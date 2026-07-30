@@ -1,6 +1,34 @@
+# AI Working Agreement
+
+> *This document defines the collaboration agreement between Jack Spaetjens and ChatGPT for software engineering projects.*
+
+**Version:** 1.2
+
+**Status:** Approved Baseline
+
+**Last Updated:** 2026-07-30
+
+**Author:** Jack Spaetjens
+
+---
+
+# Version History
+
+| Version | Date | Status | Author | Description |
+|----------|------------|-------------------|-----------------|---------------------------------------------------------------|
+| 1.0 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Initial AI Working Agreement baseline. |
+| 1.1 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Strengthened documentation governance and established working practices. |
+| 1.2 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Generalized the agreement for reuse across projects and refined governance terminology. |
+
+---
 
 ## Table of Contents
 
+
+
+- [AI Working Agreement](#ai-working-agreement)
+- [Version History](#version-history)
+  - [Table of Contents](#table-of-contents)
 - [1. Purpose](#1-purpose)
 - [2. General Collaboration Principles](#2-general-collaboration-principles)
 - [3. Mutual Responsibility](#3-mutual-responsibility)
