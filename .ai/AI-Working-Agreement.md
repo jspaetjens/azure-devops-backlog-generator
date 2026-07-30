@@ -24,8 +24,6 @@
 
 ## Table of Contents
 
-
-
 - [AI Working Agreement](#ai-working-agreement)
 - [Version History](#version-history)
   - [Table of Contents](#table-of-contents)
