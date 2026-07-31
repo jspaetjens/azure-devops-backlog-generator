@@ -1,0 +1,360 @@
+# Azure DevOps Backlog Generator
+
+# Software Architecture Document
+
+> *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
+
+**Version:** 1.0
+
+**Status:** Approved Baseline
+
+**Last Updated:** 2026-07-31
+
+**Target Release:** v1.0.0
+
+**License:** MIT
+
+**Author:** Jack Spaetjens
+
+---
+
+# Version History
+
+| Version | Date | Status | Author | Description |
+|----------|------------|-------------------|-----------------|------------------------------------------------|
+| 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Software Architecture Document. |
+| 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Software Architecture Document baseline. |
+
+---
+
+# Table of Contents
+
+- [Azure DevOps Backlog Generator](#azure-devops-backlog-generator)
+- [Software Architecture Document](#software-architecture-document)
+- [Version History](#version-history)
+- [Table of Contents](#table-of-contents)
+- [1. Introduction](#1-introduction)
+- [2. Purpose](#2-purpose)
+- [3. Architectural Goals](#3-architectural-goals)
+- [4. Architectural Principles](#4-architectural-principles)
+- [5. System Overview](#5-system-overview)
+- [6. High-Level Architecture](#6-high-level-architecture)
+- [7. Core Components](#7-core-components)
+  - [7.1 Command-Line Interface](#71-command-line-interface)
+  - [7.2 Configuration Manager](#72-configuration-manager)
+  - [7.3 Documentation Processor](#73-documentation-processor)
+  - [7.4 Backlog Generator](#74-backlog-generator)
+  - [7.5 Azure DevOps REST Client](#75-azure-devops-rest-client)
+  - [7.6 Logging Component](#76-logging-component)
+  - [7.7 Error Handler](#77-error-handler)
+- [8. Data Flow](#8-data-flow)
+- [9. Configuration Management](#9-configuration-management)
+- [10. Security Architecture](#10-security-architecture)
+- [11. Error Handling](#11-error-handling)
+- [12. Logging Strategy](#12-logging-strategy)
+- [13. Extensibility](#13-extensibility)
+- [14. Architecture Traceability](#14-architecture-traceability)
+- [15. Approval](#15-approval)
+
+---
+
+# 1. Introduction
+
+The Software Architecture Document describes the overall architecture of the Azure DevOps Backlog Generator.
+
+It defines the structural organisation of the application, the interaction between its components and the architectural decisions that support Version 1.0.
+
+The architecture provides the technical foundation for implementation while maintaining alignment with the approved Product Requirements Document.
+
+---
+
+# 2. Purpose
+
+The purpose of this document is to define the architecture required to satisfy the approved functional and non-functional requirements.
+
+The document provides the technical blueprint for implementation and establishes the architectural baseline from which development, testing and future enhancements shall be derived.
+
+---
+
+# 3. Architectural Goals
+
+Version 1.0 shall achieve the following architectural goals:
+
+- Provide a modular application architecture.
+- Support reuse across multiple software projects.
+- Separate configuration from application logic.
+- Maintain clear separation of responsibilities between components.
+- Support maintainability and extensibility.
+- Enable automated testing.
+- Support reliable communication with the Azure DevOps REST API.
+- Maintain complete traceability to the approved documentation.
+
+---
+
+# 4. Architectural Principles
+
+The architecture shall follow the following principles:
+
+- Separation of Concerns.
+- Single Responsibility Principle.
+- Configuration over hard-coded values.
+- Documentation-driven development.
+- Reusability.
+- Maintainability.
+- Testability.
+- Simplicity.
+- Traceability.
+
+---
+
+# 5. System Overview
+
+The Azure DevOps Backlog Generator is a command-line application written in Python.
+
+The application reads approved project documentation and configuration, interprets the required backlog structure and communicates with Azure DevOps through the REST API to create and maintain work items.
+
+The architecture is intentionally independent of any individual software project, allowing the application to be reused across multiple repositories.
+
+---
+
+# 6. High-Level Architecture
+
+The Azure DevOps Backlog Generator is organised as a modular command-line application.
+
+The architecture separates configuration management, documentation processing, backlog generation, Azure DevOps communication and application control into independent logical components.
+
+The primary architectural layers are:
+
+- Command-Line Interface (CLI)
+- Configuration Management
+- Documentation Processing
+- Backlog Generation
+- Azure DevOps REST Client
+- Logging
+- Error Handling
+
+Each architectural layer has a clearly defined responsibility and communicates through well-defined interfaces, promoting maintainability, testability and future extensibility.
+
+---
+
+# 7. Core Components
+
+Version 1.0 consists of the following logical components.
+
+## 7.1 Command-Line Interface
+
+The Command-Line Interface serves as the application's entry point.
+
+Its responsibilities include:
+
+- Starting the application.
+- Reading command-line parameters.
+- Initiating application execution.
+- Returning execution status.
+
+---
+
+## 7.2 Configuration Manager
+
+The Configuration Manager is responsible for loading and validating project configuration.
+
+Responsibilities include:
+
+- Reading configuration files.
+- Validating required configuration.
+- Providing configuration values to the application.
+
+---
+
+## 7.3 Documentation Processor
+
+The Documentation Processor interprets the approved project documentation.
+
+Responsibilities include:
+
+- Reading approved documentation.
+- Extracting backlog information.
+- Preparing work item data.
+- Maintaining traceability between documentation and generated work items.
+
+---
+
+## 7.4 Backlog Generator
+
+The Backlog Generator converts processed documentation into Azure DevOps work items.
+
+Responsibilities include:
+
+- Creating work item structures.
+- Creating parent-child relationships.
+- Preparing work item attributes.
+- Preventing duplicate work item creation.
+
+---
+
+## 7.5 Azure DevOps REST Client
+
+The Azure DevOps REST Client manages communication with Azure DevOps.
+
+Responsibilities include:
+
+- Authentication.
+- REST API communication.
+- Sending work item requests.
+- Receiving Azure DevOps responses.
+- Reporting API errors.
+
+---
+
+## 7.6 Logging Component
+
+The Logging Component records application execution.
+
+Responsibilities include:
+
+- Execution logging.
+- Warning logging.
+- Error logging.
+- Diagnostic information.
+
+---
+
+## 7.7 Error Handler
+
+The Error Handler manages application failures.
+
+Responsibilities include:
+
+- Detecting execution errors.
+- Reporting failures.
+- Supporting graceful application termination where recovery is not possible.
+
+---
+
+# 8. Data Flow
+
+The application follows the logical execution sequence below.
+
+1. The user starts the application.
+2. Configuration is loaded.
+3. Configuration is validated.
+4. Approved project documentation is processed.
+5. Backlog structures are generated.
+6. Azure DevOps work items are prepared.
+7. REST API requests are executed.
+8. Results are logged.
+9. Execution summary is presented.
+
+Each stage shall complete successfully before the next stage begins.
+
+---
+
+# 9. Configuration Management
+
+Application behaviour shall be controlled through external configuration.
+
+Configuration shall include:
+
+- Azure DevOps organisation.
+- Azure DevOps project.
+- Authentication settings.
+- Documentation location.
+- Logging configuration.
+- Application options.
+
+Configuration shall remain separate from application source code.
+
+---
+
+# 10. Security Architecture
+
+Version 1.0 shall follow the following security principles:
+
+- Sensitive information shall not be hard-coded.
+- Personal Access Tokens shall be provided through configuration.
+- Authentication credentials shall not be written to log files.
+- Communication with Azure DevOps shall use secure HTTPS connections.
+- Configuration files containing sensitive information shall be excluded from version control where appropriate.
+
+---
+
+# 11. Error Handling
+
+Version 1.0 shall implement a consistent error handling strategy.
+
+The application shall:
+
+- Validate configuration before execution.
+- Detect invalid input data.
+- Detect Azure DevOps communication failures.
+- Report meaningful error messages.
+- Record execution failures in the application log.
+- Terminate gracefully when recovery is not possible.
+
+Unexpected exceptions shall be handled in a controlled manner to prevent application crashes and to provide sufficient diagnostic information.
+
+---
+
+# 12. Logging Strategy
+
+The application shall provide logging to support operational monitoring, troubleshooting and future maintenance.
+
+The logging strategy shall include:
+
+- Application startup.
+- Configuration validation.
+- Documentation processing.
+- Azure DevOps communication.
+- Work item creation.
+- Warning messages.
+- Error messages.
+- Execution summary.
+
+Logging shall provide sufficient information to diagnose issues without exposing sensitive information.
+
+---
+
+# 13. Extensibility
+
+The architecture shall support future enhancements without requiring significant modification of the existing design.
+
+Version 1.0 establishes an architectural foundation for future capabilities, including:
+
+- Additional Azure DevOps work item types.
+- Alternative authentication methods.
+- Additional configuration options.
+- Support for multiple backlog templates.
+- Synchronisation of existing work items.
+- Integration with additional project management platforms.
+
+Future enhancements shall preserve the established architectural principles and maintain backward compatibility where practical.
+
+---
+
+# 14. Architecture Traceability
+
+This Software Architecture Document provides the technical implementation framework for the approved Product Requirements Document.
+
+Traceability shall be maintained between:
+
+- Product Requirements Document
+- Software Architecture Document
+- Development Roadmap
+- Azure DevOps Backlog
+- Source Code
+- Test Documentation
+
+The Software Architecture Document shall remain consistent with the approved Product Requirements Document and shall not introduce functionality that is not traceable to an approved requirement.
+
+---
+
+# 15. Approval
+
+This document becomes part of the approved documentation baseline following:
+
+- Completion of the editorial review.
+- Approval of Version 1.0.
+- Creation of the Version 1.0 Approved Baseline.
+- Commit to the project repository using the agreed Git workflow.
+
+Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
