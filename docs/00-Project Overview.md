@@ -113,8 +113,6 @@ Project documentation is organised as follows:
 | 05 – API Specification | Azure DevOps REST API design |
 | 06 – Testing Strategy | Testing approach and quality assurance |
 | 07 – Release Management | Versioning and release process |
-| 08 – Backlog | Logical backlog structure |
-| 09 – AzureDevOps-Standards | Azure DevOps governance and work item standards |
 
 The AI Working Agreement is intentionally maintained outside the project documentation under the `.ai` directory because it defines the collaboration between the project owner and the AI rather than the software project itself.
 
