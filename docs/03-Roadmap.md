@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 0.1 (Draft)
+**Version:** 1.0
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-07-31
 
