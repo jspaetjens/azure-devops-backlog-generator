@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.2
+**Version:** 1.3
 
 **Status:** Approved Baseline
 
@@ -26,6 +26,7 @@
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved API Specification baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only API deployment scope for Version 1.0. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined Azure DevOps REST API version 7.1 as the Version 1.0 API-contract constant. |
+| 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps REST endpoint and HTTP-method contract. |
 
 ---
 
@@ -119,6 +120,8 @@ Version 1.0 shall communicate with Azure DevOps using the official REST API.
 
 The Version 1.0 API contract targets Azure DevOps Services. Azure DevOps Server is not supported by the Version 1.0 API contract. REST requests shall use the Azure DevOps Services organisation/project addressing model.
 
+Version 1.0 shall derive the Azure DevOps Services base URL as `https://dev.azure.com/{organization}`, where `{organization}` is the configured Azure DevOps Services organisation. No configurable base URL shall be introduced.
+
 Communication shall adhere to the following standards:
 
 - All communication shall use HTTPS.
@@ -138,15 +141,23 @@ Communication failures shall be detected, logged and reported through the applic
 
 # 7. API Endpoints
 
-Version 1.0 shall use Azure DevOps REST API endpoints required to support approved functionality.
+Version 1.0 shall use the following Azure DevOps REST API endpoints required to support approved functionality.
 
-The application shall support interactions including:
+| Operation | HTTP method | Endpoint path | Full pattern | Parameters | Content type |
+|-----------|-------------|---------------|--------------|------------|--------------|
+| Project retrieval | `GET` | `/_apis/projects/{projectId}` | `https://dev.azure.com/{organization}/_apis/projects/{projectId}?api-version=7.1` | `{organization}` is the configured Azure DevOps Services organisation; `{projectId}` is the configured project name or identifier accepted by the Azure DevOps Projects Get operation; `api-version=7.1` | None |
+| Work-item creation | `POST` | `/{project}/_apis/wit/workitems/{type}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{type}?api-version=7.1` | `{organization}`, `{project}` and `{type}`; `api-version=7.1` | `application/json-patch+json` |
+| Work-item update | `PATCH` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?api-version=7.1` | `{organization}`, `{project}` and `{id}`; `api-version=7.1` | `application/json-patch+json` |
+| Parent-child relationship update | `PATCH` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?api-version=7.1` | `{organization}`, `{project}` and `{id}`; `api-version=7.1` | `application/json-patch+json` |
+| Repeatability query | `POST` | `/{project}/_apis/wit/wiql` | `https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.1` | `{organization}` and `{project}`; `api-version=7.1`; no team parameter | `application/json` |
 
-- Project information retrieval.
-- Work item creation.
-- Work item updates where required.
-- Parent-child relationship creation.
-- Work item queries where required to support repeatable execution.
+Work-item creation shall use the approved Version 1.0 work-item type values `Epic`, `Feature`, `Product Backlog Item` and `Task`. Work-item type values are URI path-segment values. Values containing spaces shall be correctly URI encoded when constructing the request.
+
+Version 1.0 shall use the configured project-scoped Work Items Update form consistently. Parent-child relationships shall be created or updated using the same Work Items Update endpoint, HTTP `PATCH` and `application/json-patch+json`. Version 1.0 does not require a separate relationship-creation endpoint. Relationship changes shall be performed through the work item's relations collection using the Work Items Update operation.
+
+Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries and shall not require a team parameter.
+
+This section does not define request payload structures, Azure DevOps field mappings, concrete response fields or response-validation rules, parent-child relation payload semantics, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
 
 Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
 
@@ -245,8 +256,8 @@ The API implementation shall remain aligned with the approved Product Requiremen
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.2.
-- Creation of the Version 1.2 Approved Baseline.
+- Approval of Version 1.3.
+- Creation of the Version 1.3 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
