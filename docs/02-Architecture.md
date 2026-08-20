@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-20
 
 **Target Release:** v1.0.0
 
@@ -24,6 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Software Architecture Document. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Software Architecture Document baseline. |
+| 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only connection topology for Version 1.0. |
 
 ---
 
@@ -196,6 +197,10 @@ Responsibilities include:
 
 The Azure DevOps REST Client manages communication with Azure DevOps.
 
+Version 1.0 shall target Azure DevOps Services only and shall use the Azure DevOps Services organisation/project model. The Services REST base address shall be derived from the configured organisation according to the official Azure DevOps Services URL structure.
+
+Azure DevOps Server instance, port, collection and Server-specific base-address handling are outside Version 1.0 architecture scope.
+
 Responsibilities include:
 
 - Authentication.
@@ -353,8 +358,8 @@ The Software Architecture Document shall remain consistent with the approved Pro
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.0.
-- Creation of the Version 1.0 Approved Baseline.
+- Approval of Version 1.1.
+- Creation of the Version 1.1 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

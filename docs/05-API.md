@@ -4,11 +4,11 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-20
 
 **Target Release:** v1.0.0
 
@@ -24,6 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial API Specification. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved API Specification baseline. |
+| 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only API deployment scope for Version 1.0. |
 
 ---
 
@@ -114,6 +115,8 @@ Authentication failures shall terminate execution with an appropriate error mess
 # 6. Communication Standards
 
 Version 1.0 shall communicate with Azure DevOps using the official REST API.
+
+The Version 1.0 API contract targets Azure DevOps Services. Azure DevOps Server is not supported by the Version 1.0 API contract. REST requests shall use the Azure DevOps Services organisation/project addressing model.
 
 Communication shall adhere to the following standards:
 
@@ -237,8 +240,8 @@ The API implementation shall remain aligned with the approved Product Requiremen
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.0.
-- Creation of the Version 1.0 Approved Baseline.
+- Approval of Version 1.1.
+- Creation of the Version 1.1 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

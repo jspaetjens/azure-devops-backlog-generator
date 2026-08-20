@@ -4,11 +4,11 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-07-30
+**Last Updated:** 2026-08-20
 
 **Target Release:** v1.0.0
 
@@ -24,12 +24,12 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-30 | Draft | Jack Spaetjens | Initial Product Requirements Document. |
 | 1.0 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Initial approved Product Requirements Document baseline. |
+| 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified Azure DevOps Services-only deployment scope for Version 1.0. |
 
 ---
 
 # Table of Contents
 
-Work Item Creation](#fr-004-work-item-creation)
 - [Azure DevOps Backlog Generator](#azure-devops-backlog-generator)
 - [Product Requirements Document](#product-requirements-document)
 - [Version History](#version-history)
@@ -144,6 +144,7 @@ The scope establishes which capabilities are included in the initial release and
 Version 1.0 shall support the following capabilities:
 
 - Authentication using an Azure DevOps Personal Access Token (PAT).
+- Version 1.0 supports Azure DevOps Services.
 - Connection to Azure DevOps through the REST API.
 - Project selection through configuration.
 - Creation of Epics.
@@ -167,6 +168,7 @@ The following capabilities are intentionally excluded from Version 1.0:
 - Azure Repos integration.
 - Azure Pipelines integration.
 - Azure DevOps Wiki integration.
+- Azure DevOps Server deployments are not supported in Version 1.0.
 - Microsoft Entra ID authentication.
 - Graphical User Interface (GUI).
 - Web application deployment.
@@ -370,8 +372,8 @@ No implementation, backlog item or test case shall introduce functionality that 
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.0.
-- Creation of the Version 1.0 Approved Baseline.
+- Approval of Version 1.1.
+- Creation of the Version 1.1 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

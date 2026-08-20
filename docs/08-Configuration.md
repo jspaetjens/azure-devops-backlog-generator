@@ -4,7 +4,7 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.3
+**Version:** 1.4
 
 **Status:** Approved Baseline
 
@@ -27,6 +27,7 @@
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved Version 1.0 configuration mechanism and identified the pending parameter schema and CLI argument name. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved CLI configuration-file contract. |
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved complete Version 1.0 external configuration schema. |
+| 1.4 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only configuration scope for Version 1.0. |
 
 ---
 
@@ -188,10 +189,12 @@ The `[azure_devops]` TOML table shall contain the following required parameters:
 
 | Key | Purpose | TOML type | Default | Environment override | CLI override |
 |-----|---------|-----------|---------|----------------------|--------------|
-| `organization` | Identifies the target Azure DevOps organisation. | String | None | Not supported | Not supported |
+| `organization` | Identifies the target Azure DevOps Services organisation. | String | None | Not supported | Not supported |
 | `project` | Identifies the target Azure DevOps project. | String | None | Not supported | Not supported |
 
 `azure_devops.organization` and `azure_devops.project` shall be validated as strings that are not empty after trimming whitespace for validation purposes. This version shall not define stricter Azure DevOps character or naming rules. The original configured values shall not be normalised unless separately approved.
+
+Version 1.0 does not support Azure DevOps Server connection configuration. No Version 1.0 configuration parameters exist for server hostname, port, collection, base URL or deployment type.
 
 There shall be no PAT TOML key. A PAT shall be supplied exclusively through `AZDO_PAT`, shall be required at runtime and shall not be accepted through the CLI. An absent or whitespace-only `AZDO_PAT` value shall be a configuration error. Whitespace inspection shall be used only to validate presence; the original secret value shall not be modified.
 
@@ -354,8 +357,8 @@ Configuration implementation shall remain aligned with the approved documentatio
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.3.
-- Creation of the Version 1.3 Approved Baseline.
+- Approval of Version 1.4.
+- Creation of the Version 1.4 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

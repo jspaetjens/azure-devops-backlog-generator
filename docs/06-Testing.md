@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-20
 
 **Target Release:** v1.0.0
 
@@ -24,6 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Testing Strategy. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Testing Strategy baseline. |
+| 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only integration and system-test target for Version 1.0. |
 
 ---
 
@@ -157,12 +158,14 @@ Testing shall be performed within a controlled development environment.
 The environment shall include:
 
 - Python development environment.
-- Azure DevOps test project.
+- Azure DevOps Services test organisation/project.
 - Test configuration files.
 - Approved documentation baseline.
 - Automated testing framework.
 
 The test environment shall be maintained independently from production environments where practical.
+
+Azure DevOps integration and system validation for Version 1.0 shall use an Azure DevOps Services test organisation/project. Azure DevOps Server test environments are not required for Version 1.0 acceptance or release validation.
 
 ---
 
@@ -257,8 +260,8 @@ Testing activities shall remain aligned with the approved documentation baseline
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.0.
-- Creation of the Version 1.0 Approved Baseline.
+- Approval of Version 1.1.
+- Creation of the Version 1.1 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
