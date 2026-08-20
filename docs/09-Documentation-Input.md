@@ -4,11 +4,11 @@
 
 > *This document defines the Version 1.0 source-document discovery, Markdown parsing, hierarchy interpretation, title extraction, validation, deterministic ordering and source-side traceability contract for the Azure DevOps Backlog Generator.*
 
-**Version:** 0.1
+**Version:** 0.2
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-20
+**Last Updated:** 2026-08-21
 
 **Target Release:** v1.0.0
 
@@ -23,6 +23,7 @@
 | Version | Date | Status | Author | Description |
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Initial Documentation Input Specification. |
+| 0.2 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 
 ---
 
@@ -324,13 +325,13 @@ These areas shall not be inferred from this specification.
 
 # 15. Approval
 
-This Version 0.1 document is a Draft and is not an Approved Baseline until it has been formally reviewed and approved.
-
-This document becomes part of the approved documentation baseline following:
+Approval of a document version requires:
 
 - Completion of the editorial review.
-- Approval of Version 0.1.
-- Creation of the Version 0.1 Approved Baseline.
+- Approval of that document version.
+- Creation of the corresponding Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
+
+The document metadata and Version History record whether the current version has completed this approval process.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

@@ -4,11 +4,11 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.4
+**Version:** 1.5
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-20
+**Last Updated:** 2026-08-21
 
 **Target Release:** v1.0.0
 
@@ -28,6 +28,7 @@
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined Azure DevOps REST API version 7.1 as the Version 1.0 API-contract constant. |
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps REST endpoint and HTTP-method contract. |
 | 1.4 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined stable Scrum compatibility validation through work-item type metadata and validation-only creation. |
+| 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 
 ---
 
@@ -266,11 +267,13 @@ The API implementation shall remain aligned with the approved Product Requiremen
 
 # 13. Approval
 
-This document becomes part of the approved documentation baseline following:
+Approval of a document version requires:
 
 - Completion of the editorial review.
-- Approval of Version 1.4.
-- Creation of the Version 1.4 Approved Baseline.
+- Approval of that document version.
+- Creation of the corresponding Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
+
+The document metadata and Version History record whether the current version has completed this approval process.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
