@@ -4,7 +4,7 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.2
+**Version:** 1.3
 
 **Status:** Approved Baseline
 
@@ -26,6 +26,7 @@
 | 1.0 | 2026-08-04 | Approved Baseline | Jack Spaetjens | Initial approved Configuration Specification baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved Version 1.0 configuration mechanism and identified the pending parameter schema and CLI argument name. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved CLI configuration-file contract. |
+| 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved complete Version 1.0 external configuration schema. |
 
 ---
 
@@ -46,6 +47,12 @@
   - [5.4 Relative Path Resolution](#54-relative-path-resolution)
   - [5.5 Configuration File Composition](#55-configuration-file-composition)
 - [6. Configuration Parameters](#6-configuration-parameters)
+  - [6.1 Application](#61-application)
+  - [6.2 Azure DevOps](#62-azure-devops)
+  - [6.3 Documentation](#63-documentation)
+  - [6.4 Logging](#64-logging)
+  - [6.5 Generator](#65-generator)
+  - [6.6 Complete External Schema](#66-complete-external-schema)
 - [7. Configuration Validation](#7-configuration-validation)
 - [8. Environment Variables](#8-environment-variables)
 - [9. Default Values](#9-default-values)
@@ -165,29 +172,84 @@ Configuration overlays and configuration-file merging are not supported in Versi
 
 # 6. Configuration Parameters
 
-The configuration shall define all application settings required for execution.
+The Version 1.0 external configuration schema consists only of the parameters defined in this section. No other TOML keys are permitted.
 
-This specification establishes the configuration mechanism but does not yet define the complete parameter schema. Parameter-level definitions, including names, data types, required or optional status, and default values, remain pending project decisions except where already stated in this specification or the approved documentation baseline.
+## 6.1 Application
 
-Configuration parameters shall include, where applicable:
+Version 1.0 defines no externally configurable application parameters. The `[application]` TOML table may be omitted. An explicitly present empty `[application]` table is equivalent to omission. Any key inside `[application]` shall be an unknown-key validation error.
 
-- Application settings.
-- Azure DevOps organisation.
-- Azure DevOps project.
-- Authentication configuration.
-- Documentation location.
-- Logging configuration.
-- Generator options.
+Application name and application version shall be derived from application or package metadata. Dry-run behaviour is not supported in Version 1.0.
 
-Each configuration parameter shall define:
+This fulfils the Architecture's logical Application configuration category without introducing an external application option that is not approved for Version 1.0.
 
-- Name.
-- Purpose.
-- Data type.
-- Required or optional status.
-- Default value where applicable.
+## 6.2 Azure DevOps
 
-Configuration parameters shall remain consistent with the approved Software Architecture Document.
+The `[azure_devops]` TOML table shall contain the following required parameters:
+
+| Key | Purpose | TOML type | Default | Environment override | CLI override |
+|-----|---------|-----------|---------|----------------------|--------------|
+| `organization` | Identifies the target Azure DevOps organisation. | String | None | Not supported | Not supported |
+| `project` | Identifies the target Azure DevOps project. | String | None | Not supported | Not supported |
+
+`azure_devops.organization` and `azure_devops.project` shall be validated as strings that are not empty after trimming whitespace for validation purposes. This version shall not define stricter Azure DevOps character or naming rules. The original configured values shall not be normalised unless separately approved.
+
+There shall be no PAT TOML key. A PAT shall be supplied exclusively through `AZDO_PAT`, shall be required at runtime and shall not be accepted through the CLI. An absent or whitespace-only `AZDO_PAT` value shall be a configuration error. Whitespace inspection shall be used only to validate presence; the original secret value shall not be modified.
+
+Azure DevOps API version shall not be an external Version 1.0 configuration parameter. It shall be an application-controlled API-contract constant that users cannot override through TOML, environment variables or CLI. The concrete value shall be selected and documented in the API Specification before REST-client implementation.
+
+## 6.3 Documentation
+
+The `[documentation]` TOML table shall contain the following required parameter:
+
+| Key | Purpose | TOML type | Default | Environment override | CLI override |
+|-----|---------|-----------|---------|----------------------|--------------|
+| `source_directory` | Identifies the source directory containing approved project documentation. | String representing a filesystem path | None | Not supported | Not supported |
+
+`documentation.source_directory` shall not be empty. Relative values shall resolve according to the configuration-file-relative path rule in Section 5.4. The resolved path shall exist, be a directory and be readable.
+
+This section defines filesystem validity only. Documentation-content validation remains the responsibility of documentation processing.
+
+## 6.4 Logging
+
+The `[logging]` TOML table may omit either or both of the following optional parameters:
+
+| Key | Purpose | TOML type | Default | Environment override | CLI override |
+|-----|---------|-----------|---------|----------------------|--------------|
+| `level` | Defines the minimum logging severity. | String | `INFO` | Not supported | Not supported |
+| `log_directory` | Defines the directory used for file logging. | String representing a filesystem path | `../logs` | Not supported | Not supported |
+
+`logging.level` shall accept the following values case-insensitively: `DEBUG`, `INFO`, `WARNING`, `ERROR` and `CRITICAL`. The effective runtime value shall be normalised to uppercase. Any other value shall be a configuration validation error. Treatment of surrounding whitespace is not defined by this specification and remains an implementation-detail decision.
+
+`logging.log_directory` shall resolve according to the configuration-file-relative path rule in Section 5.4. With the canonical `config/config.toml` file, the default `../logs` resolves to the root-level `logs/` directory.
+
+If the resolved logging directory does not exist, the application shall create it before file logging begins. If creation fails, execution shall stop with a configuration or startup error. If the path exists, it shall be a directory and the effective directory shall be usable and writable for logging. Failure to use the resolved directory shall stop execution with a configuration or startup error. The application shall not silently fall back to another logging directory.
+
+Parent-directory creation semantics for arbitrary nested logging paths are not defined by this specification.
+
+## 6.5 Generator
+
+Version 1.0 defines no externally configurable generator parameters. The `[generator]` TOML table may be omitted. An explicitly present empty `[generator]` table is equivalent to omission. Any key inside `[generator]` shall be an unknown-key validation error.
+
+Parent-child relationship creation, duplicate prevention and repeatability, traceability, and the supported work-item types Epic, Feature, Product Backlog Item and Task shall remain fixed mandatory Version 1.0 behaviour. `overwrite_existing`, `create_relationships` and equivalent generator toggles shall not be exposed as configuration parameters.
+
+## 6.6 Complete External Schema
+
+The only permitted Version 1.0 TOML keys are:
+
+```toml
+[azure_devops]
+organization = "..."
+project = "..."
+
+[documentation]
+source_directory = "..."
+
+[logging]
+level = "..."
+log_directory = "..."
+```
+
+The `[application]` and `[generator]` tables are optional and, when present, shall be empty. No other TOML keys are permitted.
 
 ---
 
@@ -204,12 +266,17 @@ Validation shall verify:
 - Valid Azure DevOps configuration.
 - Internal configuration consistency.
 - Absence of unknown configuration sections and keys.
+- Presence and non-empty validation of `AZDO_PAT` without exposing or altering its secret value.
+- Valid logging-level values.
+- Valid documentation source-directory and logging-directory references.
 
 Application execution shall not continue when required configuration validation fails.
 
 Meaningful validation errors shall be presented to the user and recorded through the application's logging mechanism.
 
 Unknown configuration sections or keys shall be validation errors. Validation shall fail before application execution when unknown configuration sections or keys are present.
+
+A PAT TOML key and all other keys not permitted by Section 6.6 shall be validation errors.
 
 Configuration errors, including missing configuration files, shall provide clear error messages without exposing sensitive information.
 
@@ -226,16 +293,11 @@ CLI usage errors and configuration errors shall be reported through the applicat
 
 # 8. Environment Variables
 
-Version 1.0 shall support environment variables only for sensitive configuration values and overrides explicitly documented by this specification.
-
-Environment variables may be used for:
-
-- Azure DevOps Personal Access Token (PAT), through `AZDO_PAT`.
-- Explicitly documented environment-specific configuration overrides.
+`AZDO_PAT` shall be the only supported Version 1.0 environment configuration input. No TOML setting shall be overridden through another environment variable.
 
 The PAT shall not be stored in the canonical configuration file. It shall be supplied through `AZDO_PAT` and shall not be accepted through the CLI.
 
-Environment variables shall take precedence over TOML configuration-file values where explicitly supported, subject to the precedence defined in Section 5.3.
+Environment variables shall take precedence over TOML configuration-file values where explicitly supported, subject to the precedence defined in Section 5.3. In Version 1.0, `AZDO_PAT` is the only supported environment input.
 
 Sensitive information supplied through environment variables shall not be written to application logs. PATs and other secrets shall never be logged, exposed in validation messages, exceptions or diagnostics. Secret values shall be masked whenever provenance or diagnostics are reported.
 
@@ -254,7 +316,14 @@ Default values shall:
 
 Required configuration parameters shall not define default values or receive undocumented implicit defaults.
 
-Default values shall be documented and maintained as part of the approved configuration specification. No parameter-level default values are established by this version.
+The Version 1.0 defaults are:
+
+| Parameter | Default value |
+|-----------|---------------|
+| `logging.level` | `INFO` |
+| `logging.log_directory` | `../logs` |
+
+No other Version 1.0 configuration parameter has a default value.
 
 ---
 
@@ -285,8 +354,8 @@ Configuration implementation shall remain aligned with the approved documentatio
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.2.
-- Creation of the Version 1.2 Approved Baseline.
+- Approval of Version 1.3.
+- Creation of the Version 1.3 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
