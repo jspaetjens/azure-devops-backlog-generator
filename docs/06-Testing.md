@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.4
+**Version:** 1.5
 
 **Status:** Approved Baseline
 
@@ -28,6 +28,7 @@
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined test coverage for Scrum compatibility validation. |
 | 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Documentation Input Specification contract. |
 | 1.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
+| 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Description Mapping and normative Markdown rendering contract. |
 
 ---
 
@@ -219,6 +220,19 @@ Documentation Input Specification validation shall cover:
 - deterministic source identity and accepted rename sensitivity;
 - cross-file hierarchy rejection; and
 - source validation before persistent backlog generation.
+
+Description Mapping validation shall additionally cover:
+
+- installation and operation of `markdown-it-py==4.2.0` on the supported Python 3.14 environment;
+- the fixed `MarkdownIt("commonmark")` configuration, with no plugins, option overrides, linkify, typography, GFM preset or custom renderer rules;
+- relevant CommonMark 0.31.2 parsing and parsed-node validation behaviour;
+- direct-body extraction and exclusion of child semantic headings and child-item content;
+- missing, whitespace-only, rendering-failure and empty-rendered-output validation failures before persistence;
+- raw HTML and Markdown image rejection;
+- permitted RFC 3986 absolute HTTP/HTTPS links and rejection of relative, non-HTTP(S), hostless and malformed destinations;
+- supported CommonMark body content, including fenced and indented code blocks;
+- exact normative HTML snapshots after CRLF and lone-CR normalisation to LF only, preserving every other character and any renderer-produced final LF; and
+- confirmation that Description content does not change source identity.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
 

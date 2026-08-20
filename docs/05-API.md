@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.5
+**Version:** 1.6
 
 **Status:** Approved Baseline
 
@@ -29,6 +29,7 @@
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps REST endpoint and HTTP-method contract. |
 | 1.4 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined stable Scrum compatibility validation through work-item type metadata and validation-only creation. |
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
+| 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 `System.Description` content-representation contract. |
 
 ---
 
@@ -160,6 +161,8 @@ Version 1.0 shall support Azure DevOps Services projects compatible with the Scr
 
 Before persistent backlog generation, the Work Item Types Get operation shall be used for each required work-item type to verify its availability and inspect field metadata and required-field compatibility. The standard compatibility field reference names are `System.Title`, `System.Description`, `Microsoft.VSTS.Common.AcceptanceCriteria` where applicable, and `System.Tags`. Reference names, rather than display names, define compatibility.
 
+`System.Description` shall receive the normative HTML fragment prepared by the Documentation Processor under the approved Description Mapping Contract in `09-Documentation-Input.md`. This contract does not define JSON Patch add or replace semantics.
+
 Acceptance Criteria shall be mapped only where the target work-item type exposes `Microsoft.VSTS.Common.AcceptanceCriteria`: Epic, Feature and Product Backlog Item. Task shall not receive Acceptance Criteria through a fallback field, Description or a custom field.
 
 An additional field marked `alwaysRequired` shall not alone establish incompatibility. Its metadata shall be inspected and, when static metadata alone cannot establish whether the candidate payload satisfies project/process rules, the approved Work Items Create operation may use `validateOnly=true`. Validation-only creation requests shall not persist work items, shall use the same candidate field contract intended for persistent creation, and validation failure shall prevent persistent backlog generation. Validation errors shall be reported meaningfully without exposing secrets.
@@ -168,7 +171,7 @@ Version 1.0 shall use the configured project-scoped Work Items Update form consi
 
 Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries and shall not require a team parameter.
 
-This section does not define detailed request payload structures, Markdown-to-HTML or other content representation, tag taxonomy, ordinary work-item update operation semantics, concrete response fields or response-validation rules, parent-child relation payload semantics, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
+This section does not define detailed request payload structures, tag taxonomy, ordinary work-item update operation semantics, concrete response fields or response-validation rules, parent-child relation payload semantics, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
 
 Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
 

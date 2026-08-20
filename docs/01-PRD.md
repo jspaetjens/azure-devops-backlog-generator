@@ -4,7 +4,7 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.4
+**Version:** 1.5
 
 **Status:** Approved Baseline
 
@@ -28,6 +28,7 @@
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Scrum-compatible Azure DevOps process boundary and pre-generation compatibility validation. |
 | 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Integrated the approved Documentation Input Specification into the Version 1.0 product requirements. |
 | 1.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
+| 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 mandatory Description Mapping contract. |
 
 ---
 
@@ -237,6 +238,10 @@ The application shall populate supported Azure DevOps work item fields, includin
 - Tags
 
 Acceptance Criteria shall be populated only where applicable to the target work-item type. Version 1.0 shall use `Microsoft.VSTS.Common.AcceptanceCriteria` where the target type exposes it: Epic, Feature and Product Backlog Item. Task does not use this field. Version 1.0 shall not invent a fallback Acceptance Criteria field for Task or automatically place Task Acceptance Criteria in Description or a custom field.
+
+For Epic, Feature, Product Backlog Item and Task, `System.Description` shall be derived from the complete direct body of the corresponding Document 09 source item. Child semantic headings and child-item content shall be excluded according to the approved item-boundary rules. No reserved Description subsection shall be introduced.
+
+Description shall be mandatory. Missing direct body content, whitespace-only direct body content, Description-rendering failure or an empty rendered HTML fragment shall be validation failures that prevent persistent backlog generation. `System.Description` shall not be omitted or deliberately sent as an empty value. The detailed Description Mapping and rendering rules are defined by `09-Documentation-Input.md`.
 
 ## FR-007 Repeatable Execution
 
