@@ -2,11 +2,11 @@
 
 > *This document defines the collaboration agreement between Jack Spaetjens and ChatGPT for software engineering projects.*
 
-**Version:** 1.2
+**Version:** 1.3
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-07-30
+**Last Updated:** 2026-08-20
 
 **Author:** Jack Spaetjens
 
@@ -19,6 +19,7 @@
 | 1.0 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Initial AI Working Agreement baseline. |
 | 1.1 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Strengthened documentation governance and established working practices. |
 | 1.2 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Generalized the agreement for reuse across projects and refined governance terminology. |
+| 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Aligned the Git workflow with the authoritative Development Standards and removed the obsolete develop-branch requirement. |
 
 ---
 
@@ -185,7 +186,9 @@ Whenever Git commands are generated they shall include:
 
 - git add
 - git commit
-- git push origin develop
+- git push origin <feature-branch>
+
+Generated Git workflows shall follow the approved project branching strategy: feature branch → Pull Request → main.
 
 Repository filenames shall always be used exactly as they exist.
 
