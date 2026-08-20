@@ -4,11 +4,11 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-04
+**Last Updated:** 2026-08-20
 
 **Target Release:** v1.0.0
 
@@ -24,6 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-08-04 | Draft | Jack Spaetjens | Initial Configuration Specification. |
 | 1.0 | 2026-08-04 | Approved Baseline | Jack Spaetjens | Initial approved Configuration Specification baseline. |
+| 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved Version 1.0 configuration mechanism and identified the pending parameter schema and CLI argument name. |
 
 ---
 
@@ -38,6 +39,11 @@
 - [3. Configuration Objectives](#3-configuration-objectives)
 - [4. Configuration Principles](#4-configuration-principles)
 - [5. Configuration Structure](#5-configuration-structure)
+  - [5.1 Configuration File Format](#51-configuration-file-format)
+  - [5.2 Configuration File Selection and Discovery](#52-configuration-file-selection-and-discovery)
+  - [5.3 Configuration Sources and Precedence](#53-configuration-sources-and-precedence)
+  - [5.4 Relative Path Resolution](#54-relative-path-resolution)
+  - [5.5 Configuration File Composition](#55-configuration-file-composition)
 - [6. Configuration Parameters](#6-configuration-parameters)
 - [7. Configuration Validation](#7-configuration-validation)
 - [8. Environment Variables](#8-environment-variables)
@@ -109,11 +115,52 @@ Each configuration section shall contain only settings related to its defined re
 
 The configuration structure shall support future expansion without requiring modification of existing configuration sections.
 
+## 5.1 Configuration File Format
+
+Version 1.0 shall use TOML as the supported configuration-file format.
+
+Configuration files shall be parsed using the Python standard-library `tomllib` module. No third-party TOML parser dependency is required.
+
+## 5.2 Configuration File Selection and Discovery
+
+The canonical configuration-file path shall be `config/config.toml`.
+
+The CLI shall support supplying an explicit configuration-file path. The CLI argument name for this capability is not established by the approved documentation or current implementation and remains a pending project decision. It shall be documented before implementation.
+
+When an explicit configuration-file path is supplied, the application shall use that file.
+
+When no explicit configuration-file path is supplied, the application shall use `config/config.toml`.
+
+A missing explicitly supplied configuration file shall be an immediate configuration error. A missing default `config/config.toml` file shall also be a configuration error.
+
+## 5.3 Configuration Sources and Precedence
+
+The effective configuration precedence shall be:
+
+1. Supported CLI values.
+2. Supported environment-variable values.
+3. TOML configuration-file values.
+4. Documented defaults.
+
+Only settings explicitly documented as supporting CLI or environment-variable overrides may be overridden through those sources. Supported CLI values shall override supported environment-variable values. Supported environment-variable values shall override TOML configuration-file values. TOML configuration-file values shall override documented defaults.
+
+## 5.4 Relative Path Resolution
+
+Relative paths defined inside a configuration file shall resolve relative to the directory containing the loaded configuration file.
+
+## 5.5 Configuration File Composition
+
+Exactly one TOML configuration file shall be selected for each execution.
+
+Configuration overlays and configuration-file merging are not supported in Version 1.0.
+
 ---
 
 # 6. Configuration Parameters
 
 The configuration shall define all application settings required for execution.
+
+This specification establishes the configuration mechanism but does not yet define the complete parameter schema. Parameter-level definitions, including names, data types, required or optional status, and default values, remain pending project decisions except where already stated in this specification or the approved documentation baseline.
 
 Configuration parameters shall include, where applicable:
 
@@ -149,32 +196,38 @@ Validation shall verify:
 - Valid file and directory references.
 - Valid Azure DevOps configuration.
 - Internal configuration consistency.
+- Absence of unknown configuration sections and keys.
 
 Application execution shall not continue when required configuration validation fails.
 
 Meaningful validation errors shall be presented to the user and recorded through the application's logging mechanism.
 
+Unknown configuration sections or keys shall be validation errors. Validation shall fail before application execution when unknown configuration sections or keys are present.
+
+Configuration errors, including missing configuration files, shall provide clear error messages without exposing sensitive information.
+
 ---
 
 # 8. Environment Variables
 
-Version 1.0 shall support environment variables for sensitive configuration values where appropriate.
+Version 1.0 shall support environment variables only for sensitive configuration values and overrides explicitly documented by this specification.
 
 Environment variables may be used for:
 
-- Azure DevOps Personal Access Token.
-- Environment-specific configuration overrides.
-- Future authentication mechanisms.
+- Azure DevOps Personal Access Token (PAT), through `AZDO_PAT`.
+- Explicitly documented environment-specific configuration overrides.
 
-Environment variables shall take precedence over configuration file values where explicitly supported.
+The PAT shall not be stored in the canonical configuration file. It shall be supplied through `AZDO_PAT` and shall not be accepted through the CLI.
 
-Sensitive information supplied through environment variables shall not be written to application logs.
+Environment variables shall take precedence over TOML configuration-file values where explicitly supported, subject to the precedence defined in Section 5.3.
+
+Sensitive information supplied through environment variables shall not be written to application logs. PATs and other secrets shall never be logged, exposed in validation messages, exceptions or diagnostics. Secret values shall be masked whenever provenance or diagnostics are reported.
 
 ---
 
 # 9. Default Values
 
-Version 1.0 shall provide default values for optional configuration parameters where appropriate.
+Version 1.0 shall provide default values for optional configuration parameters where appropriate. Defaults are permitted only where they are explicitly defined in this Configuration Specification.
 
 Default values shall:
 
@@ -183,9 +236,9 @@ Default values shall:
 - Support predictable execution.
 - Simplify initial deployment.
 
-Required configuration parameters shall not define default values.
+Required configuration parameters shall not define default values or receive undocumented implicit defaults.
 
-Default values shall be documented and maintained as part of the approved configuration specification.
+Default values shall be documented and maintained as part of the approved configuration specification. No parameter-level default values are established by this version.
 
 ---
 
@@ -216,8 +269,8 @@ Configuration implementation shall remain aligned with the approved documentatio
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.0.
-- Creation of the Version 1.0 Approved Baseline.
+- Approval of Version 1.1.
+- Creation of the Version 1.1 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
