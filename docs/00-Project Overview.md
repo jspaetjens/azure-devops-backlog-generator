@@ -4,11 +4,11 @@
 
 > *This document provides an overview of the Azure DevOps Backlog Generator project, its objectives, documentation structure, and guiding principles.*
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-20
+**Last Updated:** 2026-08-21
 
 **Target Release:** v1.0.0
 
@@ -25,6 +25,7 @@
 | 0.1 | 2026-07-30 | Draft | Jack Spaetjens | Initial Project Overview document. |
 | 1.0 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Initial approved Project Overview baseline.|
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Added the approved Configuration Specification to the documentation overview. |
+| 1.2 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Added the Documentation Input Specification to the documentation overview. |
 
 ---
 
@@ -43,6 +44,7 @@
 - [7. Documentation Principles](#7-documentation-principles)
 - [8. Source of Truth](#8-source-of-truth)
 - [9. Governance](#9-governance)
+- [10. Approval](#10-approval)
 
 ---
 
@@ -115,6 +117,7 @@ Project documentation is organised as follows:
 | 06 – Testing Strategy | Testing approach and quality assurance |
 | 07 – Release Management | Versioning and release process |
 | 08 – Configuration Specification | Configuration architecture, parameters and validation rules |
+| 09 – Documentation Input Specification | Version 1.0 backlog-input Markdown discovery, parsing, hierarchy, title extraction, validation, deterministic ordering and source-side identity |
 
 The AI Working Agreement is intentionally maintained outside the project documentation under the `.ai` directory because it defines the collaboration between the project owner and the AI rather than the software project itself.
 
@@ -162,3 +165,16 @@ This includes:
 - Automated testing where applicable.
 
 Project governance shall ensure that implementation remains aligned with the approved documentation throughout the software development lifecycle.
+
+---
+
+# 10. Approval
+
+This document becomes part of the approved documentation baseline following:
+
+- Completion of the editorial review.
+- Approval of Version 1.2.
+- Creation of the Version 1.2 Approved Baseline.
+- Commit to the project repository using the agreed Git workflow.
+
+Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

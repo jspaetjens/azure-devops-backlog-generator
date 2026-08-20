@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.2
+**Version:** 1.3
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-20
+**Last Updated:** 2026-08-21
 
 **Target Release:** v1.0.0
 
@@ -26,6 +26,7 @@
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Testing Strategy baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only integration and system-test target for Version 1.0. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined test coverage for Scrum compatibility validation. |
+| 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Documentation Input Specification contract. |
 
 ---
 
@@ -205,6 +206,21 @@ Validation shall include:
 - Manual verification where appropriate.
 - Scrum compatibility validation, including failure before persistent backlog generation when required metadata cannot be retrieved or a candidate request is invalid.
 
+Documentation Input Specification validation shall cover:
+
+- dedicated source-directory discovery and direct regular `.md` file discovery;
+- case-insensitive extension matching, no recursive traversal and symbolic-link exclusion;
+- UTF-8 input, accepted UTF-8 byte order marks and invalid UTF-8 rejection;
+- CommonMark 0.31.2 semantic parsing, top-level ATX hierarchy mapping, excluded or nested Markdown contexts and top-level setext-heading rejection;
+- hierarchy-level validation and orphan Feature, Product Backlog Item and Task rejection;
+- title extraction and normalisation, empty-title rejection, title rejection above 255 characters and duplicate normalised sibling-title rejection;
+- deterministic NFC, `casefold()` and ordinal file ordering, with item source order preserved;
+- deterministic source identity and accepted rename sensitivity;
+- cross-file hierarchy rejection; and
+- source validation before persistent backlog generation.
+
+Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
+
 Validation results shall be documented before Version 1.0 is approved for release.
 
 ---
@@ -270,8 +286,8 @@ Testing activities shall remain aligned with the approved documentation baseline
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.2.
-- Creation of the Version 1.2 Approved Baseline.
+- Approval of Version 1.3.
+- Creation of the Version 1.3 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

@@ -4,11 +4,11 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.4
+**Version:** 1.5
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-20
+**Last Updated:** 2026-08-21
 
 **Target Release:** v1.0.0
 
@@ -28,6 +28,7 @@
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved CLI configuration-file contract. |
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved complete Version 1.0 external configuration schema. |
 | 1.4 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only configuration scope for Version 1.0. |
+| 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Clarified the dedicated backlog-input source-directory contract. |
 
 ---
 
@@ -206,9 +207,11 @@ The `[documentation]` TOML table shall contain the following required parameter:
 
 | Key | Purpose | TOML type | Default | Environment override | CLI override |
 |-----|---------|-----------|---------|----------------------|--------------|
-| `source_directory` | Identifies the source directory containing approved project documentation. | String representing a filesystem path | None | Not supported | Not supported |
+| `source_directory` | Identifies the dedicated directory containing approved backlog-input Markdown documents governed by `09-Documentation-Input.md`. | String representing a filesystem path | None | Not supported | Not supported |
 
 `documentation.source_directory` shall not be empty. Relative values shall resolve according to the configuration-file-relative path rule in Section 5.4. The resolved path shall exist, be a directory and be readable.
+
+`documentation.source_directory` shall not identify the general project documentation directory or a mixed directory containing arbitrary Markdown documents. It shall identify only the dedicated backlog-input directory governed by `09-Documentation-Input.md`.
 
 This section defines filesystem validity only. Documentation-content validation remains the responsibility of documentation processing.
 
@@ -357,8 +360,8 @@ Configuration implementation shall remain aligned with the approved documentatio
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.4.
-- Creation of the Version 1.4 Approved Baseline.
+- Approval of Version 1.5.
+- Creation of the Version 1.5 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

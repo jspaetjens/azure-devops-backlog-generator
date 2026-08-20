@@ -4,11 +4,11 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.2
+**Version:** 1.3
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-20
+**Last Updated:** 2026-08-21
 
 **Target Release:** v1.0.0
 
@@ -26,6 +26,7 @@
 | 1.0 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Initial approved Product Requirements Document baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified Azure DevOps Services-only deployment scope for Version 1.0. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Scrum-compatible Azure DevOps process boundary and pre-generation compatibility validation. |
+| 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Integrated the approved Documentation Input Specification into the Version 1.0 product requirements. |
 
 ---
 
@@ -159,6 +160,7 @@ Version 1.0 shall support the following capabilities:
 - Population of Acceptance Criteria.
 - Application of work item tags.
 - Repeatable backlog generation without creating duplicate work items.
+- Backlog generation from approved backlog-input Markdown documents in the configured dedicated source directory.
 - Configuration through external configuration files.
 - Execution as a command-line application.
 
@@ -218,6 +220,8 @@ Supported work item types include:
 
 Version 1.0 may operate with standard Scrum or an inherited/customised Scrum-compatible process only when the approved work-item types and required standard field contracts remain compatible and the candidate payload can satisfy the project/process rules. Process-to-work-item-type mappings shall not be configurable.
 
+The source hierarchy and source-title interpretation for backlog generation shall be governed by `09-Documentation-Input.md`.
+
 ## FR-005 Work Item Hierarchy
 
 The application shall create parent-child relationships between generated work items.
@@ -252,6 +256,8 @@ The application shall detect, report and handle execution errors without causing
 Before persistent backlog generation, the application shall validate that the configured Azure DevOps Services project is compatible with the Version 1.0 Scrum work-item model. Validation shall confirm that the configured project and the required work-item types Epic, Feature, Product Backlog Item and Task exist; that required standard fields are available and compatible where applicable; and that a candidate payload can satisfy project/process rules when static metadata alone is insufficient. If required compatibility metadata cannot be retrieved or compatibility cannot be established, the application shall stop before persistent backlog generation, report the incompatibility clearly and shall not fall back to another process or invent type or field mappings.
 
 An additional field marked `alwaysRequired` shall not alone establish incompatibility. The application shall inspect the metadata and, where necessary, validate a candidate payload rather than inventing a value for an unsupported custom field.
+
+Before persistent backlog generation, the application shall validate that approved backlog-input Markdown documents from the configured dedicated source directory conform to `09-Documentation-Input.md`. Invalid source input shall prevent persistent backlog generation.
 
 ---
 
@@ -388,8 +394,8 @@ No implementation, backlog item or test case shall introduce functionality that 
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.2.
-- Creation of the Version 1.2 Approved Baseline.
+- Approval of Version 1.3.
+- Creation of the Version 1.3 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

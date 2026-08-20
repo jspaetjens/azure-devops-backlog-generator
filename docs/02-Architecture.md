@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 1.2
+**Version:** 1.3
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-20
+**Last Updated:** 2026-08-21
 
 **Target Release:** v1.0.0
 
@@ -26,6 +26,7 @@
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Software Architecture Document baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only connection topology for Version 1.0. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined architecture responsibilities and data flow for Scrum compatibility validation. |
+| 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned the Documentation Input Specification contract to the Documentation Processor. |
 
 ---
 
@@ -170,13 +171,17 @@ Responsibilities include:
 
 ## 7.3 Documentation Processor
 
-The Documentation Processor interprets the approved project documentation.
+The Documentation Processor interprets approved backlog-input Markdown documents according to `09-Documentation-Input.md`.
 
 Responsibilities include:
 
-- Reading approved documentation.
-- Extracting backlog information.
-- Preparing work item data.
+- Discovering backlog-input documents according to the approved source-directory contract.
+- Parsing documents according to the approved CommonMark and source-hierarchy contract.
+- Validating source structure before persistent Azure DevOps operations.
+- Deriving normalised source titles.
+- Constructing deterministic source-side identities.
+- Preserving deterministic source processing order.
+- Producing the parsed Epic → Feature → Product Backlog Item → Task structure for downstream generation.
 - Preparing candidate work item data for compatibility validation.
 - Maintaining traceability between documentation and generated work items.
 
@@ -248,8 +253,8 @@ The application follows the logical execution sequence below.
 1. The user starts the application.
 2. Configuration is loaded.
 3. Configuration is validated.
-4. Approved project documentation is processed.
-5. Backlog structures are generated.
+4. Approved backlog-input Markdown documents are discovered, parsed and validated according to `09-Documentation-Input.md`.
+5. Parsed backlog structures are generated.
 6. Candidate Azure DevOps work items are prepared.
 7. Azure DevOps Scrum compatibility is validated through work-item type metadata and, where necessary, validation-only requests.
 8. Persistent REST API requests are executed.
@@ -299,6 +304,7 @@ The application shall:
 
 - Validate configuration before execution.
 - Detect invalid input data.
+- Validate source input before persistent Azure DevOps operations.
 - Detect Azure DevOps communication failures.
 - Detect Azure DevOps Scrum compatibility failures before persistent backlog generation.
 - Report meaningful error messages.
@@ -367,8 +373,8 @@ The Software Architecture Document shall remain consistent with the approved Pro
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.2.
-- Creation of the Version 1.2 Approved Baseline.
+- Approval of Version 1.3.
+- Creation of the Version 1.3 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
