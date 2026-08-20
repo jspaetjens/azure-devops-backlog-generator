@@ -4,11 +4,11 @@
 
 > *This document provides an overview of the Azure DevOps Backlog Generator project, its objectives, documentation structure, and guiding principles.*
 
-**Version:** 1.0
+**Version:** 1.1
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-07-30
+**Last Updated:** 2026-08-20
 
 **Target Release:** v1.0.0
 
@@ -24,6 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-30 | Draft | Jack Spaetjens | Initial Project Overview document. |
 | 1.0 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Initial approved Project Overview baseline.|
+| 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Added the approved Configuration Specification to the documentation overview. |
 
 ---
 
@@ -113,6 +114,7 @@ Project documentation is organised as follows:
 | 05 – API Specification | Azure DevOps REST API design |
 | 06 – Testing Strategy | Testing approach and quality assurance |
 | 07 – Release Management | Versioning and release process |
+| 08 – Configuration Specification | Configuration architecture, parameters and validation rules |
 
 The AI Working Agreement is intentionally maintained outside the project documentation under the `.ai` directory because it defines the collaboration between the project owner and the AI rather than the software project itself.
 
