@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** Approved Baseline
 
@@ -25,6 +25,7 @@
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial API Specification. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved API Specification baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only API deployment scope for Version 1.0. |
+| 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined Azure DevOps REST API version 7.1 as the Version 1.0 API-contract constant. |
 
 ---
 
@@ -125,7 +126,11 @@ Communication shall adhere to the following standards:
 - API requests shall be validated before transmission.
 - API responses shall be validated before processing.
 - Communication shall be stateless.
-- API versioning shall be explicitly specified where applicable.
+- All supported Version 1.0 Azure DevOps REST requests shall use API version `7.1`.
+- API version `7.1` shall be a single application-controlled API-contract constant.
+- API version `7.1` shall not be configurable through TOML, environment variables or CLI.
+- The same API version shall be used for all supported Version 1.0 REST operations unless authoritative Microsoft Azure DevOps documentation demonstrates that a supported operation requires a different version.
+- Version 1.0 shall not require preview APIs.
 
 Communication failures shall be detected, logged and reported through the application's error handling mechanism.
 
@@ -143,7 +148,7 @@ The application shall support interactions including:
 - Parent-child relationship creation.
 - Work item queries where required to support repeatable execution.
 
-Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions.
+Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
 
 ---
 
@@ -240,8 +245,8 @@ The API implementation shall remain aligned with the approved Product Requiremen
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.1.
-- Creation of the Version 1.1 Approved Baseline.
+- Approval of Version 1.2.
+- Creation of the Version 1.2 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
