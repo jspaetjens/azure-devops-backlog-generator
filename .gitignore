@@ -5,6 +5,12 @@ __pycache__/
 .venv/
 venv/
 
+# Python coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
 # VS Code
 .vscode/
 
@@ -13,3 +19,6 @@ venv/
 
 # Home Assistant
 .storage/
+
+# PowerShell
+/Microsoft/Windows/PowerShell/ModuleAnalysisCache
