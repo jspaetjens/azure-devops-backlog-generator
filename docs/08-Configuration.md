@@ -4,7 +4,7 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** Approved Baseline
 
@@ -25,6 +25,7 @@
 | 0.1 | 2026-08-04 | Draft | Jack Spaetjens | Initial Configuration Specification. |
 | 1.0 | 2026-08-04 | Approved Baseline | Jack Spaetjens | Initial approved Configuration Specification baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved Version 1.0 configuration mechanism and identified the pending parameter schema and CLI argument name. |
+| 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved CLI configuration-file contract. |
 
 ---
 
@@ -125,11 +126,17 @@ Configuration files shall be parsed using the Python standard-library `tomllib` 
 
 The canonical configuration-file path shall be `config/config.toml`.
 
-The CLI shall support supplying an explicit configuration-file path. The CLI argument name for this capability is not established by the approved documentation or current implementation and remains a pending project decision. It shall be documented before implementation.
+The optional `--config-file` CLI option shall supply an explicit configuration-file path. No short alias shall be supported in Version 1.0. The option shall accept exactly one file-path operand.
 
-When an explicit configuration-file path is supplied, the application shall use that file.
+When `--config-file` is supplied, the application shall use the supplied file and shall not perform default configuration discovery. When `--config-file` is omitted, the application shall use `config/config.toml`.
 
-When no explicit configuration-file path is supplied, the application shall use `config/config.toml`.
+A relative path supplied through `--config-file` shall resolve relative to the process current working directory. This rule applies only to the `--config-file` operand. Relative paths defined inside the selected TOML configuration file shall resolve relative to the directory containing that file, as defined in Section 5.4.
+
+Supplying `--config-file` more than once shall be a CLI usage error. A missing or empty `--config-file` operand shall be a CLI usage error and shall not fall back to `config/config.toml`.
+
+The selected configuration file shall not be required to use a `.toml` filename extension. Its validity shall be determined by accessibility and valid TOML content.
+
+The `--config-file` option shall identify a configuration file only. It shall not accept a PAT or other secret. PAT input shall remain exclusively through `AZDO_PAT`.
 
 A missing explicitly supplied configuration file shall be an immediate configuration error. A missing default `config/config.toml` file shall also be a configuration error.
 
@@ -206,6 +213,15 @@ Unknown configuration sections or keys shall be validation errors. Validation sh
 
 Configuration errors, including missing configuration files, shall provide clear error messages without exposing sensitive information.
 
+The following selected configuration-file conditions shall be configuration errors:
+
+- The selected file does not exist.
+- The selected path is not a file, including a directory path.
+- The selected file cannot be read.
+- The selected file contains malformed TOML.
+
+CLI usage errors and configuration errors shall be reported through the application's error handling. Numeric exit-status mapping remains part of the future CLI and error-handling contract.
+
 ---
 
 # 8. Environment Variables
@@ -269,8 +285,8 @@ Configuration implementation shall remain aligned with the approved documentatio
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.1.
-- Creation of the Version 1.1 Approved Baseline.
+- Approval of Version 1.2.
+- Creation of the Version 1.2 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
