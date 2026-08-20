@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.3
+**Version:** 1.4
 
 **Status:** Approved Baseline
 
@@ -27,6 +27,7 @@
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only API deployment scope for Version 1.0. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined Azure DevOps REST API version 7.1 as the Version 1.0 API-contract constant. |
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps REST endpoint and HTTP-method contract. |
+| 1.4 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined stable Scrum compatibility validation through work-item type metadata and validation-only creation. |
 
 ---
 
@@ -146,6 +147,7 @@ Version 1.0 shall use the following Azure DevOps REST API endpoints required to 
 | Operation | HTTP method | Endpoint path | Full pattern | Parameters | Content type |
 |-----------|-------------|---------------|--------------|------------|--------------|
 | Project retrieval | `GET` | `/_apis/projects/{projectId}` | `https://dev.azure.com/{organization}/_apis/projects/{projectId}?api-version=7.1` | `{organization}` is the configured Azure DevOps Services organisation; `{projectId}` is the configured project name or identifier accepted by the Azure DevOps Projects Get operation; `api-version=7.1` | None |
+| Work-item type compatibility metadata | `GET` | `/{project}/_apis/wit/workitemtypes/{type}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitemtypes/{type}?api-version=7.1` | `{organization}`, `{project}` and `{type}`; `api-version=7.1` | None |
 | Work-item creation | `POST` | `/{project}/_apis/wit/workitems/{type}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{type}?api-version=7.1` | `{organization}`, `{project}` and `{type}`; `api-version=7.1` | `application/json-patch+json` |
 | Work-item update | `PATCH` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?api-version=7.1` | `{organization}`, `{project}` and `{id}`; `api-version=7.1` | `application/json-patch+json` |
 | Parent-child relationship update | `PATCH` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?api-version=7.1` | `{organization}`, `{project}` and `{id}`; `api-version=7.1` | `application/json-patch+json` |
@@ -153,11 +155,19 @@ Version 1.0 shall use the following Azure DevOps REST API endpoints required to 
 
 Work-item creation shall use the approved Version 1.0 work-item type values `Epic`, `Feature`, `Product Backlog Item` and `Task`. Work-item type values are URI path-segment values. Values containing spaces shall be correctly URI encoded when constructing the request.
 
+Version 1.0 shall support Azure DevOps Services projects compatible with the Scrum work-item model `Epic` → `Feature` → `Product Backlog Item` → `Task`. Agile/User Story, Basic/Issue, CMMI/Requirement and arbitrary process-to-work-item-type mappings are outside the Version 1.0 API contract. Standard Scrum or an inherited/customised Scrum-compatible process may be used only when the approved work-item types, required standard field reference names and candidate payload remain compatible. Custom display names do not affect compatibility when the required reference names and field contracts remain compatible. Process mappings, work-item type mappings, field mappings and required-field overrides shall not be configurable.
+
+Before persistent backlog generation, the Work Item Types Get operation shall be used for each required work-item type to verify its availability and inspect field metadata and required-field compatibility. The standard compatibility field reference names are `System.Title`, `System.Description`, `Microsoft.VSTS.Common.AcceptanceCriteria` where applicable, and `System.Tags`. Reference names, rather than display names, define compatibility.
+
+Acceptance Criteria shall be mapped only where the target work-item type exposes `Microsoft.VSTS.Common.AcceptanceCriteria`: Epic, Feature and Product Backlog Item. Task shall not receive Acceptance Criteria through a fallback field, Description or a custom field.
+
+An additional field marked `alwaysRequired` shall not alone establish incompatibility. Its metadata shall be inspected and, when static metadata alone cannot establish whether the candidate payload satisfies project/process rules, the approved Work Items Create operation may use `validateOnly=true`. Validation-only creation requests shall not persist work items, shall use the same candidate field contract intended for persistent creation, and validation failure shall prevent persistent backlog generation. Validation errors shall be reported meaningfully without exposing secrets.
+
 Version 1.0 shall use the configured project-scoped Work Items Update form consistently. Parent-child relationships shall be created or updated using the same Work Items Update endpoint, HTTP `PATCH` and `application/json-patch+json`. Version 1.0 does not require a separate relationship-creation endpoint. Relationship changes shall be performed through the work item's relations collection using the Work Items Update operation.
 
 Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries and shall not require a team parameter.
 
-This section does not define request payload structures, Azure DevOps field mappings, concrete response fields or response-validation rules, parent-child relation payload semantics, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
+This section does not define detailed request payload structures, Markdown-to-HTML or other content representation, tag taxonomy, ordinary work-item update operation semantics, concrete response fields or response-validation rules, parent-child relation payload semantics, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
 
 Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
 
@@ -178,6 +188,8 @@ Each request shall include, where applicable:
 - Request metadata.
 
 Requests shall be validated before transmission to minimise API failures.
+
+Where static compatibility metadata is insufficient, validation-only creation requests shall be used before persistent backlog generation to validate the candidate work-item request against project/process rules. A validation-only request shall include `validateOnly=true`, shall not persist a work item and shall use the same candidate field contract intended for persistent creation.
 
 ---
 
@@ -208,6 +220,7 @@ The application shall:
 - Detect authentication failures.
 - Detect authorisation failures.
 - Detect invalid API requests.
+- Detect Azure DevOps Scrum compatibility failures before persistent backlog generation.
 - Detect unexpected API responses.
 - Record API failures in the application log.
 - Provide meaningful error messages to the user.
@@ -256,8 +269,8 @@ The API implementation shall remain aligned with the approved Product Requiremen
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.3.
-- Creation of the Version 1.3 Approved Baseline.
+- Approval of Version 1.4.
+- Creation of the Version 1.4 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

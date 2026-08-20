@@ -4,7 +4,7 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** Approved Baseline
 
@@ -25,6 +25,7 @@
 | 0.1 | 2026-07-30 | Draft | Jack Spaetjens | Initial Product Requirements Document. |
 | 1.0 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Initial approved Product Requirements Document baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified Azure DevOps Services-only deployment scope for Version 1.0. |
+| 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Scrum-compatible Azure DevOps process boundary and pre-generation compatibility validation. |
 
 ---
 
@@ -145,6 +146,7 @@ Version 1.0 shall support the following capabilities:
 
 - Authentication using an Azure DevOps Personal Access Token (PAT).
 - Version 1.0 supports Azure DevOps Services.
+- Support for Azure DevOps Services projects compatible with the Scrum work-item model: Epic → Feature → Product Backlog Item → Task.
 - Connection to Azure DevOps through the REST API.
 - Project selection through configuration.
 - Creation of Epics.
@@ -169,6 +171,10 @@ The following capabilities are intentionally excluded from Version 1.0:
 - Azure Pipelines integration.
 - Azure DevOps Wiki integration.
 - Azure DevOps Server deployments are not supported in Version 1.0.
+- Agile/User Story mappings.
+- Basic/Issue mappings.
+- CMMI/Requirement mappings.
+- Arbitrary process-to-work-item-type mappings.
 - Microsoft Entra ID authentication.
 - Graphical User Interface (GUI).
 - Web application deployment.
@@ -201,12 +207,16 @@ The application shall allow project-specific configuration without requiring cha
 
 The application shall create Azure DevOps work items.
 
+Version 1.0 shall use the fixed Scrum work-item model:
+
 Supported work item types include:
 
 - Epic
 - Feature
 - Product Backlog Item (PBI)
 - Task
+
+Version 1.0 may operate with standard Scrum or an inherited/customised Scrum-compatible process only when the approved work-item types and required standard field contracts remain compatible and the candidate payload can satisfy the project/process rules. Process-to-work-item-type mappings shall not be configurable.
 
 ## FR-005 Work Item Hierarchy
 
@@ -220,6 +230,8 @@ The application shall populate supported Azure DevOps work item fields, includin
 - Description
 - Acceptance Criteria
 - Tags
+
+Acceptance Criteria shall be populated only where applicable to the target work-item type. Version 1.0 shall use `Microsoft.VSTS.Common.AcceptanceCriteria` where the target type exposes it: Epic, Feature and Product Backlog Item. Task does not use this field. Version 1.0 shall not invent a fallback Acceptance Criteria field for Task or automatically place Task Acceptance Criteria in Description or a custom field.
 
 ## FR-007 Repeatable Execution
 
@@ -236,6 +248,10 @@ The application shall provide logging sufficient to monitor execution and diagno
 ## FR-010 Error Handling
 
 The application shall detect, report and handle execution errors without causing unexpected application termination where recovery is possible.
+
+Before persistent backlog generation, the application shall validate that the configured Azure DevOps Services project is compatible with the Version 1.0 Scrum work-item model. Validation shall confirm that the configured project and the required work-item types Epic, Feature, Product Backlog Item and Task exist; that required standard fields are available and compatible where applicable; and that a candidate payload can satisfy project/process rules when static metadata alone is insufficient. If required compatibility metadata cannot be retrieved or compatibility cannot be established, the application shall stop before persistent backlog generation, report the incompatibility clearly and shall not fall back to another process or invent type or field mappings.
+
+An additional field marked `alwaysRequired` shall not alone establish incompatibility. The application shall inspect the metadata and, where necessary, validate a candidate payload rather than inventing a value for an unsupported custom field.
 
 ---
 
@@ -372,8 +388,8 @@ No implementation, backlog item or test case shall introduce functionality that 
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.1.
-- Creation of the Version 1.1 Approved Baseline.
+- Approval of Version 1.2.
+- Creation of the Version 1.2 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

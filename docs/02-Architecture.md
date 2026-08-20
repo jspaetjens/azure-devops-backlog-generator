@@ -4,7 +4,7 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** Approved Baseline
 
@@ -25,6 +25,7 @@
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Software Architecture Document. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Software Architecture Document baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only connection topology for Version 1.0. |
+| 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined architecture responsibilities and data flow for Scrum compatibility validation. |
 
 ---
 
@@ -176,6 +177,7 @@ Responsibilities include:
 - Reading approved documentation.
 - Extracting backlog information.
 - Preparing work item data.
+- Preparing candidate work item data for compatibility validation.
 - Maintaining traceability between documentation and generated work items.
 
 ---
@@ -190,6 +192,7 @@ Responsibilities include:
 - Creating parent-child relationships.
 - Preparing work item attributes.
 - Preventing duplicate work item creation.
+- Initiating persistent backlog generation only after Scrum compatibility validation succeeds.
 
 ---
 
@@ -205,6 +208,8 @@ Responsibilities include:
 
 - Authentication.
 - REST API communication.
+- Retrieving required work-item type metadata for Scrum compatibility validation.
+- Using validation-only creation requests when static metadata alone cannot establish candidate payload compatibility.
 - Sending work item requests.
 - Receiving Azure DevOps responses.
 - Reporting API errors.
@@ -245,10 +250,11 @@ The application follows the logical execution sequence below.
 3. Configuration is validated.
 4. Approved project documentation is processed.
 5. Backlog structures are generated.
-6. Azure DevOps work items are prepared.
-7. REST API requests are executed.
-8. Results are logged.
-9. Execution summary is presented.
+6. Candidate Azure DevOps work items are prepared.
+7. Azure DevOps Scrum compatibility is validated through work-item type metadata and, where necessary, validation-only requests.
+8. Persistent REST API requests are executed.
+9. Results are logged.
+10. Execution summary is presented.
 
 Each stage shall complete successfully before the next stage begins.
 
@@ -268,6 +274,8 @@ Configuration shall include:
 - Application options.
 
 Configuration shall remain separate from application source code.
+
+Scrum compatibility shall remain a fixed Version 1.0 product constraint. Configuration shall not introduce process mappings, work-item type mappings, field mappings or required-field overrides.
 
 ---
 
@@ -292,6 +300,7 @@ The application shall:
 - Validate configuration before execution.
 - Detect invalid input data.
 - Detect Azure DevOps communication failures.
+- Detect Azure DevOps Scrum compatibility failures before persistent backlog generation.
 - Report meaningful error messages.
 - Record execution failures in the application log.
 - Terminate gracefully when recovery is not possible.
@@ -358,8 +367,8 @@ The Software Architecture Document shall remain consistent with the approved Pro
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.1.
-- Creation of the Version 1.1 Approved Baseline.
+- Approval of Version 1.2.
+- Creation of the Version 1.2 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.1
+**Version:** 1.2
 
 **Status:** Approved Baseline
 
@@ -25,6 +25,7 @@
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Testing Strategy. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Testing Strategy baseline. |
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only integration and system-test target for Version 1.0. |
+| 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined test coverage for Scrum compatibility validation. |
 
 ---
 
@@ -127,6 +128,8 @@ Integration testing shall validate:
 - Azure DevOps REST API communication.
 - Work item generation.
 - Parent-child relationship creation.
+- Scrum compatibility validation.
+- Validation-only candidate creation where static metadata is insufficient.
 
 ---
 
@@ -159,6 +162,7 @@ The environment shall include:
 
 - Python development environment.
 - Azure DevOps Services test organisation/project.
+- Standard Scrum and compatible inherited/customised Scrum test projects or controlled equivalent test fixtures.
 - Test configuration files.
 - Approved documentation baseline.
 - Automated testing framework.
@@ -178,6 +182,9 @@ Version 1.0 shall use:
 - Approved documentation.
 - Representative Azure DevOps projects.
 - Representative work item structures.
+- A project missing a required work-item type.
+- A project with a missing or incompatible required standard field.
+- A project/process rule that prevents candidate creation.
 - Controlled configuration files.
 
 Test data shall avoid the inclusion of confidential or sensitive information.
@@ -196,6 +203,7 @@ Validation shall include:
 - Documentation traceability verification.
 - Automated test execution.
 - Manual verification where appropriate.
+- Scrum compatibility validation, including failure before persistent backlog generation when required metadata cannot be retrieved or a candidate request is invalid.
 
 Validation results shall be documented before Version 1.0 is approved for release.
 
@@ -211,6 +219,8 @@ Version 1.0 shall be considered successfully validated when all of the following
 - Azure DevOps work items have been created correctly.
 - Parent-child relationships have been created correctly.
 - Configuration validation has completed successfully.
+- Scrum compatibility validation has completed successfully for standard Scrum and compatible inherited/customised Scrum projects.
+- Missing required work-item types, missing or incompatible standard fields, additional project/process rules that prevent candidate creation, validation-only failures and metadata retrieval failures have been validated to stop persistent backlog generation.
 - No critical or high-severity defects remain unresolved.
 - Complete traceability has been maintained between requirements, implementation and testing.
 
@@ -260,8 +270,8 @@ Testing activities shall remain aligned with the approved documentation baseline
 This document becomes part of the approved documentation baseline following:
 
 - Completion of the editorial review.
-- Approval of Version 1.1.
-- Creation of the Version 1.1 Approved Baseline.
+- Approval of Version 1.2.
+- Creation of the Version 1.2 Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
