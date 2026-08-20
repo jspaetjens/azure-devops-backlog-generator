@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.3
+**Version:** 1.4
 
 **Status:** Approved Baseline
 
@@ -27,6 +27,7 @@
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only integration and system-test target for Version 1.0. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined test coverage for Scrum compatibility validation. |
 | 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Documentation Input Specification contract. |
+| 1.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 
 ---
 
@@ -283,12 +284,14 @@ Testing activities shall remain aligned with the approved documentation baseline
 
 # 12. Approval
 
-This document becomes part of the approved documentation baseline following:
+Approval of a document version requires:
 
 - Completion of the editorial review.
-- Approval of Version 1.3.
-- Creation of the Version 1.3 Approved Baseline.
+- Approval of that document version.
+- Creation of the corresponding Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
+
+The document metadata and Version History record whether the current version has completed this approval process.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
 

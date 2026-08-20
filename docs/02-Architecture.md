@@ -4,7 +4,7 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 1.3
+**Version:** 1.4
 
 **Status:** Approved Baseline
 
@@ -27,6 +27,7 @@
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only connection topology for Version 1.0. |
 | 1.2 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Defined architecture responsibilities and data flow for Scrum compatibility validation. |
 | 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned the Documentation Input Specification contract to the Documentation Processor. |
+| 1.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 
 ---
 
@@ -370,11 +371,13 @@ The Software Architecture Document shall remain consistent with the approved Pro
 
 # 15. Approval
 
-This document becomes part of the approved documentation baseline following:
+Approval of a document version requires:
 
 - Completion of the editorial review.
-- Approval of Version 1.3.
-- Creation of the Version 1.3 Approved Baseline.
+- Approval of that document version.
+- Creation of the corresponding Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
+
+The document metadata and Version History record whether the current version has completed this approval process.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

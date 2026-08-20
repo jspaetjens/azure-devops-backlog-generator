@@ -4,7 +4,7 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.5
+**Version:** 1.6
 
 **Status:** Approved Baseline
 
@@ -29,6 +29,7 @@
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Documented the approved complete Version 1.0 external configuration schema. |
 | 1.4 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only configuration scope for Version 1.0. |
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Clarified the dedicated backlog-input source-directory contract. |
+| 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 
 ---
 
@@ -357,11 +358,13 @@ Configuration implementation shall remain aligned with the approved documentatio
 
 # 11. Approval
 
-This document becomes part of the approved documentation baseline following:
+Approval of a document version requires:
 
 - Completion of the editorial review.
-- Approval of Version 1.5.
-- Creation of the Version 1.5 Approved Baseline.
+- Approval of that document version.
+- Creation of the corresponding Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
+
+The document metadata and Version History record whether the current version has completed this approval process.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.

@@ -4,7 +4,7 @@
 
 > *This document provides an overview of the Azure DevOps Backlog Generator project, its objectives, documentation structure, and guiding principles.*
 
-**Version:** 1.2
+**Version:** 1.3
 
 **Status:** Approved Baseline
 
@@ -26,6 +26,7 @@
 | 1.0 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Initial approved Project Overview baseline.|
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Added the approved Configuration Specification to the documentation overview. |
 | 1.2 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Added the Documentation Input Specification to the documentation overview. |
+| 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 
 ---
 
@@ -170,11 +171,13 @@ Project governance shall ensure that implementation remains aligned with the app
 
 # 10. Approval
 
-This document becomes part of the approved documentation baseline following:
+Approval of a document version requires:
 
 - Completion of the editorial review.
-- Approval of Version 1.2.
-- Creation of the Version 1.2 Approved Baseline.
+- Approval of that document version.
+- Creation of the corresponding Approved Baseline.
 - Commit to the project repository using the agreed Git workflow.
+
+The document metadata and Version History record whether the current version has completed this approval process.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
