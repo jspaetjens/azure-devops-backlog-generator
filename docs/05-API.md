@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.9
+**Version:** 2.0
 
 **Status:** Approved Baseline
 
@@ -33,6 +33,7 @@
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Acceptance Criteria content-representation contract. |
 | 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 `System.Tags` content-representation contract. |
 | 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Work Item Create JSON Patch payload contract. |
+| 2.0 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Parent-Child Relationship JSON Patch contract. |
 
 ---
 
@@ -51,6 +52,7 @@
 - [7. API Endpoints](#7-api-endpoints)
 - [8. Request Model](#8-request-model)
   - [8.1 Work Item Create Payload](#81-work-item-create-payload)
+  - [8.2 Parent-Child Relationship Payload](#82-parent-child-relationship-payload)
 - [9. Response Model](#9-response-model)
 - [10. Error Handling](#10-error-handling)
 - [11. Rate Limiting](#11-rate-limiting)
@@ -156,7 +158,7 @@ Version 1.0 shall use the following Azure DevOps REST API endpoints required to 
 | Work-item type compatibility metadata | `GET` | `/{project}/_apis/wit/workitemtypes/{type}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitemtypes/{type}?api-version=7.1` | `{organization}`, `{project}` and `{type}`; `api-version=7.1` | None |
 | Work-item creation | `POST` | `/{project}/_apis/wit/workitems/{type}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{type}?api-version=7.1` | `{organization}`, `{project}` and `{type}`; `api-version=7.1` | `application/json-patch+json` |
 | Work-item update | `PATCH` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?api-version=7.1` | `{organization}`, `{project}` and `{id}`; `api-version=7.1` | `application/json-patch+json` |
-| Parent-child relationship update | `PATCH` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?api-version=7.1` | `{organization}`, `{project}` and `{id}`; `api-version=7.1` | `application/json-patch+json` |
+| Parent-child relationship update | `PATCH` | `/{project}/_apis/wit/workitems/{childId}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{childId}?api-version=7.1` | `{organization}`, `{project}` and numeric `{childId}`; `api-version=7.1` | `application/json-patch+json` |
 | Repeatability query | `POST` | `/{project}/_apis/wit/wiql` | `https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.1` | `{organization}` and `{project}`; `api-version=7.1`; no team parameter | `application/json` |
 
 Work-item creation shall use the approved Version 1.0 work-item type values `Epic`, `Feature`, `Product Backlog Item` and `Task`. Work-item type values are URI path-segment values. Values containing spaces shall be correctly URI encoded when constructing the request.
@@ -177,7 +179,7 @@ Version 1.0 shall use the configured project-scoped Work Items Update form consi
 
 Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries and shall not require a team parameter.
 
-Aside from the Work Item Create payload contract in Section 8.1, this section does not define tag taxonomy, ordinary work-item update operation semantics, concrete response fields or response-validation rules, parent-child relation payload semantics, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
+Aside from the Work Item Create payload contract in Section 8.1 and the Parent-Child Relationship contract in Section 8.2, this section does not define tag taxonomy, ordinary work-item update operation semantics, concrete response fields or response-validation rules, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
 
 Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
 
@@ -300,6 +302,55 @@ When Acceptance Criteria and Tags are both absent, only the required Title and D
 ```
 
 Incomplete or incompatible candidate payloads shall not proceed to persistent creation under the approved validation behaviour. This contract does not define retry, rollback, HTTP error mapping or recovery policy.
+
+---
+
+## 8.2 Parent-Child Relationship Payload
+
+Version 1.0 shall create each parent-child relationship by PATCHing the child work item using `PATCH https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{childId}?api-version=7.1`. `{childId}` shall be the numeric Azure DevOps child work-item ID. The Content-Type shall be `application/json-patch+json`.
+
+The relation shall point from the child to its immediate parent and shall use only `System.LinkTypes.Hierarchy-Reverse`. `System.LinkTypes.Hierarchy-Forward` and all other relation types are prohibited by this contract.
+
+The relationship JSON Patch document shall contain exactly two operations in this order:
+
+1. A relationship-specific optimistic-concurrency `test` operation at `/rev`, with the current numeric child revision.
+2. An `add` operation at `/relations/-`.
+
+The `/rev` `test` operation shall be first and shall not define ordinary field-update concurrency semantics. The relation `add` operation shall be second. Its value shall contain exactly `rel` and `url`; relation attributes and all other relation-specific fields, including `attributes`, `comment`, `name` and `metadata`, shall not be included.
+
+The parent relation target URL shall be `https://dev.azure.com/{organization}/_apis/wit/workItems/{parentId}`, where `{parentId}` is the numeric Azure DevOps parent work-item ID. The target URL shall not contain a project segment, `api-version`, query parameters or a browser/UI URL. The contractual `workItems` path spelling and casing shall be preserved.
+
+The representative payload below illustrates the normative contract:
+
+```json
+[
+  {
+    "op": "test",
+    "path": "/rev",
+    "value": <childRevision>
+  },
+  {
+    "op": "add",
+    "path": "/relations/-",
+    "value": {
+      "rel": "System.LinkTypes.Hierarchy-Reverse",
+      "url": "https://dev.azure.com/{organization}/_apis/wit/workItems/{parentId}"
+    }
+  }
+]
+```
+
+Relationship PATCH requests shall include only `api-version=7.1`. They shall not include `validateOnly`, `bypassRules`, `suppressNotifications` or `$expand`, and no configuration shall be introduced for these options. Version 1.0 shall not use or define a validation-only Parent-Child Relationship PATCH; the approved validation-only Work Item Create contract remains unchanged.
+
+Only the following direct hierarchy edges are permitted: Epic → Feature, Feature → Product Backlog Item and Product Backlog Item → Task. Each generated Feature, Product Backlog Item and Task shall have exactly one intended immediate parent in the candidate hierarchy and shall receive exactly one relationship PATCH. Root Epic items shall receive no relationship PATCH. Direct hierarchy shortcuts, including Epic → Product Backlog Item, Epic → Task and Feature → Task, are prohibited. Relationship operations shall not be batched for multiple children.
+
+Relationship creation requires the numeric parent Azure DevOps work-item ID, numeric child Azure DevOps work-item ID and current numeric child revision. The successful child Create response supplies the child ID and revision. Approved source identity shall not substitute for Azure DevOps numeric IDs.
+
+Persistent orchestration shall be parent before child. For every non-root child, the relationship PATCH shall occur immediately after successful child creation once the parent ID, child ID and child revision are known: create parent → create child → PATCH child-to-parent relationship → continue generation. Relationship creation shall not be deferred until all work items have been created.
+
+If a Parent-Child Relationship PATCH fails, persistent backlog generation shall stop immediately. The failure shall be reported clearly without exposing secrets; later work items and relationships shall not be created. Version 1.0 shall not automatically retry, roll back, delete created work items, remove created relationships, repair remote state or continue collecting later relationship failures. Already-created work items and relationships shall remain as accepted partial persistent state.
+
+This contract does not define relation GET-before-PATCH, remote relation duplicate detection or idempotence, relation merge, replacement or deletion, WIQL relation detection, retry behaviour, rollback, ordinary work-item field-update semantics, generic update concurrency, or Tags merge or replacement behaviour. Parent-child relationships remain excluded from the Work Item Create payload contract and are established only through this subsequent relationship PATCH.
 
 ---
 
