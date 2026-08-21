@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.6
+**Version:** 1.7
 
 **Status:** Approved Baseline
 
@@ -30,6 +30,7 @@
 | 1.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Description Mapping and normative Markdown rendering contract. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Acceptance Criteria Mapping contract. |
+| 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Tags Mapping contract. |
 
 ---
 
@@ -246,6 +247,19 @@ Acceptance Criteria Mapping validation shall additionally cover:
 - raw HTML, Markdown image and invalid-link rejection;
 - CommonMark rendering, exact HTML snapshots, line-ending normalisation and renderer-produced final-LF preservation;
 - Acceptance Criteria exclusion from source identity; and
+- source-validation failure before persistent backlog generation.
+
+Tags Mapping validation shall additionally cover:
+
+- direct-body marker recognition and nested or container-context non-recognition;
+- valid optional Tags constructs for Epic, Feature, Product Backlog Item and Task;
+- fixed Description, Tags and Acceptance Criteria ordering, Tags boundaries and Description preservation after partitioning;
+- unordered-list requirements and ordered-list, duplicate-marker, empty-list, multiple-list, nested-list and prose-outside-list rejection;
+- visible inline-text extraction, Unicode whitespace normalisation, empty-tag rejection and source-order preservation;
+- comma, semicolon, more-than-400-Unicode-character, Unicode control-character, Unicode format-character and malformed-surrogate rejection;
+- casefold duplicate-tag rejection and exact `; ` prepared `System.Tags` values;
+- raw HTML, Markdown image and invalid link or autolink rejection;
+- Tags exclusion from source identity; and
 - source-validation failure before persistent backlog generation.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
