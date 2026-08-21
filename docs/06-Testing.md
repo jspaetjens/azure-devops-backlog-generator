@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.5
+**Version:** 1.6
 
 **Status:** Approved Baseline
 
@@ -29,6 +29,7 @@
 | 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Documentation Input Specification contract. |
 | 1.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Description Mapping and normative Markdown rendering contract. |
+| 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Acceptance Criteria Mapping contract. |
 
 ---
 
@@ -233,6 +234,19 @@ Description Mapping validation shall additionally cover:
 - supported CommonMark body content, including fenced and indented code blocks;
 - exact normative HTML snapshots after CRLF and lone-CR normalisation to LF only, preserving every other character and any renderer-produced final LF; and
 - confirmation that Description content does not change source identity.
+
+Acceptance Criteria Mapping validation shall additionally cover:
+
+- recognition of the reserved marker and ordinary-prose or non-direct-context occurrences;
+- valid Epic, Feature and Product Backlog Item constructs and optional absence;
+- Task rejection, duplicate markers and invalid placement;
+- Description and Acceptance Criteria partitioning, including mandatory Description validation after exclusion;
+- one valid ordered or unordered top-level list, list cardinality, mixed-list rejection, nested-list rejection and prose-outside-list rejection;
+- empty or whitespace-only criterion rejection;
+- raw HTML, Markdown image and invalid-link rejection;
+- CommonMark rendering, exact HTML snapshots, line-ending normalisation and renderer-produced final-LF preservation;
+- Acceptance Criteria exclusion from source identity; and
+- source-validation failure before persistent backlog generation.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
 

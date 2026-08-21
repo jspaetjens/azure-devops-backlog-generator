@@ -4,7 +4,7 @@
 
 > *This document defines the Version 1.0 source-document discovery, Markdown parsing, hierarchy interpretation, title extraction, validation, deterministic ordering and source-side traceability contract for the Azure DevOps Backlog Generator.*
 
-**Version:** 0.3
+**Version:** 0.4
 
 **Status:** Approved Baseline
 
@@ -25,6 +25,7 @@
 | 0.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Initial Documentation Input Specification. |
 | 0.2 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 0.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Description Mapping and normative Markdown rendering contract. |
+| 0.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Acceptance Criteria source syntax and mapping contract. |
 
 ---
 
@@ -49,6 +50,7 @@
   - [9.1 Description Mapping](#91-description-mapping)
   - [9.2 Description Source Validation](#92-description-source-validation)
   - [9.3 Description Rendering and Supported Content](#93-description-rendering-and-supported-content)
+  - [9.4 Acceptance Criteria Mapping](#94-acceptance-criteria-mapping)
 - [10. Duplicate Sibling Titles](#10-duplicate-sibling-titles)
 - [11. Deterministic File Ordering](#11-deterministic-file-ordering)
 - [12. Source Identity and Traceability](#12-source-identity-and-traceability)
@@ -235,11 +237,11 @@ The item's direct body shall:
 
 ## 9.1 Description Mapping
 
-For Epic, Feature, Product Backlog Item and Task, `System.Description` shall be derived from the complete direct body of the corresponding source item. No reserved Description subsection shall be introduced.
+For Epic, Feature, Product Backlog Item and Task, `System.Description` shall be derived from the complete direct body of the corresponding source item, excluding the recognised Acceptance Criteria construct defined in Section 9.4 where present. No reserved Description subsection shall be introduced.
 
-Description content shall be mandatory. No direct body, a whitespace-only direct body, a rendering failure or an empty rendered HTML fragment shall be source-validation failures before persistent backlog generation. `System.Description` shall not be omitted or deliberately prepared as an empty value.
+Description content shall be mandatory after Acceptance Criteria exclusion. No Description content, whitespace-only Description content, a rendering failure or an empty rendered HTML fragment shall be source-validation failures before persistent backlog generation. `System.Description` shall not be omitted or deliberately prepared as an empty value.
 
-Acceptance Criteria and Tags source syntax remain unresolved. Until a future approved version of this specification defines reserved constructs, all currently permitted direct-body content shall belong to Description. A future reserved Acceptance Criteria or Tags construct shall explicitly define whether and how its source content is excluded from Description.
+Tags source syntax remains unresolved. All permitted direct-body content shall belong to Description except for a recognised Acceptance Criteria construct defined in Section 9.4. A future reserved Tags construct shall explicitly define whether and how its source content is excluded from Description.
 
 ## 9.2 Description Source Validation
 
@@ -260,6 +262,20 @@ For exact automated comparison, CRLF and lone CR shall be normalised to LF. Ever
 Subject to the restrictions in Section 9.2, standard CommonMark 0.31.2 body content may be rendered naturally, including paragraphs, emphasis, strong emphasis, ordered and unordered lists, nested lists, block quotes, fenced and indented code blocks, inline code, thematic breaks, permitted links, permitted autolinks and nested non-semantic headings that Section 7.2 treats as ordinary item content. Tables, task lists, strikethrough and footnotes are not supported.
 
 Description rendering shall follow CommonMark body semantics. The title whitespace-normalisation rules in Section 8 shall not apply to body content, and no additional body whitespace-normalisation contract is introduced.
+
+## 9.4 Acceptance Criteria Mapping
+
+Acceptance Criteria shall apply only to Epic, Feature and Product Backlog Item. The source construct shall be optional for those types. When it is absent, no Acceptance Criteria value shall be produced. Task shall permit no recognised Acceptance Criteria construct; a recognised construct on a Task shall be a source-validation failure and shall not be treated as Description content or mapped to a fallback or custom field.
+
+The exact reserved marker shall be the standalone paragraph `Acceptance Criteria:`. It shall be recognised through the parsed CommonMark structure, not naive line-prefix matching, only when it is a direct-body paragraph. It shall not be a heading or participate in the semantic hierarchy. Text equal to the marker in block quotes, list items, fenced or indented code blocks, or other nested or container contexts shall be ordinary content and shall not be the reserved construct.
+
+For an applicable source item, zero or one recognised marker shall be permitted. A recognised marker shall follow Description content, occur before the next semantic heading and remain entirely within the item's direct body. It shall introduce all remaining direct-body content as Acceptance Criteria. The marker and that content shall be excluded from Description; child semantic headings and child-item content shall remain excluded from both.
+
+The construct shall contain exactly one top-level CommonMark list, either ordered or unordered, with at least one top-level list item. Each top-level list item shall represent one Acceptance Criterion. Ordered and unordered list types shall not be mixed, nested lists shall be prohibited, and prose outside the single list shall be prohibited. Criterion identifiers and additional numbering semantics shall not be introduced.
+
+Acceptance Criteria source content shall use the restrictions in Section 9.2. Raw HTML blocks, inline HTML, Markdown images and invalid link or autolink destinations shall be source-validation failures before rendering and persistent generation. The HTML fragment produced for the construct by the fixed parser and default renderer in Section 9.3 shall be the normative `Microsoft.VSTS.Common.AcceptanceCriteria` serialization. Exact automated comparison shall use the line-ending normalisation and exact-output rules in Section 9.3.
+
+The following Acceptance Criteria conditions shall be source-validation failures: a duplicate marker; a marker without the required list; an empty list; an empty or whitespace-only criterion; more than one top-level list; mixed ordered and unordered top-level list structure; a nested list; prose outside the approved list; a rendering failure; or an empty rendered Acceptance Criteria fragment.
 
 ---
 
@@ -308,7 +324,7 @@ The canonical relative file path shall:
 
 The semantic heading hierarchy shall use the normalised titles defined by this specification.
 
-Description content shall not participate in source identity.
+Description content, the Acceptance Criteria marker and Acceptance Criteria content shall not participate in source identity.
 
 Rename sensitivity is explicitly accepted. Changing a filename or a semantic heading shall change the source identity. Version 1.0 shall not track renames.
 
@@ -339,6 +355,7 @@ At minimum, the following shall be source-validation failures:
 - raw HTML blocks or inline HTML in Description source content;
 - a Markdown image construct in Description source content;
 - an invalid Description link or autolink destination defined by Section 9.2;
+- an invalid Acceptance Criteria construct defined by Section 9.4;
 - a cross-file hierarchy dependency; or
 - any discovered input document that violates this specification.
 
@@ -350,7 +367,6 @@ This specification does not define numeric exit codes.
 
 This specification does not define:
 
-- Acceptance Criteria source syntax or mapping;
 - Tags source syntax or taxonomy;
 - Azure DevOps JSON Patch payloads;
 - parent-child relation payload semantics;
