@@ -4,7 +4,7 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 1.7
+**Version:** 1.8
 
 **Status:** Approved Baseline
 
@@ -31,6 +31,7 @@
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned fixed Description parsing, validation and rendering responsibilities to the Documentation Processor. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned Acceptance Criteria partitioning, validation and rendering responsibilities to the Documentation Processor. |
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned Tags partitioning, validation and prepared-field responsibilities to the Documentation Processor. |
+| 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined JSON Patch Create payload-construction ownership and transport responsibilities. |
 
 ---
 
@@ -189,7 +190,7 @@ Responsibilities include:
 - Constructing deterministic source-side identities.
 - Preserving deterministic source processing order.
 - Producing the parsed Epic → Feature → Product Backlog Item → Task structure for downstream generation.
-- Preparing candidate work item data for compatibility validation.
+- Preparing candidate work item data for compatibility validation without constructing Azure DevOps HTTP or JSON Patch request representations.
 - Maintaining traceability between documentation and generated work items.
 
 ---
@@ -203,6 +204,7 @@ Responsibilities include:
 - Creating work item structures.
 - Creating parent-child relationships.
 - Preparing work item attributes.
+- Coordinating candidate work items for REST Client request construction and execution.
 - Preventing duplicate work item creation.
 - Initiating persistent backlog generation only after Scrum compatibility validation succeeds.
 
@@ -222,6 +224,9 @@ Responsibilities include:
 - REST API communication.
 - Retrieving required work-item type metadata for Scrum compatibility validation.
 - Using validation-only creation requests when static metadata alone cannot establish candidate payload compatibility.
+- Exclusively constructing Work Item Create JSON Patch request representations from prepared candidate values, using only the approved field paths and canonical operation order.
+- Applying only JSON serialization escaping to prepared values and performing no semantic transformation, Markdown rendering, HTML transformation or Tags reinterpretation.
+- Using the same logical candidate JSON Patch document for validation-only and persistent creation, with `validateOnly=true` as the only Create-payload contract difference.
 - Sending work item requests.
 - Receiving Azure DevOps responses.
 - Reporting API errors.

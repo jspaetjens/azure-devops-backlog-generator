@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.7
+**Version:** 1.8
 
 **Status:** Approved Baseline
 
@@ -31,6 +31,7 @@
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Description Mapping and normative Markdown rendering contract. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Acceptance Criteria Mapping contract. |
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Tags Mapping contract. |
+| 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Version 1.0 Work Item Create payload contract. |
 
 ---
 
@@ -261,6 +262,18 @@ Tags Mapping validation shall additionally cover:
 - raw HTML, Markdown image and invalid link or autolink rejection;
 - Tags exclusion from source identity; and
 - source-validation failure before persistent backlog generation.
+
+Work Item Create Payload validation shall additionally cover:
+
+- the exact Create endpoint, HTTP `POST`, `application/json-patch+json` Content-Type, `api-version=7.1` and validation-only query behaviour;
+- RFC 6902 JSON Patch array structure, the `add`-only Create profile and exclusion of `replace`, `remove`, `test`, `copy` and `move`;
+- the exact four-field allowlist, canonical field order, mandatory Title and mandatory Description;
+- optional Acceptance Criteria, mandatory Task Acceptance Criteria omission, optional Tags, absent optional-field omission and no empty placeholder operations;
+- exact prepared-value preservation, JSON escaping without semantic transformation, no double HTML escaping, no Markdown re-rendering and no Tags splitting, reordering or renormalisation;
+- exclusion of `System.WorkItemType`, additional fields, server-managed fields and relationship operations;
+- exclusion of `bypassRules`, `suppressNotifications` and `$expand`;
+- validation-only and persistent candidate-payload equivalence; and
+- pre-persistence failure for incomplete or incompatible candidates.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
 
