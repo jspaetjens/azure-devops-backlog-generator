@@ -4,7 +4,7 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.6
+**Version:** 1.7
 
 **Status:** Approved Baseline
 
@@ -30,6 +30,7 @@
 | 1.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 mandatory Description Mapping contract. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Acceptance Criteria Mapping contract. |
+| 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Tags Mapping contract. |
 
 ---
 
@@ -240,9 +241,11 @@ The application shall populate supported Azure DevOps work item fields, includin
 
 Acceptance Criteria shall be populated only where applicable to the target work-item type. Version 1.0 shall use `Microsoft.VSTS.Common.AcceptanceCriteria` where the target type exposes it: Epic, Feature and Product Backlog Item. Acceptance Criteria shall be optional for those types; when the approved Document 09 source construct is absent, no Acceptance Criteria value shall be produced and the field shall be omitted. Task does not use this field. A recognised Acceptance Criteria construct on a Task shall be invalid source input. Version 1.0 shall not invent a fallback Acceptance Criteria field for Task or automatically place Task Acceptance Criteria in Description or a custom field.
 
-For Epic, Feature, Product Backlog Item and Task, `System.Description` shall be derived from the complete direct body of the corresponding Document 09 source item, excluding the approved reserved Acceptance Criteria construct where present. Child semantic headings and child-item content shall be excluded according to the approved item-boundary rules. No reserved Description subsection shall be introduced.
+Tags shall be optional for Epic, Feature, Product Backlog Item and Task. Valid Tags derived from the approved Document 09 source construct shall be prepared for `System.Tags`. When the construct is absent, no Tags value shall be produced and the field shall be omitted. Invalid Tags source input shall prevent persistent backlog generation.
 
-Description shall be mandatory after Acceptance Criteria exclusion. Missing Description content, whitespace-only Description content, Description-rendering failure or an empty rendered HTML fragment shall be validation failures that prevent persistent backlog generation. `System.Description` shall not be omitted or deliberately sent as an empty value. The detailed Description Mapping, Acceptance Criteria Mapping and rendering rules are defined by `09-Documentation-Input.md`.
+For Epic, Feature, Product Backlog Item and Task, `System.Description` shall be derived from the complete direct body of the corresponding Document 09 source item, excluding the approved reserved Tags and Acceptance Criteria constructs where present. Child semantic headings and child-item content shall be excluded according to the approved item-boundary rules. No reserved Description subsection shall be introduced.
+
+Description shall be mandatory after Tags and Acceptance Criteria exclusion. Missing Description content, whitespace-only Description content, Description-rendering failure or an empty rendered HTML fragment shall be validation failures that prevent persistent backlog generation. `System.Description` shall not be omitted or deliberately sent as an empty value. The detailed Description Mapping, Acceptance Criteria Mapping, Tags Mapping and rendering rules are defined by `09-Documentation-Input.md`.
 
 ## FR-007 Repeatable Execution
 

@@ -4,7 +4,7 @@
 
 > *This document defines the Version 1.0 source-document discovery, Markdown parsing, hierarchy interpretation, title extraction, validation, deterministic ordering and source-side traceability contract for the Azure DevOps Backlog Generator.*
 
-**Version:** 0.4
+**Version:** 0.5
 
 **Status:** Approved Baseline
 
@@ -26,6 +26,7 @@
 | 0.2 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 0.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Description Mapping and normative Markdown rendering contract. |
 | 0.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Acceptance Criteria source syntax and mapping contract. |
+| 0.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Tags source syntax and mapping contract. |
 
 ---
 
@@ -51,6 +52,7 @@
   - [9.2 Description Source Validation](#92-description-source-validation)
   - [9.3 Description Rendering and Supported Content](#93-description-rendering-and-supported-content)
   - [9.4 Acceptance Criteria Mapping](#94-acceptance-criteria-mapping)
+  - [9.5 Tags Mapping](#95-tags-mapping)
 - [10. Duplicate Sibling Titles](#10-duplicate-sibling-titles)
 - [11. Deterministic File Ordering](#11-deterministic-file-ordering)
 - [12. Source Identity and Traceability](#12-source-identity-and-traceability)
@@ -237,11 +239,11 @@ The item's direct body shall:
 
 ## 9.1 Description Mapping
 
-For Epic, Feature, Product Backlog Item and Task, `System.Description` shall be derived from the complete direct body of the corresponding source item, excluding the recognised Acceptance Criteria construct defined in Section 9.4 where present. No reserved Description subsection shall be introduced.
+For Epic, Feature, Product Backlog Item and Task, `System.Description` shall be derived from the complete direct body of the corresponding source item, excluding the recognised Tags and Acceptance Criteria constructs defined in Sections 9.5 and 9.4 where present. No reserved Description subsection shall be introduced.
 
-Description content shall be mandatory after Acceptance Criteria exclusion. No Description content, whitespace-only Description content, a rendering failure or an empty rendered HTML fragment shall be source-validation failures before persistent backlog generation. `System.Description` shall not be omitted or deliberately prepared as an empty value.
+Description content shall be mandatory after Tags and Acceptance Criteria exclusion. No Description content, whitespace-only Description content, a rendering failure or an empty rendered HTML fragment shall be source-validation failures before persistent backlog generation. `System.Description` shall not be omitted or deliberately prepared as an empty value.
 
-Tags source syntax remains unresolved. All permitted direct-body content shall belong to Description except for a recognised Acceptance Criteria construct defined in Section 9.4. A future reserved Tags construct shall explicitly define whether and how its source content is excluded from Description.
+All permitted direct-body content shall belong to Description except for recognised Tags and Acceptance Criteria constructs defined in Sections 9.5 and 9.4.
 
 ## 9.2 Description Source Validation
 
@@ -276,6 +278,22 @@ The construct shall contain exactly one top-level CommonMark list, either ordere
 Acceptance Criteria source content shall use the restrictions in Section 9.2. Raw HTML blocks, inline HTML, Markdown images and invalid link or autolink destinations shall be source-validation failures before rendering and persistent generation. The HTML fragment produced for the construct by the fixed parser and default renderer in Section 9.3 shall be the normative `Microsoft.VSTS.Common.AcceptanceCriteria` serialization. Exact automated comparison shall use the line-ending normalisation and exact-output rules in Section 9.3.
 
 The following Acceptance Criteria conditions shall be source-validation failures: a duplicate marker; a marker without the required list; an empty list; an empty or whitespace-only criterion; more than one top-level list; mixed ordered and unordered top-level list structure; a nested list; prose outside the approved list; a rendering failure; or an empty rendered Acceptance Criteria fragment.
+
+## 9.5 Tags Mapping
+
+Tags shall apply to Epic, Feature, Product Backlog Item and Task. The source construct shall be optional. When it is absent, no Tags value shall be produced. The exact reserved marker shall be the standalone paragraph `Tags:`. It shall be recognised through the parsed CommonMark structure, not naive line-prefix matching, only when it is a direct-body paragraph. It shall not be a heading or participate in the semantic hierarchy. Text equal to the marker in block quotes, list items, fenced or indented code blocks, or other nested or container contexts shall be ordinary content and shall not be the reserved construct.
+
+For a source item, zero or one recognised Tags marker shall be permitted. Description shall precede a recognised Tags marker. When both reserved constructs are present, Tags shall precede Acceptance Criteria; arbitrary reserved-construct ordering shall not be supported. Tags content shall begin immediately after its marker and shall end immediately before a recognised Acceptance Criteria marker in the same source item, or at the item's direct-body boundary when no Acceptance Criteria construct follows. The Tags marker and Tags content shall be excluded from Description and shall not be Acceptance Criteria content. Child semantic headings and child-item content shall remain excluded from all fields.
+
+The Tags construct shall contain exactly one top-level CommonMark unordered list with at least one top-level list item. Each top-level list item shall represent one tag. Ordered lists, nested lists, prose outside the single list, multiple lists and empty list items shall be source-validation failures. This construct shall not introduce a generic metadata grammar.
+
+Each tag value shall be derived from the visible plain-text inline content of one list item. Formatting markers shall be removed while visible text remains; character references and escapes shall contribute their interpreted visible text; code spans shall contribute visible code text; and links and autolinks shall contribute visible text only when their destinations satisfy the restrictions in Section 9.2. Markdown images and raw or inline HTML shall be source-validation failures. After extraction, leading and trailing Unicode whitespace shall be trimmed and each internal Unicode whitespace run shall be collapsed to one ASCII space. An empty resulting tag shall be a source-validation failure. Tags shall be plain text and shall not use CommonMark-to-HTML rendering, `RendererHTML`, Description HTML semantics or Acceptance Criteria HTML semantics.
+
+After normalisation, each tag shall be non-empty, contain no more than 400 Unicode characters, contain neither `,` nor `;`, and contain no Unicode control or format character or malformed or unpaired surrogate character. The generator shall not escape, quote, strip or reinterpret invalid characters. Within one source item, normalised tag values shall be compared using Unicode `casefold()`. Values that compare equal shall be duplicate tags and shall be source-validation failures; the generator shall not silently deduplicate, preserve duplicates or resolve duplicates by changing case. This intentional Version 1.0 project rule is stricter than Azure DevOps case-sensitive tag handling.
+
+Source-list order shall be preserved. Tags shall not be alphabetically sorted, case-sorted or otherwise reordered, and their order shall not imply priority, backlog rank, state or business importance. For a valid Tags construct, the prepared future `System.Tags` value shall consist of the normalised tags in source order joined by exactly `; `. This defines field-content representation only and does not define JSON Patch add or replace operations, create or update payloads, or tag merge or replacement behaviour.
+
+The following Tags conditions shall be source-validation failures before persistent generation: a duplicate marker; invalid placement; a marker without the required list; an ordered list; an empty list; multiple lists; a nested list; prose outside the list; an empty or whitespace-only tag; a duplicate normalised tag after casefold comparison; comma or semicolon in a normalised tag; a tag longer than 400 Unicode characters; a Unicode control or format character; a malformed or unpaired surrogate; raw HTML; a Markdown image; an invalid link or autolink; or an extraction failure.
 
 ---
 
@@ -324,7 +342,7 @@ The canonical relative file path shall:
 
 The semantic heading hierarchy shall use the normalised titles defined by this specification.
 
-Description content, the Acceptance Criteria marker and Acceptance Criteria content shall not participate in source identity.
+Description content, the Tags marker, Tags content, the Acceptance Criteria marker and Acceptance Criteria content shall not participate in source identity.
 
 Rename sensitivity is explicitly accepted. Changing a filename or a semantic heading shall change the source identity. Version 1.0 shall not track renames.
 
@@ -356,6 +374,7 @@ At minimum, the following shall be source-validation failures:
 - a Markdown image construct in Description source content;
 - an invalid Description link or autolink destination defined by Section 9.2;
 - an invalid Acceptance Criteria construct defined by Section 9.4;
+- an invalid Tags construct defined by Section 9.5;
 - a cross-file hierarchy dependency; or
 - any discovered input document that violates this specification.
 
@@ -367,8 +386,9 @@ This specification does not define numeric exit codes.
 
 This specification does not define:
 
-- Tags source syntax or taxonomy;
+- Tags taxonomy;
 - Azure DevOps JSON Patch payloads;
+- tag merge or replacement update behaviour;
 - parent-child relation payload semantics;
 - WIQL duplicate-detection or query semantics;
 - PAT authentication transport;

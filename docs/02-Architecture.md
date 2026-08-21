@@ -4,7 +4,7 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 1.6
+**Version:** 1.7
 
 **Status:** Approved Baseline
 
@@ -30,6 +30,7 @@
 | 1.4 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned fixed Description parsing, validation and rendering responsibilities to the Documentation Processor. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned Acceptance Criteria partitioning, validation and rendering responsibilities to the Documentation Processor. |
+| 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned Tags partitioning, validation and prepared-field responsibilities to the Documentation Processor. |
 
 ---
 
@@ -183,8 +184,8 @@ Responsibilities include:
 - Keeping the Markdown implementation, parser preset and renderer behaviour fixed rather than externally configurable.
 - Validating parsed source nodes, including source structure, raw HTML, images and permitted link destinations, before persistent Azure DevOps operations.
 - Deriving normalised source titles.
-- Extracting each item's direct body, recognising the approved Acceptance Criteria construct and partitioning Description and Acceptance Criteria content.
-- Preparing each item's mandatory `System.Description` value and any applicable Acceptance Criteria value through the approved normative HTML rendering contract.
+- Extracting each item's direct body, recognising the approved Tags and Acceptance Criteria constructs and partitioning Description, Tags and Acceptance Criteria content.
+- Preparing each item's mandatory `System.Description` value, any applicable Acceptance Criteria value through the approved normative HTML rendering contract, and any applicable plain-text `System.Tags` value.
 - Constructing deterministic source-side identities.
 - Preserving deterministic source processing order.
 - Producing the parsed Epic → Feature → Product Backlog Item → Task structure for downstream generation.
@@ -259,9 +260,9 @@ The application follows the logical execution sequence below.
 1. The user starts the application.
 2. Configuration is loaded.
 3. Configuration is validated.
-4. Approved backlog-input Markdown documents are discovered, parsed, validated, partitioned and rendered for mandatory Description values and optional applicable Acceptance Criteria values according to `09-Documentation-Input.md` before persistent Azure DevOps operations.
+4. Approved backlog-input Markdown documents are discovered, parsed, validated, partitioned and rendered for mandatory Description values, optional applicable Acceptance Criteria values and optional Tags values according to `09-Documentation-Input.md` before persistent Azure DevOps operations.
 5. Parsed backlog structures are generated.
-6. Candidate Azure DevOps work items, including prepared Description values and applicable Acceptance Criteria values, are prepared.
+6. Candidate Azure DevOps work items, including prepared Description values, applicable Acceptance Criteria values and applicable Tags values, are prepared.
 7. Azure DevOps Scrum compatibility is validated through work-item type metadata and, where necessary, validation-only requests.
 8. Persistent REST API requests are executed.
 9. Results are logged.
