@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.8
+**Version:** 1.9
 
 **Status:** Approved Baseline
 
@@ -32,6 +32,7 @@
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 `System.Description` content-representation contract. |
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Acceptance Criteria content-representation contract. |
 | 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 `System.Tags` content-representation contract. |
+| 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Work Item Create JSON Patch payload contract. |
 
 ---
 
@@ -49,6 +50,7 @@
 - [6. Communication Standards](#6-communication-standards)
 - [7. API Endpoints](#7-api-endpoints)
 - [8. Request Model](#8-request-model)
+  - [8.1 Work Item Create Payload](#81-work-item-create-payload)
 - [9. Response Model](#9-response-model)
 - [10. Error Handling](#10-error-handling)
 - [11. Rate Limiting](#11-rate-limiting)
@@ -175,7 +177,7 @@ Version 1.0 shall use the configured project-scoped Work Items Update form consi
 
 Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries and shall not require a team parameter.
 
-This section does not define detailed request payload structures, tag taxonomy, ordinary work-item update operation semantics, concrete response fields or response-validation rules, parent-child relation payload semantics, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
+Aside from the Work Item Create payload contract in Section 8.1, this section does not define tag taxonomy, ordinary work-item update operation semantics, concrete response fields or response-validation rules, parent-child relation payload semantics, WIQL duplicate-detection semantics, PAT authentication transport or header details, error classification or recovery, or retry and rate-limit policy.
 
 Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
 
@@ -198,6 +200,106 @@ Each request shall include, where applicable:
 Requests shall be validated before transmission to minimise API failures.
 
 Where static compatibility metadata is insufficient, validation-only creation requests shall be used before persistent backlog generation to validate the candidate work-item request against project/process rules. A validation-only request shall include `validateOnly=true`, shall not persist a work item and shall use the same candidate field contract intended for persistent creation.
+
+## 8.1 Work Item Create Payload
+
+Version 1.0 Work Item Create shall use `POST https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{type}`. Persistent Create requests shall include `api-version=7.1`. Validation-only Create requests shall include `api-version=7.1&validateOnly=true`. The Content-Type shall be `application/json-patch+json`.
+
+The request body shall be an RFC 6902 JSON Patch array. For Version 1.0 Work Item Create, the only permitted JSON Patch operation shall be `add`. The operations `replace`, `remove`, `test`, `copy` and `move` shall not be used for Create. This constrained profile applies only to Work Item Create and does not define ordinary work-item update semantics.
+
+Create payload operations shall use only the following field paths:
+
+- `/fields/System.Title`
+- `/fields/System.Description`
+- `/fields/Microsoft.VSTS.Common.AcceptanceCriteria`
+- `/fields/System.Tags`
+
+No other field path shall be permitted. In particular, Create payloads shall not contain operations for `System.WorkItemType`, `System.State`, `System.AreaPath`, `System.IterationPath`, `System.AssignedTo`, `System.CreatedBy`, `System.Reason`, custom fields, source IDs, other unapproved fields or server-managed fields. The work-item type shall be selected only through the approved `{type}` URI path parameter; no redundant `/fields/System.WorkItemType` operation shall be used. No relationship operation, including `/relations/-`, belongs in this Create field payload contract.
+
+`System.Title` and `System.Description` operations shall be present for every supported work-item type. `Microsoft.VSTS.Common.AcceptanceCriteria` shall be included only when prepared for Epic, Feature or Product Backlog Item and shall be omitted for Task. `System.Tags` shall be included only when prepared for any supported work-item type. Absent optional fields shall be omitted and shall not produce empty placeholder operations.
+
+When present, operations shall appear in exactly this order:
+
+1. `/fields/System.Title`
+2. `/fields/System.Description`
+3. `/fields/Microsoft.VSTS.Common.AcceptanceCriteria`
+4. `/fields/System.Tags`
+
+This order is deterministic transport representation only. It does not imply priority, backlog rank, business importance, field importance or processing priority.
+
+Persistent Create requests shall not include `validateOnly`, `bypassRules`, `suppressNotifications` or `$expand`. Validation-only Create requests shall include `validateOnly=true` and shall never include `bypassRules`, `suppressNotifications` or `$expand`. No configuration shall be introduced for these options.
+
+Validation-only and persistent creation shall use the exact same logical candidate JSON Patch document, including the work-item type, operation count, operation order, operation types, field paths, prepared values, optional-field omissions and Content-Type. The presence of `validateOnly=true` is the only approved Create-payload contract difference. A separate validation payload shall not be defined.
+
+The Documentation Processor shall prepare and validate the normalised Title, normative Description HTML, normative Acceptance Criteria HTML and normalised plain-text `System.Tags` content under the approved source contracts. The REST Client shall exclusively construct the JSON Patch request representation from those prepared values. It may select approved paths, construct the canonical operation array, omit absent optional fields, JSON-serialize the request, apply JSON-required escaping and transmit the request. It shall not trim or normalise prepared values, re-render Markdown, transform or HTML-escape prepared HTML before JSON serialization, split, reorder or renormalise Tags, reinterpret Acceptance Criteria, invent missing values or add unapproved fields. JSON serialization escaping shall be transport encoding only and shall preserve each prepared semantic value after decoding.
+
+The following representative payload is illustrative of the normative contract for Epic, Feature or Product Backlog Item when all optional values are prepared:
+
+```json
+[
+  {
+    "op": "add",
+    "path": "/fields/System.Title",
+    "value": "<prepared title>"
+  },
+  {
+    "op": "add",
+    "path": "/fields/System.Description",
+    "value": "<prepared normative Description HTML>"
+  },
+  {
+    "op": "add",
+    "path": "/fields/Microsoft.VSTS.Common.AcceptanceCriteria",
+    "value": "<prepared normative Acceptance Criteria HTML>"
+  },
+  {
+    "op": "add",
+    "path": "/fields/System.Tags",
+    "value": "<prepared plain-text System.Tags content>"
+  }
+]
+```
+
+The following representative Task payload shows that Acceptance Criteria shall be omitted:
+
+```json
+[
+  {
+    "op": "add",
+    "path": "/fields/System.Title",
+    "value": "<prepared title>"
+  },
+  {
+    "op": "add",
+    "path": "/fields/System.Description",
+    "value": "<prepared normative Description HTML>"
+  },
+  {
+    "op": "add",
+    "path": "/fields/System.Tags",
+    "value": "<prepared plain-text System.Tags content>"
+  }
+]
+```
+
+When Acceptance Criteria and Tags are both absent, only the required Title and Description operations shall be present:
+
+```json
+[
+  {
+    "op": "add",
+    "path": "/fields/System.Title",
+    "value": "<prepared title>"
+  },
+  {
+    "op": "add",
+    "path": "/fields/System.Description",
+    "value": "<prepared normative Description HTML>"
+  }
+]
+```
+
+Incomplete or incompatible candidate payloads shall not proceed to persistent creation under the approved validation behaviour. This contract does not define retry, rollback, HTTP error mapping or recovery policy.
 
 ---
 
