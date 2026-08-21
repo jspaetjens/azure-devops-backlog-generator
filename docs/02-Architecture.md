@@ -4,7 +4,7 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 1.8
+**Version:** 1.9
 
 **Status:** Approved Baseline
 
@@ -32,6 +32,7 @@
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned Acceptance Criteria partitioning, validation and rendering responsibilities to the Documentation Processor. |
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned Tags partitioning, validation and prepared-field responsibilities to the Documentation Processor. |
 | 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined JSON Patch Create payload-construction ownership and transport responsibilities. |
+| 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined parent-child relationship orchestration, ownership and failure-handling responsibilities. |
 
 ---
 
@@ -191,6 +192,7 @@ Responsibilities include:
 - Preserving deterministic source processing order.
 - Producing the parsed Epic → Feature → Product Backlog Item → Task structure for downstream generation.
 - Preparing candidate work item data for compatibility validation without constructing Azure DevOps HTTP or JSON Patch request representations.
+- Not constructing Azure DevOps relation URLs or relationship JSON Patch payloads.
 - Maintaining traceability between documentation and generated work items.
 
 ---
@@ -205,6 +207,9 @@ Responsibilities include:
 - Creating parent-child relationships.
 - Preparing work item attributes.
 - Coordinating candidate work items for REST Client request construction and execution.
+- Maintaining the resolved candidate parent-child hierarchy and resolving created source items to Azure DevOps numeric work-item IDs.
+- Coordinating parent-before-child persistent creation and the immediate child-to-parent relationship request after successful child creation.
+- Supplying the parent ID, child ID and current child revision to the REST Client for each non-root child relationship.
 - Preventing duplicate work item creation.
 - Initiating persistent backlog generation only after Scrum compatibility validation succeeds.
 
@@ -227,6 +232,8 @@ Responsibilities include:
 - Exclusively constructing Work Item Create JSON Patch request representations from prepared candidate values, using only the approved field paths and canonical operation order.
 - Applying only JSON serialization escaping to prepared values and performing no semantic transformation, Markdown rendering, HTML transformation or Tags reinterpretation.
 - Using the same logical candidate JSON Patch document for validation-only and persistent creation, with `validateOnly=true` as the only Create-payload contract difference.
+- Constructing Parent-Child Relationship PATCH requests, including the canonical parent relation target URL, the relationship-specific `/rev` `test` operation and the `/relations/-` `add` operation.
+- Applying only JSON serialization and JSON-required escaping to relationship payload values.
 - Sending work item requests.
 - Receiving Azure DevOps responses.
 - Reporting API errors.
@@ -269,7 +276,7 @@ The application follows the logical execution sequence below.
 5. Parsed backlog structures are generated.
 6. Candidate Azure DevOps work items, including prepared Description values, applicable Acceptance Criteria values and applicable Tags values, are prepared.
 7. Azure DevOps Scrum compatibility is validated through work-item type metadata and, where necessary, validation-only requests.
-8. Persistent REST API requests are executed.
+8. Persistent REST API requests are executed. For each non-root child, the parent shall be created before the child, and the child-to-parent relationship PATCH shall occur immediately after successful child creation when the parent ID, child ID and child revision are known.
 9. Results are logged.
 10. Execution summary is presented.
 
@@ -319,6 +326,8 @@ The application shall:
 - Validate source input before persistent Azure DevOps operations.
 - Detect Azure DevOps communication failures.
 - Detect Azure DevOps Scrum compatibility failures before persistent backlog generation.
+- On a parent-child relationship PATCH failure, stop further persistent backlog generation immediately, report the failure clearly and do not create later work items or relationships.
+- Do not automatically retry, roll back, delete, remove or repair Azure DevOps state after a parent-child relationship PATCH failure; already-created work items and relationships shall remain as accepted partial persistent state.
 - Report meaningful error messages.
 - Record execution failures in the application log.
 - Terminate gracefully when recovery is not possible.

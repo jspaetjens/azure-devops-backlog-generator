@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.8
+**Version:** 1.9
 
 **Status:** Approved Baseline
 
@@ -32,6 +32,7 @@
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Acceptance Criteria Mapping contract. |
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Tags Mapping contract. |
 | 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Version 1.0 Work Item Create payload contract. |
+| 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Version 1.0 Parent-Child Relationship contract. |
 
 ---
 
@@ -274,6 +275,21 @@ Work Item Create Payload validation shall additionally cover:
 - exclusion of `bypassRules`, `suppressNotifications` and `$expand`;
 - validation-only and persistent candidate-payload equivalence; and
 - pre-persistence failure for incomplete or incompatible candidates.
+
+Parent-Child Relationship validation shall additionally cover:
+
+- the exact relationship endpoint, HTTP `PATCH`, `application/json-patch+json` Content-Type, `api-version=7.1` and numeric child ID in the endpoint;
+- exactly two JSON Patch operations: a first `test` operation at `/rev` using the current numeric child revision, followed by a second `add` operation at `/relations/-`;
+- the exact `System.LinkTypes.Hierarchy-Reverse` relation type and exclusion of `System.LinkTypes.Hierarchy-Forward` and all other relation types;
+- the canonical numeric-parent target URL `https://dev.azure.com/{organization}/_apis/wit/workItems/{parentId}`, including no project segment, no `api-version`, no query parameters and no browser/UI URL;
+- a relation object containing exactly `rel` and `url`, with no relation attributes or other relation-specific fields;
+- absence of ordinary field operations, `validateOnly`, `bypassRules`, `suppressNotifications` and `$expand` from relationship PATCH requests;
+- exactly one relationship PATCH for each Feature, Product Backlog Item and Task, and no relationship PATCH for a root Epic;
+- permitted direct hierarchy edges Epic → Feature, Feature → Product Backlog Item and Product Backlog Item → Task; rejected direct shortcuts; and exactly one intended immediate parent for each non-root child;
+- parent-before-child persistent creation, immediate child-to-parent relationship PATCH timing and parent/child ID plus child-revision lifecycle;
+- fail-fast behaviour when a relationship PATCH fails, including no later persistent work-item or relationship creation;
+- no automatic retry, rollback, deletion, relationship removal or remote-state repair, with already-created remote work items and relationships remaining; and
+- responsibility boundaries in which the Documentation Processor supplies source hierarchy, the Backlog Generator coordinates IDs and relationship timing, and the REST Client constructs and transmits the relationship JSON Patch request.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
 
