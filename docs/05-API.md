@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.2
+**Version:** 2.3
 
 **Status:** Approved Baseline
 
@@ -36,6 +36,7 @@
 | 2.0 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Parent-Child Relationship JSON Patch contract. |
 | 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 source-identity persistence and existing-item lookup contract. |
 | 2.2 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 reused-child relationship-state inspection and recovery contract. |
+| 2.3 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps REST transport and operational failure contract. |
 
 ---
 
@@ -51,6 +52,7 @@
 - [4. API Principles](#4-api-principles)
 - [5. Authentication](#5-authentication)
 - [6. Communication Standards](#6-communication-standards)
+  - [6.1 REST Transport and Operational Failure Contract](#61-rest-transport-and-operational-failure-contract)
 - [7. API Endpoints](#7-api-endpoints)
 - [8. Request Model](#8-request-model)
   - [8.1 Work Item Create Payload](#81-work-item-create-payload)
@@ -153,6 +155,41 @@ Communication failures shall be detected, logged and reported through the applic
 
 ---
 
+## 6.1 REST Transport and Operational Failure Contract
+
+Version 1.0 shall obtain the Azure DevOps Personal Access Token only from `AZDO_PAT`. The PAT is runtime-only secret material. It shall not be loaded from TOML, placed in URLs, query parameters or request bodies, written to logs, exception messages or diagnostics, or persisted by the application.
+
+All Azure DevOps Services requests shall use HTTPS and HTTP Basic authentication. The Basic credential shall be constructed from `":" + PAT`, encoded as ASCII bytes and Base64-encoded exactly once. The `Authorization` header shall be `Basic <base64-credential>`. The username component shall be empty. The PAT and derived Authorization header shall exist in memory only for request execution and shall never be logged, included in error output or included in request-dump diagnostics.
+
+Every Azure DevOps REST request shall use a fixed 30-second timeout. The timeout is application behaviour and shall not be configurable through TOML, environment variables or CLI. Version 1.0 shall not define separate connect, read or total timeout configuration. The implementation may use the selected HTTP library's timeout mechanism provided that the effective request timeout is 30 seconds.
+
+Version 1.0 shall perform no automatic HTTP retries for any Azure DevOps REST operation. This includes Project retrieval; process, work-item-type and field compatibility calls; validation-only Create; WIQL; Work Item GET; relationship-state GET; persistent Create; relationship PATCH; missing-parent recovery PATCH; and any other Version 1.0 Azure DevOps REST request. Connection errors, DNS failures, TLS failures, timeouts, HTTP `408`, HTTP `429`, HTTP `500`, HTTP `502`, HTTP `503`, HTTP `504`, optimistic-concurrency failures and uncertain persistent Create results shall not be retried.
+
+Persistent mutation requests are not safely retryable in the general case. In particular, a lost or uncertain persistent Create response may mean Azure DevOps created the work item even though the client did not receive the success response. Version 1.0 shall not blindly retry Create or other mutation requests and shall not introduce idempotency keys or retry reconciliation.
+
+For HTTP `429`, the request shall be treated as failed. The application shall not sleep or retry automatically. When present, `Retry-After` may be captured and logged safely for diagnostics only; it does not authorise retry behaviour.
+
+Every authenticated request shall include `Authorization: Basic <base64-credential>`. Version 1.0 shall use `Accept: application/json` as the response-media convention for Azure DevOps JSON REST requests. WIQL requests shall use `Content-Type: application/json`. JSON Patch operations shall use `Content-Type: application/json-patch+json`. A fixed User-Agent may remain an implementation or observability detail and is not a normative Version 1.0 requirement.
+
+Version 1.0 shall use endpoint-specific documented success status codes and shall not accept arbitrary `2xx` responses. For all currently approved REST operations, including Project retrieval, compatibility metadata GET calls where the Microsoft endpoint contract documents success, validation-only Work Item Create, persistent Work Item Create, WIQL POST, Work Item GET, relationship-state GET and Work Item relationship PATCH or update, the expected successful status is `200 OK`. A future endpoint with another explicitly documented success status shall define that status separately. An unexpected success-range status shall not be silently accepted.
+
+The application shall fail immediately without automatic retry on connection failure, DNS failure, TLS failure, timeout, unexpected HTTP status, malformed success response, malformed JSON when JSON is required, or an empty body where an endpoint contract requires a body. Where an endpoint contract requires JSON, the response body shall exist, be valid JSON, have the required top-level shape, and contain required properties with expected types. Unexpected or malformed responses shall fail and shall not be reinterpreted as success. Endpoint-specific response validation defined elsewhere in this API Specification remains authoritative.
+
+The minimum generic HTTP status interpretation shall be:
+
+- `400`: invalid or malformed request, or incompatible request payload; fail.
+- `401`: authentication rejected; report authentication failure without claiming a more specific root cause unless Azure DevOps provides trustworthy evidence.
+- `403`: authenticated request lacks required authorisation or permission; report authorisation failure.
+- `404`: requested project, resource or work item not found; fail in the relevant operation.
+- `409` or `412`: applicable conflict, concurrency or state failure; fail. Existing relationship `/rev` no-retry behaviour remains unchanged.
+- `408`, `429` or `5xx`: fail without automatic retry.
+
+On HTTP failure, the implementation shall preserve the HTTP status. It may extract a bounded safe Azure DevOps error message or code when present. Non-JSON error responses shall be handled safely. Error-body parsing is an optional diagnostic enhancement and is not required for correctness. The application shall not log an entire response body by default, expose the Authorization header or PAT, or assume every error response has the same JSON schema.
+
+Successful controlled execution shall exit with status `0`. A controlled application failure shall exit with status `1`. Version 1.0 shall not define a differentiated numeric exit-code taxonomy. The implementation may use internal typed exception categories, including configuration, validation, compatibility, transport or API, response-shape, identity-resolution and relationship-state categories, provided that public behaviour remains consistent. Version 1.0 dry-run remains unsupported.
+
+---
+
 # 7. API Endpoints
 
 Version 1.0 shall use the following Azure DevOps REST API endpoints required to support approved functionality.
@@ -188,7 +225,7 @@ Version 1.0 shall use the configured project-scoped Work Items Update form consi
 
 Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries and shall not require a team parameter.
 
-Aside from the Work Item Create payload contract in Section 8.1, Parent-Child Relationship contract in Section 8.2, Persisted Source Identity contract in Section 8.3, Existing Item Lookup contract in Section 8.4 and Existing Relationship State and Recovery contract in Section 8.5, this section does not define tag taxonomy, ordinary work-item update operation semantics, PAT authentication transport or header details, general error classification or recovery, or retry and rate-limit policy.
+Aside from the Work Item Create payload contract in Section 8.1, Parent-Child Relationship contract in Section 8.2, Persisted Source Identity contract in Section 8.3, Existing Item Lookup contract in Section 8.4 and Existing Relationship State and Recovery contract in Section 8.5, this section does not define tag taxonomy or ordinary work-item update operation semantics.
 
 Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
 

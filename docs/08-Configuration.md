@@ -4,11 +4,11 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.6
+**Version:** 1.7
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-21
+**Last Updated:** 2026-08-23
 
 **Target Release:** v1.0.0
 
@@ -30,6 +30,7 @@
 | 1.4 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Clarified the Azure DevOps Services-only configuration scope for Version 1.0. |
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Clarified the dedicated backlog-input source-directory contract. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
+| 1.7 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Aligned the Version 1.0 process exit-status boundary with the approved REST operational contract. |
 
 ---
 
@@ -294,7 +295,7 @@ The following selected configuration-file conditions shall be configuration erro
 - The selected file cannot be read.
 - The selected file contains malformed TOML.
 
-CLI usage errors and configuration errors shall be reported through the application's error handling. Numeric exit-status mapping remains part of the future CLI and error-handling contract.
+CLI usage errors and configuration errors shall be reported through the application's error handling. Version 1.0 defines the fixed process exit-status mapping: controlled successful execution shall exit with status `0`, and controlled application failure shall exit with status `1`. This mapping is application behaviour and shall not be configurable through TOML, environment variables or CLI configuration options. A differentiated numeric exit-code taxonomy beyond `0` and `1` remains future work.
 
 ---
 
