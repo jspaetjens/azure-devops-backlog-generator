@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 1.9
+**Version:** 2.0
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-21
+**Last Updated:** 2026-08-23
 
 **Target Release:** v1.0.0
 
@@ -33,6 +33,7 @@
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Assigned Tags partitioning, validation and prepared-field responsibilities to the Documentation Processor. |
 | 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined JSON Patch Create payload-construction ownership and transport responsibilities. |
 | 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined parent-child relationship orchestration, ownership and failure-handling responsibilities. |
+| 2.0 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined persisted source-identity and resolve-or-create responsibilities. |
 
 ---
 
@@ -191,7 +192,9 @@ Responsibilities include:
 - Constructing deterministic source-side identities.
 - Preserving deterministic source processing order.
 - Producing the parsed Epic → Feature → Product Backlog Item → Task structure for downstream generation.
+- Producing each item's canonical relative source path and complete ordered normalised semantic-heading hierarchy, including heading levels, under the authority of `09-Documentation-Input.md`.
 - Preparing candidate work item data for compatibility validation without constructing Azure DevOps HTTP or JSON Patch request representations.
+- Not computing the persisted source-identity digest, constructing WIQL or interpreting Azure DevOps lookup results.
 - Not constructing Azure DevOps relation URLs or relationship JSON Patch payloads.
 - Maintaining traceability between documentation and generated work items.
 
@@ -207,8 +210,13 @@ Responsibilities include:
 - Creating parent-child relationships.
 - Preparing work item attributes.
 - Coordinating candidate work items for REST Client request construction and execution.
-- Maintaining the resolved candidate parent-child hierarchy and resolving created source items to Azure DevOps numeric work-item IDs.
-- Coordinating parent-before-child persistent creation and the immediate child-to-parent relationship request after successful child creation.
+- Maintaining the resolved candidate parent-child hierarchy and resolving created or reused source items to Azure DevOps numeric work-item IDs.
+- Serialising each approved logical source identity using the Version 1.0 binary framing, computing its SHA-256 digest and formatting the persisted identity marker.
+- Detecting collisions in which distinct logical source identities produce the same complete marker and stopping before persistent generation.
+- Coordinating resolve-or-create processing in deterministic source order and interpreting zero, one and multiple lookup outcomes.
+- Associating source items with created or reused Azure DevOps numeric IDs and retaining the current numeric revision returned for reused items.
+- Preventing Create after successful existing-item resolution and not inferring permission to compare or update ordinary fields.
+- Coordinating parent resolution-or-creation before child persistent creation and the immediate child-to-parent relationship request after successful child creation.
 - Supplying the parent ID, child ID and current child revision to the REST Client for each non-root child relationship.
 - Preventing duplicate work item creation.
 - Initiating persistent backlog generation only after Scrum compatibility validation succeeds.
@@ -228,8 +236,11 @@ Responsibilities include:
 - Authentication.
 - REST API communication.
 - Retrieving required work-item type metadata for Scrum compatibility validation.
+- Verifying the fixed `Custom.BacklogGeneratorSourceIdentity` reference name, `Backlog Generator Source Identity` display name, String/single-line-text type, applicability, writability and optional process status during compatibility validation.
 - Using validation-only creation requests when static metadata alone cannot establish candidate payload compatibility.
 - Exclusively constructing Work Item Create JSON Patch request representations from prepared candidate values, using only the approved field paths and canonical operation order.
+- Holding the custom identity-field reference as a fixed API constant, constructing and transmitting the fixed project/type/marker WIQL request, retrieving the sole candidate work item and validating transport and response structure.
+- Returning the required candidate ID, revision, project, type and identity-field state without computing logical source identity or deciding business-field updates.
 - Applying only JSON serialization escaping to prepared values and performing no semantic transformation, Markdown rendering, HTML transformation or Tags reinterpretation.
 - Using the same logical candidate JSON Patch document for validation-only and persistent creation, with `validateOnly=true` as the only Create-payload contract difference.
 - Constructing Parent-Child Relationship PATCH requests, including the canonical parent relation target URL, the relationship-specific `/rev` `test` operation and the `/relations/-` `add` operation.
@@ -275,10 +286,15 @@ The application follows the logical execution sequence below.
 4. Approved backlog-input Markdown documents are discovered, parsed, validated, partitioned and rendered for mandatory Description values, optional applicable Acceptance Criteria values and optional Tags values according to `09-Documentation-Input.md` before persistent Azure DevOps operations.
 5. Parsed backlog structures are generated.
 6. Candidate Azure DevOps work items, including prepared Description values, applicable Acceptance Criteria values and applicable Tags values, are prepared.
-7. Azure DevOps Scrum compatibility is validated through work-item type metadata and, where necessary, validation-only requests.
-8. Persistent REST API requests are executed. For each non-root child, the parent shall be created before the child, and the child-to-parent relationship PATCH shall occur immediately after successful child creation when the parent ID, child ID and child revision are known.
-9. Results are logged.
-10. Execution summary is presented.
+7. The Backlog Generator computes every persisted identity marker and validates that distinct logical source identities do not collide before persistent generation.
+8. Azure DevOps Scrum compatibility, including the fixed custom identity-field contract and candidate payload containing the mandatory marker, is validated through work-item type metadata and, where necessary, validation-only requests. The configured project is resolved through Project retrieval and its canonical Azure DevOps project name and ID are retained for later candidate validation.
+9. For every source item in deterministic source order, the Backlog Generator requests an existing-item lookup scoped to the configured project, exact supported type and exact marker.
+10. Zero candidates cause Work Item Create using the approved five-field contract. Exactly one candidate causes Work Item GET, validation of its canonical project name, exact type and ordinal marker, and reuse of its numeric ID and revision without Create. Multiple, malformed or conflicting candidates stop processing before Create.
+11. For newly created non-root children, the parent shall be created or resolved before the child, and the child-to-parent relationship PATCH shall occur immediately after successful child creation when the parent ID, child ID and child revision are known.
+12. Results are logged.
+13. Execution summary is presented.
+
+Existing Relationship State and Recovery for reused non-root children is outside this flow. Resolving and retaining an existing child ID and revision shall not authorise relation retrieval, comparison, repair, replacement, deletion or PATCH. Full recovery of partial relationship state requires a separate approved contract.
 
 Each stage shall complete successfully before the next stage begins.
 
@@ -312,6 +328,8 @@ Version 1.0 shall follow the following security principles:
 - Authentication credentials shall not be written to log files.
 - Communication with Azure DevOps shall use secure HTTPS connections.
 - Configuration files containing sensitive information shall be excluded from version control where appropriate.
+- Caller-supplied WIQL structure shall not be accepted. Identity lookup shall use application-controlled fields, operators and type literals, the `@project` macro and a marker validated against the fixed Version 1.0 format before query construction.
+- Source-derived titles, paths and headings shall not be interpolated into WIQL. PATs, Authorization headers, full remote response bodies by default and raw logical source identities without necessity shall not be logged.
 
 ---
 
@@ -326,6 +344,7 @@ The application shall:
 - Validate source input before persistent Azure DevOps operations.
 - Detect Azure DevOps communication failures.
 - Detect Azure DevOps Scrum compatibility failures before persistent backlog generation.
+- Stop before Create on identity lookup failure, local or remote marker ambiguity, malformed result IDs, candidate retrieval failure, or conflicting project, type or marker evidence. A rejected candidate shall not be reinterpreted as zero matches.
 - On a parent-child relationship PATCH failure, stop further persistent backlog generation immediately, report the failure clearly and do not create later work items or relationships.
 - Do not automatically retry, roll back, delete, remove or repair Azure DevOps state after a parent-child relationship PATCH failure; already-created work items and relationships shall remain as accepted partial persistent state.
 - Report meaningful error messages.
