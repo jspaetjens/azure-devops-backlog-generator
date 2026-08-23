@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.1
+**Version:** 2.2
 
 **Status:** Approved Baseline
 
@@ -35,6 +35,7 @@
 | 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Work Item Create JSON Patch payload contract. |
 | 2.0 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Parent-Child Relationship JSON Patch contract. |
 | 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 source-identity persistence and existing-item lookup contract. |
+| 2.2 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 reused-child relationship-state inspection and recovery contract. |
 
 ---
 
@@ -56,6 +57,7 @@
   - [8.2 Parent-Child Relationship Payload](#82-parent-child-relationship-payload)
   - [8.3 Persisted Source Identity](#83-persisted-source-identity)
   - [8.4 Existing Item Lookup](#84-existing-item-lookup)
+  - [8.5 Existing Relationship State and Recovery](#85-existing-relationship-state-and-recovery)
 - [9. Response Model](#9-response-model)
 - [10. Error Handling](#10-error-handling)
 - [11. Rate Limiting](#11-rate-limiting)
@@ -164,6 +166,7 @@ Version 1.0 shall use the following Azure DevOps REST API endpoints required to 
 | Parent-child relationship update | `PATCH` | `/{project}/_apis/wit/workitems/{childId}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{childId}?api-version=7.1` | `{organization}`, `{project}` and numeric `{childId}`; `api-version=7.1` | `application/json-patch+json` |
 | Repeatability query | `POST` | `/{project}/_apis/wit/wiql` | `https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?$top=2&api-version=7.1` | `{organization}` and `{project}`; `$top=2`; `api-version=7.1`; no team parameter | `application/json` |
 | Existing-item retrieval | `GET` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?fields=System.TeamProject,System.WorkItemType,Custom.BacklogGeneratorSourceIdentity&api-version=7.1` | `{organization}`, `{project}` and numeric `{id}`; exact `fields`; `api-version=7.1` | None |
+| Reused-child relationship-state retrieval | `GET` | `/{project}/_apis/wit/workitems/{childId}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{childId}?$expand=relations&api-version=7.1` | `{organization}`, `{project}` and numeric `{childId}`; `$expand=relations`; `api-version=7.1`; no `fields` parameter | None |
 
 Work-item creation shall use the approved Version 1.0 work-item type values `Epic`, `Feature`, `Product Backlog Item` and `Task`. Work-item type values are URI path-segment values. Values containing spaces shall be correctly URI encoded when constructing the request.
 
@@ -185,7 +188,7 @@ Version 1.0 shall use the configured project-scoped Work Items Update form consi
 
 Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries and shall not require a team parameter.
 
-Aside from the Work Item Create payload contract in Section 8.1, Parent-Child Relationship contract in Section 8.2, Persisted Source Identity contract in Section 8.3 and Existing Item Lookup contract in Section 8.4, this section does not define tag taxonomy, ordinary work-item update operation semantics, PAT authentication transport or header details, general error classification or recovery, or retry and rate-limit policy.
+Aside from the Work Item Create payload contract in Section 8.1, Parent-Child Relationship contract in Section 8.2, Persisted Source Identity contract in Section 8.3, Existing Item Lookup contract in Section 8.4 and Existing Relationship State and Recovery contract in Section 8.5, this section does not define tag taxonomy, ordinary work-item update operation semantics, PAT authentication transport or header details, general error classification or recovery, or retry and rate-limit policy.
 
 Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
 
@@ -365,15 +368,15 @@ The representative payload below illustrates the normative contract:
 
 Relationship PATCH requests shall include only `api-version=7.1`. They shall not include `validateOnly`, `bypassRules`, `suppressNotifications` or `$expand`, and no configuration shall be introduced for these options. Version 1.0 shall not use or define a validation-only Parent-Child Relationship PATCH; the approved validation-only Work Item Create contract remains unchanged.
 
-Only the following direct hierarchy edges are permitted: Epic → Feature, Feature → Product Backlog Item and Product Backlog Item → Task. Each newly created Feature, Product Backlog Item and Task shall have exactly one intended immediate parent in the candidate hierarchy and shall receive exactly one relationship PATCH. Relationship processing for reused non-root items remains outside this contract. Root Epic items shall receive no relationship PATCH. Direct hierarchy shortcuts, including Epic → Product Backlog Item, Epic → Task and Feature → Task, are prohibited. Relationship operations shall not be batched for multiple children.
+Only the following direct hierarchy edges are permitted: Epic → Feature, Feature → Product Backlog Item and Product Backlog Item → Task. Each newly created Feature, Product Backlog Item and Task shall have exactly one intended immediate parent in the candidate hierarchy and shall receive exactly one relationship PATCH. A reused non-root item classified MISSING under Section 8.5 shall receive the same relationship PATCH unchanged. Root Epic items shall receive no relationship PATCH. Direct hierarchy shortcuts, including Epic → Product Backlog Item, Epic → Task and Feature → Task, are prohibited. Relationship operations shall not be batched for multiple children.
 
 Relationship creation requires the numeric parent Azure DevOps work-item ID, numeric child Azure DevOps work-item ID and current numeric child revision. The successful child Create response supplies the child ID and revision. Approved source identity shall not substitute for Azure DevOps numeric IDs.
 
-Persistent orchestration shall resolve or create the parent before creating a missing child. For every newly created non-root child, the relationship PATCH shall occur immediately after successful child creation once the parent ID, child ID and child revision are known: resolve-or-create parent → create child → PATCH newly created child-to-parent relationship → continue generation. Relationship creation for newly created children shall not be deferred until all work items have been created. This orchestration shall not define relationship processing for reused non-root children.
+Persistent orchestration shall resolve or create the parent before resolving or creating its child. For every newly created non-root child, the relationship PATCH shall occur immediately after successful child creation once the parent ID, child ID and child revision are known: resolve-or-create parent → create child → PATCH newly created child-to-parent relationship → continue generation. Relationship creation for newly created children shall not be deferred until all work items have been created. Reused non-root children shall follow Section 8.5 and shall not alter this newly created child flow.
 
 If a Parent-Child Relationship PATCH fails, persistent backlog generation shall stop immediately. The failure shall be reported clearly without exposing secrets; later work items and relationships shall not be created. Version 1.0 shall not automatically retry, roll back, delete created work items, remove created relationships, repair remote state or continue collecting later relationship failures. Already-created work items and relationships shall remain as accepted partial persistent state.
 
-This contract does not define relation GET-before-PATCH, remote relation duplicate detection or idempotence, relation merge, replacement or deletion, WIQL relation detection, retry behaviour, rollback, ordinary work-item field-update semantics, generic update concurrency, or Tags merge or replacement behaviour. Parent-child relationships remain excluded from the Work Item Create payload contract and are established only through this subsequent relationship PATCH.
+Section 8.5 defines purpose-specific relation retrieval and missing-parent recovery for reused non-root children. Neither section defines relation merge, replacement or deletion, relation-index PATCH operations, WIQL relation detection, retry behaviour, rollback, ordinary work-item field-update semantics, generic update concurrency, or Tags merge or replacement behaviour. Parent-child relationships remain excluded from the Work Item Create payload contract and are established only through this subsequent relationship PATCH.
 
 ---
 
@@ -456,9 +459,76 @@ Unmarked manual items shall remain outside the generator identity domain. They s
 
 Description-only, Acceptance Criteria-only and Tags-only changes shall preserve identity and cause reuse without update. Heading, ancestor-heading, canonical source-file or path, and identity-significant canonical-path case changes shall change identity under Document 09. Old generated items shall not be automatically renamed, migrated, updated, deleted, superseded or cleaned up.
 
-This section does not define Existing Relationship State and Recovery. It shall not introduce `$expand=relations`, relation retrieval, comparison, repair, replacement, deletion or relationship PATCH for reused items. Section 8.2 remains applicable to newly created children only. Ordinary updates, identity migration, retry, rollback and recovery remain unresolved.
+Successful reuse under this section authorises only the subsequent purpose-specific relationship-state handling in Section 8.5 for a non-root child. It shall not authorise ordinary field updates, identity migration, WIQL changes, relationship replacement or deletion, retry or rollback.
 
 Identity lookup diagnostics shall remain secret-safe. PATs and Authorization headers shall never be logged. Full remote response bodies shall not be logged by default, and raw logical source identities shall not be logged unnecessarily. Permitted diagnostics may include the work-item type, candidate count, numeric Azure DevOps ID, shortened digest fingerprint and source processing context where already permitted.
+
+---
+
+## 8.5 Existing Relationship State and Recovery
+
+This contract applies only to a reused non-root work item after successful Existing Item Lookup under Section 8.4. It provides deterministic recovery from a prior partial relationship-generation failure without introducing ordinary field updates or generic relation editing. Root Epic items and newly created non-root children shall bypass this relationship-state GET.
+
+For every reused non-root child, the REST Client shall request exactly:
+
+```http
+GET https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{childId}?$expand=relations&api-version=7.1
+```
+
+No `fields` parameter shall be included. The accepted response shall provide a numeric `id` equal to the reused numeric child ID and a numeric `rev`. A missing, null, malformed or non-numeric required ID or revision, or an ID mismatch, shall fail immediately.
+
+The `relations` property shall be interpreted and validated as follows:
+
+- An omitted `relations` property shall represent zero returned relations.
+- A present empty JSON array shall represent zero returned relations.
+- A present `null` value or any other non-array value shall be malformed and shall fail.
+- Every member of a non-empty relation array shall be a JSON object containing a non-empty string `rel` and a non-empty string `url`.
+- Any invalid member shall invalidate the complete response; malformed relation data shall not be ignored or repaired.
+- `attributes` shall be optional and irrelevant to Version 1.0 parent-state evaluation.
+
+Only the exact case-sensitive relation reference `System.LinkTypes.Hierarchy-Reverse` shall count as parent evidence. A case-altered form shall be malformed or conflicting evidence and shall fail. Structurally valid non-parent relations, including `System.LinkTypes.Hierarchy-Forward`, Related, Dependency, Hyperlink, ArtifactLink and other well-formed non-parent relations, shall be ignored for parent-state classification.
+
+For every `System.LinkTypes.Hierarchy-Reverse` relation, the REST Client shall parse `url` as an absolute URI and require all of the following:
+
+- the scheme is HTTPS;
+- the host is `dev.azure.com`;
+- the first path component is the configured organisation;
+- the remaining route is exactly `_apis/wit/workItems/{id}`;
+- no query or fragment is present;
+- no extra path segment follows `{id}`; and
+- `{id}` is a positive base-10 integer.
+
+URI scheme and host shall use normal case-insensitive URI comparison. The contractual work-item route structure shall remain fixed. The REST Client shall extract the numeric target ID only after complete structural validation. It shall not use unconstrained terminal-ID parsing. The Backlog Generator shall compare the extracted numeric target ID with the intended numeric parent ID rather than requiring raw full-URL string equality. No separate parent GET shall be performed.
+
+The Backlog Generator shall classify the validated parent state as follows:
+
+- MISSING: zero `System.LinkTypes.Hierarchy-Reverse` relations, including when only well-formed unrelated or `System.LinkTypes.Hierarchy-Forward` relations exist.
+- CORRECT: exactly one valid `System.LinkTypes.Hierarchy-Reverse` relation whose parsed numeric target ID equals the intended parent ID. Well-formed unrelated or forward relations may coexist.
+- CONFLICTING: exactly one reverse relation points to a different parent, two or more reverse relations exist, duplicate same-parent reverse relations exist, the correct parent coexists with another reverse relation, or malformed reverse-hierarchy evidence exists.
+
+Malformed overall response structure shall fail immediately rather than becoming a normal classification.
+
+For MISSING, the REST Client shall automatically add the intended parent using the Parent-Child Relationship PATCH in Section 8.2 unchanged. The relationship-specific `/rev` `test` value shall be the fresh numeric revision returned by the relationship-state GET. That revision shall supersede the earlier Existing Item Lookup revision only for this recovery request. Successful recovery permits descendant processing.
+
+For CORRECT, no relationship PATCH or `/rev` test shall occur, and descendant processing may continue. A difference between the fresh relationship-state revision and the earlier Existing Item Lookup revision shall not itself be a failure.
+
+For CONFLICTING, processing shall fail immediately without mutating remote state or processing descendants. The application shall not add a second parent, deduplicate relationships, remove, replace or move a relationship, modify identity or use a relation-index PATCH operation.
+
+If the relationship-state GET fails, its response is malformed, target URI validation fails, the state is CONFLICTING, the recovery `/rev` test fails or the recovery PATCH fails, processing shall stop immediately and descendants shall remain blocked. The application shall not automatically re-read, retry, roll back, delete, remove or replace remote state.
+
+No descendants of a non-root item shall be persistently processed until its intended parent relationship is known to be correct. Eligibility shall occur only after a newly created child's immediate relationship PATCH succeeds, a reused child is observed as CORRECT or a reused child classified MISSING is successfully repaired.
+
+The approved partial-run recovery lifecycle shall be:
+
+```text
+Run 1: parent created → child created → relationship PATCH fails → stop
+Run 2: parent resolved → child resolved → relationship-state GET → MISSING
+       → repair using fresh revision → repair succeeds → continue descendants
+```
+
+Permitted diagnostics may include the numeric child ID, intended parent ID, classification, reverse-parent count, repair result and revision where useful. PATs, Authorization headers, unnecessary full response bodies and relation URLs when numeric target IDs suffice shall not be logged.
+
+This section shall not change logical source identity, persisted marker construction, WIQL lookup, Work Item Create, the newly created child relationship payload or ordinary update semantics. It shall not authorise arbitrary relation editing, removal, replacement, move, relation-index operations, retry, rollback or new configuration.
 
 ---
 

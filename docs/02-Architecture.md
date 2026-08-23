@@ -4,7 +4,7 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.0
+**Version:** 2.1
 
 **Status:** Approved Baseline
 
@@ -34,6 +34,7 @@
 | 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined JSON Patch Create payload-construction ownership and transport responsibilities. |
 | 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined parent-child relationship orchestration, ownership and failure-handling responsibilities. |
 | 2.0 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined persisted source-identity and resolve-or-create responsibilities. |
+| 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined reused-child relationship inspection, recovery and descendant-gating responsibilities. |
 
 ---
 
@@ -218,6 +219,9 @@ Responsibilities include:
 - Preventing Create after successful existing-item resolution and not inferring permission to compare or update ordinary fields.
 - Coordinating parent resolution-or-creation before child persistent creation and the immediate child-to-parent relationship request after successful child creation.
 - Supplying the parent ID, child ID and current child revision to the REST Client for each non-root child relationship.
+- Coordinating relationship-state inspection for every reused non-root child after successful identity resolution.
+- Comparing parsed reverse-hierarchy target IDs with the intended numeric parent ID and classifying the reused-child state as MISSING, CORRECT or CONFLICTING.
+- Selecting missing-parent repair, correct-parent reuse without PATCH or conflict failure and gating descendant persistence until the intended parent relationship is known to be correct.
 - Preventing duplicate work item creation.
 - Initiating persistent backlog generation only after Scrum compatibility validation succeeds.
 
@@ -244,6 +248,10 @@ Responsibilities include:
 - Applying only JSON serialization escaping to prepared values and performing no semantic transformation, Markdown rendering, HTML transformation or Tags reinterpretation.
 - Using the same logical candidate JSON Patch document for validation-only and persistent creation, with `validateOnly=true` as the only Create-payload contract difference.
 - Constructing Parent-Child Relationship PATCH requests, including the canonical parent relation target URL, the relationship-specific `/rev` `test` operation and the `/relations/-` `add` operation.
+- Constructing and sending the reused-child relationship-state GET using API version `7.1` and `$expand=relations`.
+- Validating the returned work-item ID, fresh revision and relation collection and member structure, including the approved omitted-or-empty zero-state representations.
+- Strictly parsing reverse-hierarchy relation target URIs, validating their fixed Azure DevOps Services structure and extracting numeric target work-item IDs.
+- Reusing the approved Parent-Child Relationship PATCH unchanged for missing-parent recovery with the fresh relationship-state revision.
 - Applying only JSON serialization and JSON-required escaping to relationship payload values.
 - Sending work item requests.
 - Receiving Azure DevOps responses.
@@ -290,11 +298,15 @@ The application follows the logical execution sequence below.
 8. Azure DevOps Scrum compatibility, including the fixed custom identity-field contract and candidate payload containing the mandatory marker, is validated through work-item type metadata and, where necessary, validation-only requests. The configured project is resolved through Project retrieval and its canonical Azure DevOps project name and ID are retained for later candidate validation.
 9. For every source item in deterministic source order, the Backlog Generator requests an existing-item lookup scoped to the configured project, exact supported type and exact marker.
 10. Zero candidates cause Work Item Create using the approved five-field contract. Exactly one candidate causes Work Item GET, validation of its canonical project name, exact type and ordinal marker, and reuse of its numeric ID and revision without Create. Multiple, malformed or conflicting candidates stop processing before Create.
-11. For newly created non-root children, the parent shall be created or resolved before the child, and the child-to-parent relationship PATCH shall occur immediately after successful child creation when the parent ID, child ID and child revision are known.
-12. Results are logged.
-13. Execution summary is presented.
+11. For a newly created non-root child, the parent shall be created or resolved before the child, and the child-to-parent relationship PATCH shall occur immediately after successful child creation using the child ID and revision returned by Create.
+12. For a reused non-root child, the REST Client retrieves its fresh relationship state, validates the response and reverse-hierarchy target URI structure, and returns the fresh revision and parsed target IDs. The Backlog Generator compares those IDs with the intended parent ID and classifies the state as MISSING, CORRECT or CONFLICTING.
+13. MISSING causes the approved Parent-Child Relationship PATCH using the fresh relationship-state revision; CORRECT causes no PATCH; and CONFLICTING stops processing without remote mutation.
+14. Descendants become eligible for persistent processing only after a newly created child's relationship PATCH succeeds, a reused child is observed as CORRECT or a reused child's MISSING relationship is successfully repaired.
+15. Root Epic items require neither relationship-state retrieval nor a parent relationship PATCH.
+16. Results are logged.
+17. Execution summary is presented.
 
-Existing Relationship State and Recovery for reused non-root children is outside this flow. Resolving and retaining an existing child ID and revision shall not authorise relation retrieval, comparison, repair, replacement, deletion or PATCH. Full recovery of partial relationship state requires a separate approved contract.
+This flow permits deterministic recovery when an earlier execution created a child but its immediate relationship PATCH failed: the later execution resolves the parent and child, observes MISSING using a fresh relationship-state GET, repairs the relationship using the fresh revision and continues only after success.
 
 Each stage shall complete successfully before the next stage begins.
 
@@ -346,7 +358,9 @@ The application shall:
 - Detect Azure DevOps Scrum compatibility failures before persistent backlog generation.
 - Stop before Create on identity lookup failure, local or remote marker ambiguity, malformed result IDs, candidate retrieval failure, or conflicting project, type or marker evidence. A rejected candidate shall not be reinterpreted as zero matches.
 - On a parent-child relationship PATCH failure, stop further persistent backlog generation immediately, report the failure clearly and do not create later work items or relationships.
-- Do not automatically retry, roll back, delete, remove or repair Azure DevOps state after a parent-child relationship PATCH failure; already-created work items and relationships shall remain as accepted partial persistent state.
+- Fail on reused-child relationship-state GET failure, child-ID mismatch, missing or non-numeric revision, malformed relation data, malformed reverse-hierarchy target URI, wrong parent, multiple parents or duplicate parent relationships.
+- On a missing-parent recovery PATCH or `/rev` conflict, stop further persistent backlog generation immediately and block descendants.
+- Do not automatically re-read, retry, roll back, delete, remove or replace Azure DevOps relationship state after a failure; already-created work items and relationships shall remain as accepted partial persistent state.
 - Report meaningful error messages.
 - Record execution failures in the application log.
 - Terminate gracefully when recovery is not possible.

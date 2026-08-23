@@ -4,7 +4,7 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.8
+**Version:** 1.9
 
 **Status:** Approved Baseline
 
@@ -32,6 +32,7 @@
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Acceptance Criteria Mapping contract. |
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Tags Mapping contract. |
 | 1.8 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Work Item Identity and Existing Item Resolution contract. |
+| 1.9 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Existing Relationship State and Recovery contract. |
 
 ---
 
@@ -264,7 +265,15 @@ Title, parent Azure DevOps ID, State, Area Path and hierarchy similarity shall n
 
 Reuse shall not constitute an ordinary work-item update. The application shall not compare or update Title, Description, Acceptance Criteria or Tags for synchronisation purposes, update the identity field, or send an ordinary Work Item PATCH under this contract. Description-only, Acceptance Criteria-only and Tags-only changes shall retain identity and cause reuse without update. Heading changes, ancestor-heading changes, canonical source-file or path renames, and identity-significant canonical-path case changes shall produce changed identities as defined by Document 09. Old generated items shall not be automatically renamed, migrated, updated, deleted, superseded or cleaned up.
 
-This contract shall not define Existing Relationship State and Recovery for reused non-root items. The approved Create-then-parent-child relationship contract shall remain applicable to newly created children. Relationship inspection, comparison, repair, replacement, deletion or PATCH for reused items shall remain unresolved.
+After successful identity resolution, every reused non-root work item shall have its existing parent-relationship state inspected against its intended immediate parent. The application shall classify that state as MISSING, CORRECT or CONFLICTING. Well-formed non-parent relationships shall not affect parent-state classification, while malformed relationship data shall cause failure.
+
+For MISSING, the application shall automatically add the intended parent by reusing the approved Parent-Child Relationship PATCH with the fresh child revision returned by relationship-state inspection. This recovery is limited to adding a missing intended parent relationship and shall not authorise ordinary field updates or generic relationship editing.
+
+For CORRECT, the application shall perform no relationship PATCH and may continue processing descendants. For CONFLICTING, including a wrong parent, multiple parent relationships or duplicate same-parent relationships, the application shall fail without mutating remote state and shall not process descendants.
+
+No descendants of a non-root item shall be persistently processed until its intended parent relationship has either been observed as correct or successfully established. This permits a later execution to recover when a previous execution created a child but failed to establish its parent relationship. Newly created non-root children shall retain the approved immediate relationship PATCH flow, and root Epic items shall require neither parent inspection nor a parent relationship PATCH.
+
+Relationship-state recovery shall not change logical source identity, persisted identity markers, WIQL lookup, Work Item Create payloads, ordinary update semantics, relationship removal or replacement, retry or rollback behaviour.
 
 ## FR-008 Configuration Management
 
