@@ -1,104 +1,29 @@
-"""Unit tests for the configuration data models."""
+"""Tests for effective configuration data models."""
+
+from pathlib import Path
 
 from azure_devops_backlog_generator.config.models import (
-    ApplicationConfig,
     AzureDevOpsConfig,
     Configuration,
     DocumentationConfig,
-    GeneratorConfig,
     LoggingConfig,
 )
 
 
-def test_application_config() -> None:
-    config = ApplicationConfig(
-        name="test-application",
-        version="1.0.0",
-        dry_run=True,
+def test_configuration_keeps_the_runtime_pat_out_of_its_representation() -> None:
+    configuration = Configuration(
+        azure_devops=AzureDevOpsConfig(organization="organization", project="project"),
+        documentation=DocumentationConfig(source_directory=Path("input")),
+        logging=LoggingConfig(level="INFO", log_directory=Path("logs")),
+        personal_access_token="secret-value",
     )
 
-    assert config.name == "test-application"
-    assert config.version == "1.0.0"
-    assert config.dry_run is True
+    assert "secret-value" not in repr(configuration)
+    assert configuration.personal_access_token == "secret-value"
 
 
-def test_azure_devops_config() -> None:
-    config = AzureDevOpsConfig(
-        organization="test-organization",
-        project="test-project",
-        personal_access_token="test-token",
-    )
+def test_obsolete_configuration_models_are_not_public() -> None:
+    import azure_devops_backlog_generator.config.models as models
 
-    assert config.organization == "test-organization"
-    assert config.project == "test-project"
-    assert config.personal_access_token == "test-token"
-
-
-def test_documentation_config() -> None:
-    config = DocumentationConfig(
-        source_directory="docs",
-    )
-
-    assert config.source_directory == "docs"
-
-
-def test_logging_config() -> None:
-    config = LoggingConfig(
-        level="INFO",
-        log_directory="logs",
-    )
-
-    assert config.level == "INFO"
-    assert config.log_directory == "logs"
-
-
-def test_generator_config() -> None:
-    config = GeneratorConfig(
-        overwrite_existing=False,
-        create_relationships=True,
-    )
-
-    assert config.overwrite_existing is False
-    assert config.create_relationships is True
-
-
-def test_configuration() -> None:
-    application = ApplicationConfig(
-        name="test-application",
-        version="1.0.0",
-        dry_run=True,
-    )
-
-    azure_devops = AzureDevOpsConfig(
-        organization="test-organization",
-        project="test-project",
-        personal_access_token="test-token",
-    )
-
-    documentation = DocumentationConfig(
-        source_directory="docs",
-    )
-
-    logging = LoggingConfig(
-        level="INFO",
-        log_directory="logs",
-    )
-
-    generator = GeneratorConfig(
-        overwrite_existing=False,
-        create_relationships=True,
-    )
-
-    config = Configuration(
-        application=application,
-        azure_devops=azure_devops,
-        documentation=documentation,
-        logging=logging,
-        generator=generator,
-    )
-
-    assert config.application is application
-    assert config.azure_devops is azure_devops
-    assert config.documentation is documentation
-    assert config.logging is logging
-    assert config.generator is generator
+    assert not hasattr(models, "GeneratorConfig")
+    assert not hasattr(models, "ApplicationConfig")

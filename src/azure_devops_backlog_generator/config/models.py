@@ -1,75 +1,41 @@
-"""
-Configuration data models.
+"""Typed, effective configuration for the application."""
 
-These models define the strongly typed configuration objects used
-throughout the Azure DevOps Backlog Generator.
-
-Configuration values are loaded by the configuration loader and
-validated by the configuration validator before application startup.
-"""
-
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 
 
-@dataclass(slots=True)
-class ApplicationConfig:
-    """
-    General application configuration.
-    """
-
-    name: str
-    version: str
-    dry_run: bool
-
-
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class AzureDevOpsConfig:
-    """
-    Azure DevOps connection configuration.
-    """
+    """Azure DevOps Services identifiers from the configuration file."""
 
     organization: str
     project: str
-    personal_access_token: str
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class DocumentationConfig:
-    """
-    Documentation input configuration.
-    """
+    """Resolved location of dedicated backlog-input documentation."""
 
-    source_directory: str
+    source_directory: Path
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class LoggingConfig:
-    """
-    Logging configuration.
-    """
+    """Effective file-logging settings."""
 
     level: str
-    log_directory: str
+    log_directory: Path
 
 
-@dataclass(slots=True)
-class GeneratorConfig:
-    """
-    Backlog generator configuration.
-    """
-
-    overwrite_existing: bool
-    create_relationships: bool
-
-
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class Configuration:
-    """
-    Root configuration object.
+    """Validated application configuration.
+
+    The personal access token is runtime-only. It is intentionally omitted
+    from the representation so it cannot be disclosed in diagnostics.
     """
 
-    application: ApplicationConfig
     azure_devops: AzureDevOpsConfig
     documentation: DocumentationConfig
     logging: LoggingConfig
-    generator: GeneratorConfig
+    personal_access_token: str = field(repr=False)
