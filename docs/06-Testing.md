@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.0
+**Version:** 2.1
 
 **Status:** Approved Baseline
 
@@ -34,6 +34,7 @@
 | 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Version 1.0 Work Item Create payload contract. |
 | 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Version 1.0 Parent-Child Relationship contract. |
 | 2.0 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined test coverage for source identity, lookup and existing-item resolution. |
+| 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined test coverage for reused-child relationship-state inspection and recovery. |
 
 ---
 
@@ -302,7 +303,7 @@ Persisted Source Identity and Existing Item Resolution validation shall addition
 - Description-only, Acceptance Criteria-only and Tags-only changes retaining identity and causing reuse without update;
 - heading, ancestor-heading, canonical path rename and identity-significant path-case changes producing changed identities, without rename migration or obsolete-item cleanup;
 - secret-safe diagnostics and absence of PATs, Authorization headers, full remote response bodies by default and unnecessary raw logical identities from logs; and
-- the boundary that newly created children retain the approved relationship contract while reused-item relationship inspection, comparison, repair, replacement, deletion and PATCH remain unresolved and untested under this contract.
+- successful existing-item resolution remaining free of ordinary field or identity updates while authorising only the approved reused-child relationship-state contract for non-root items.
 
 The following known digest vectors shall be tested exactly:
 
@@ -328,6 +329,33 @@ Parent-Child Relationship validation shall additionally cover:
 - fail-fast behaviour when a relationship PATCH fails, including no later persistent work-item or relationship creation;
 - no automatic retry, rollback, deletion, relationship removal or remote-state repair, with already-created remote work items and relationships remaining; and
 - responsibility boundaries in which the Documentation Processor supplies source hierarchy, the Backlog Generator coordinates IDs and relationship timing, and the REST Client constructs and transmits the relationship JSON Patch request.
+
+Existing Relationship State and Recovery validation shall additionally cover:
+
+- the exact reused-child relationship-state GET endpoint, HTTP `GET`, `$expand=relations`, `api-version=7.1`, numeric child ID and absence of a `fields` parameter;
+- required numeric response `id` equal to the reused child ID and required numeric fresh `rev`, including rejection of missing, null, malformed, non-numeric or mismatched values;
+- omitted `relations` and an empty relation array as accepted zero-relation representations;
+- rejection of explicit `null` and object, string, number or boolean relation values;
+- rejection of non-object array members and mixed valid/invalid arrays;
+- rejection of relation members with missing, empty or non-string `rel` or `url` values;
+- acceptance of structurally valid relations both without and with optional `attributes`;
+- exact case-sensitive `System.LinkTypes.Hierarchy-Reverse` parent evidence and rejection of a case-altered reverse-hierarchy reference;
+- ignored well-formed unrelated-only and `System.LinkTypes.Hierarchy-Forward`-only collections;
+- CORRECT classification with coexisting well-formed unrelated or forward relations;
+- MISSING, CORRECT, wrong-parent, multiple-different-parent, duplicate-same-parent and correct-parent-plus-second-reverse outcomes;
+- strict reverse-relation URI rejection for malformed or relative URIs, HTTP, wrong host, wrong organisation, wrong route, query, fragment, extra path, missing ID, non-numeric ID, zero ID and negative ID;
+- structurally valid URI parsing followed by numeric intended-parent ID comparison, including equal and differing target IDs without raw full-string equality or unconstrained terminal-ID parsing;
+- no separate parent GET;
+- use of the fresh relationship-state revision for MISSING repair and exclusion of the earlier Existing Item Lookup revision from the repair `/rev` test;
+- exact reuse of the approved Parent-Child Relationship PATCH endpoint, Content-Type, two-operation body, operation order, relation type and canonical target URL;
+- successful missing-parent repair, `/rev` conflict and repair transport/API failure;
+- no automatic reread, retry or rollback after recovery failure;
+- root Epic bypass of relationship GET and PATCH, newly created non-root child bypass of relationship GET, and reused non-root child execution of the relationship GET;
+- CORRECT skipping PATCH, MISSING performing the recovery PATCH and CONFLICTING performing no remote mutation;
+- descendant blocking until a newly created relationship PATCH succeeds, a reused child is observed CORRECT or a MISSING reused-child relationship is successfully repaired;
+- the complete two-run lifecycle in which child creation succeeds, the initial relationship PATCH fails, the rerun resolves both items, observes MISSING, repairs with the fresh revision and then continues descendants;
+- absence of remove, replace, move, relation-index, ordinary field-update and identity-update operations and absence of WIQL changes; and
+- secret-safe diagnostics containing no PAT, Authorization header, unnecessary full response body or relation URL when the numeric target ID suffices.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
 
