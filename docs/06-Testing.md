@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.9
+**Version:** 2.0
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-21
+**Last Updated:** 2026-08-23
 
 **Target Release:** v1.0.0
 
@@ -33,6 +33,7 @@
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Tags Mapping contract. |
 | 1.8 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Version 1.0 Work Item Create payload contract. |
 | 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Version 1.0 Parent-Child Relationship contract. |
+| 2.0 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined test coverage for source identity, lookup and existing-item resolution. |
 
 ---
 
@@ -191,6 +192,8 @@ Version 1.0 shall use:
 - Representative work item structures.
 - A project missing a required work-item type.
 - A project with a missing or incompatible required standard field.
+- A project with missing, wrongly typed, read-only, inapplicable, process-required or otherwise incompatible `Custom.BacklogGeneratorSourceIdentity` support.
+- Marked, unmarked and ambiguously marked existing work items for controlled lookup outcomes.
 - A project/process rule that prevents candidate creation.
 - Controlled configuration files.
 
@@ -268,13 +271,48 @@ Work Item Create Payload validation shall additionally cover:
 
 - the exact Create endpoint, HTTP `POST`, `application/json-patch+json` Content-Type, `api-version=7.1` and validation-only query behaviour;
 - RFC 6902 JSON Patch array structure, the `add`-only Create profile and exclusion of `replace`, `remove`, `test`, `copy` and `move`;
-- the exact four-field allowlist, canonical field order, mandatory Title and mandatory Description;
+- the exact five-field allowlist, canonical field order, mandatory Title, mandatory Description and mandatory final `Custom.BacklogGeneratorSourceIdentity` operation;
 - optional Acceptance Criteria, mandatory Task Acceptance Criteria omission, optional Tags, absent optional-field omission and no empty placeholder operations;
+- valid three-, four- and five-operation payloads, with identity always final and the exact same marker in validation-only and persistent Create;
 - exact prepared-value preservation, JSON escaping without semantic transformation, no double HTML escaping, no Markdown re-rendering and no Tags splitting, reordering or renormalisation;
 - exclusion of `System.WorkItemType`, additional fields, server-managed fields and relationship operations;
 - exclusion of `bypassRules`, `suppressNotifications` and `$expand`;
 - validation-only and persistent candidate-payload equivalence; and
 - pre-persistence failure for incomplete or incompatible candidates.
+
+Persisted Source Identity and Existing Item Resolution validation shall additionally cover:
+
+- Document 09 remaining authoritative for logical source identity and the digest remaining only its remote persisted representation;
+- exact framing bytes for the ASCII `adbg-source-identity-v1` prefix, zero byte, unsigned 32-bit big-endian path byte length, UTF-8 path bytes, unsigned 32-bit big-endian hierarchy-component count, heading-level byte, unsigned 32-bit big-endian title byte length and UTF-8 title bytes;
+- UTF-8 without a byte-order mark, byte rather than code-point lengths, Unicode and non-ASCII inputs, no additional Unicode normalisation, and exclusion of newlines, delimiters, JSON framing, locale encoding, platform path conversion and additional whitespace;
+- exclusion of Description, Acceptance Criteria, Tags, Azure DevOps IDs, project, organisation, work-item type label, parent ID, remote state and configuration from the digest;
+- SHA-256 output as exactly 64 lowercase hexadecimal characters, the exact `adbg:source-id:v1:sha256:` prefix, exact marker-format validation and uppercase or otherwise case-altered marker rejection;
+- pre-persistence failure when distinct logical identities produce the same local marker;
+- the fixed custom-field reference, display name, String/single-line-text type, applicability to all four supported types, Create writability, optional process status, absent default and mandatory generator Create value;
+- compatibility failure for missing, wrongly typed, read-only, inapplicable, process-required or otherwise incompatible identity-field support and confirmation that the generator performs no process or field provisioning;
+- the exact WIQL endpoint, HTTP `POST`, `application/json` Content-Type, `$top=2`, `api-version=7.1`, `@project`, fixed field references, fixed operators, fixed supported type literals and validated-marker insertion;
+- absence of Title, path, heading, parent ID, State, Area and caller-controlled fields, operators or fragments from the authoritative WIQL query;
+- zero results causing Create, exactly one result causing GET without Create, and two results causing ambiguity failure without further candidate retrieval or Create;
+- duplicate IDs, missing or non-numeric IDs, WIQL transport/API failure and malformed result failure before Create;
+- the exact Work Item GET endpoint and fields query, and required numeric ID, numeric revision, project, exact type and exact ordinal marker response state;
+- canonical project-name verification after project configuration by name or accepted identifier, exact work-item-type and casing verification, and exact ordinal case-sensitive marker verification;
+- failure rather than zero-match fallback for missing, null, malformed or conflicting candidate response evidence or GET transport/API failure;
+- same Title with different logical identities resolving independently, and unmarked manual Title or hierarchy collisions not being queried heuristically, adopted, warned about solely for matching Title or treated as failures;
+- successful existing-ID and revision retention, descendant processing with the reused ID, no Create after resolution and no ordinary field or identity update;
+- Description-only, Acceptance Criteria-only and Tags-only changes retaining identity and causing reuse without update;
+- heading, ancestor-heading, canonical path rename and identity-significant path-case changes producing changed identities, without rename migration or obsolete-item cleanup;
+- secret-safe diagnostics and absence of PATs, Authorization headers, full remote response bodies by default and unnecessary raw logical identities from logs; and
+- the boundary that newly created children retain the approved relationship contract while reused-item relationship inspection, comparison, repair, replacement, deletion and PATCH remain unresolved and untested under this contract.
+
+The following known digest vectors shall be tested exactly:
+
+| Canonical path | Ordered hierarchy | Expected SHA-256 | Complete marker |
+|----------------|-------------------|-----------------|-----------------|
+| `file-a.md` | `(1, Platform)` | `fc590bceef6c25da9e47138a34883f99eadf0e52201fe04fb700a20edc14acaf` | `adbg:source-id:v1:sha256:fc590bceef6c25da9e47138a34883f99eadf0e52201fe04fb700a20edc14acaf` |
+| `file-a.md` | `(1, Platform), (2, API)` | `2dd6a0940a9677d61a11c4726af7f0ab39814419cfb9bcdda8c28cfe91751d63` | `adbg:source-id:v1:sha256:2dd6a0940a9677d61a11c4726af7f0ab39814419cfb9bcdda8c28cfe91751d63` |
+| `caf\u00e9.md` (`U+0063 U+0061 U+0066 U+00E9 U+002E U+006D U+0064`) | `(1, Cr\u00e8me)` where the title is `U+0043 U+0072 U+00E8 U+006D U+0065` | `d5e7aab193d51ff379aee0fc4c1fdbe4260801e2e8600dbd67d2b21bc95df7bc` | `adbg:source-id:v1:sha256:d5e7aab193d51ff379aee0fc4c1fdbe4260801e2e8600dbd67d2b21bc95df7bc` |
+
+For the non-ASCII vector, the canonical path UTF-8 bytes shall be hexadecimal `63 61 66 c3 a9 2e 6d 64`, and the title UTF-8 bytes shall be `43 72 c3 a8 6d 65`. The complete framed bytes shall be hexadecimal `61 64 62 67 2d 73 6f 75 72 63 65 2d 69 64 65 6e 74 69 74 79 2d 76 31 00 00 00 00 08 63 61 66 c3 a9 2e 6d 64 00 00 00 01 01 00 00 00 06 43 72 c3 a8 6d 65`.
 
 Parent-Child Relationship validation shall additionally cover:
 
@@ -284,9 +322,9 @@ Parent-Child Relationship validation shall additionally cover:
 - the canonical numeric-parent target URL `https://dev.azure.com/{organization}/_apis/wit/workItems/{parentId}`, including no project segment, no `api-version`, no query parameters and no browser/UI URL;
 - a relation object containing exactly `rel` and `url`, with no relation attributes or other relation-specific fields;
 - absence of ordinary field operations, `validateOnly`, `bypassRules`, `suppressNotifications` and `$expand` from relationship PATCH requests;
-- exactly one relationship PATCH for each Feature, Product Backlog Item and Task, and no relationship PATCH for a root Epic;
+- exactly one relationship PATCH for each newly created Feature, Product Backlog Item and Task, no relationship PATCH for a root Epic, and no relationship-state expectation for reused non-root items under this contract;
 - permitted direct hierarchy edges Epic → Feature, Feature → Product Backlog Item and Product Backlog Item → Task; rejected direct shortcuts; and exactly one intended immediate parent for each non-root child;
-- parent-before-child persistent creation, immediate child-to-parent relationship PATCH timing and parent/child ID plus child-revision lifecycle;
+- parent resolution-or-creation before newly created child persistence, immediate child-to-parent relationship PATCH timing, and parent/child ID plus child-revision lifecycle;
 - fail-fast behaviour when a relationship PATCH fails, including no later persistent work-item or relationship creation;
 - no automatic retry, rollback, deletion, relationship removal or remote-state repair, with already-created remote work items and relationships remaining; and
 - responsibility boundaries in which the Documentation Processor supplies source hierarchy, the Backlog Generator coordinates IDs and relationship timing, and the REST Client constructs and transmits the relationship JSON Patch request.
@@ -308,7 +346,7 @@ Version 1.0 shall be considered successfully validated when all of the following
 - Parent-child relationships have been created correctly.
 - Configuration validation has completed successfully.
 - Scrum compatibility validation has completed successfully for standard Scrum and compatible inherited/customised Scrum projects.
-- Missing required work-item types, missing or incompatible standard fields, additional project/process rules that prevent candidate creation, validation-only failures and metadata retrieval failures have been validated to stop persistent backlog generation.
+- Missing required work-item types, missing or incompatible standard fields, missing or incompatible custom identity-field support, additional project/process rules that prevent candidate creation, validation-only failures and metadata retrieval failures have been validated to stop persistent backlog generation.
 - No critical or high-severity defects remain unresolved.
 - Complete traceability has been maintained between requirements, implementation and testing.
 

@@ -4,11 +4,11 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.7
+**Version:** 1.8
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-21
+**Last Updated:** 2026-08-23
 
 **Target Release:** v1.0.0
 
@@ -31,6 +31,7 @@
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 mandatory Description Mapping contract. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Acceptance Criteria Mapping contract. |
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Tags Mapping contract. |
+| 1.8 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Work Item Identity and Existing Item Resolution contract. |
 
 ---
 
@@ -251,6 +252,20 @@ Description shall be mandatory after Tags and Acceptance Criteria exclusion. Mis
 
 The application shall support repeatable execution without creating duplicate work items.
 
+Document 09 shall remain the sole authority for the logical source identity, consisting of the canonical relative file path and complete normalised semantic-heading hierarchy. Version 1.0 shall persist a deterministic, versioned SHA-256 representation of that logical identity in the generator-reserved Azure DevOps field `Custom.BacklogGeneratorSourceIdentity`. The persisted representation shall not redefine logical source identity.
+
+`Custom.BacklogGeneratorSourceIdentity` shall have the display name `Backlog Generator Source Identity`, use the Azure DevOps String/single-line-text type and apply to Epic, Feature, Product Backlog Item and Task. It shall remain optional at Azure DevOps process level, have no default value and be mandatory in every generator-created work item. The field reference shall be fixed Version 1.0 behaviour and shall not be configurable.
+
+The required custom field shall be provisioned outside the generator. The generator shall not create an inherited process, create the field, add it to work-item types, change the project process or field rules, choose another field, or accept a configurable field mapping. Missing or incompatible identity-field support shall be a compatibility-validation failure before persistent generation.
+
+For every source item in deterministic source order, the application shall compute the persisted identity marker and resolve an existing work item using only the configured Azure DevOps project, exact supported work-item type and exact marker. Zero candidates shall cause Create; exactly one candidate shall be validated and its numeric Azure DevOps ID and revision reused without Create; and two or more candidates shall cause failure before Create. A malformed response, lookup failure or conflicting candidate identity shall cause failure and shall not be reinterpreted as zero candidates.
+
+Title, parent Azure DevOps ID, State, Area Path and hierarchy similarity shall not be authoritative identity evidence. Unmarked manual work items shall not be adopted, queried heuristically by Title or hierarchy, warned about solely for matching Title, or treated as failures solely for matching Title. A sole valid item carrying the exact marker shall be authoritative identity evidence regardless of its original provenance. Humans and other integrations shall not set, copy, alter or reuse the generator-reserved marker unless intentionally representing the same generated source identity.
+
+Reuse shall not constitute an ordinary work-item update. The application shall not compare or update Title, Description, Acceptance Criteria or Tags for synchronisation purposes, update the identity field, or send an ordinary Work Item PATCH under this contract. Description-only, Acceptance Criteria-only and Tags-only changes shall retain identity and cause reuse without update. Heading changes, ancestor-heading changes, canonical source-file or path renames, and identity-significant canonical-path case changes shall produce changed identities as defined by Document 09. Old generated items shall not be automatically renamed, migrated, updated, deleted, superseded or cleaned up.
+
+This contract shall not define Existing Relationship State and Recovery for reused non-root items. The approved Create-then-parent-child relationship contract shall remain applicable to newly created children. Relationship inspection, comparison, repair, replacement, deletion or PATCH for reused items shall remain unresolved.
+
 ## FR-008 Configuration Management
 
 The application shall support external configuration files to enable reuse across multiple software projects.
@@ -263,7 +278,7 @@ The application shall provide logging sufficient to monitor execution and diagno
 
 The application shall detect, report and handle execution errors without causing unexpected application termination where recovery is possible.
 
-Before persistent backlog generation, the application shall validate that the configured Azure DevOps Services project is compatible with the Version 1.0 Scrum work-item model. Validation shall confirm that the configured project and the required work-item types Epic, Feature, Product Backlog Item and Task exist; that required standard fields are available and compatible where applicable; and that a candidate payload can satisfy project/process rules when static metadata alone is insufficient. If required compatibility metadata cannot be retrieved or compatibility cannot be established, the application shall stop before persistent backlog generation, report the incompatibility clearly and shall not fall back to another process or invent type or field mappings.
+Before persistent backlog generation, the application shall validate that the configured Azure DevOps Services project is compatible with the Version 1.0 Scrum work-item model. Validation shall confirm that the configured project and the required work-item types Epic, Feature, Product Backlog Item and Task exist; that required standard fields are available and compatible where applicable; that `Custom.BacklogGeneratorSourceIdentity` has the exact approved reference name, display name and String/single-line-text contract, applies to all four supported types, is writable during Create and is not process-required; and that a candidate payload including the mandatory identity marker can satisfy project/process rules when static metadata alone is insufficient. If required compatibility metadata cannot be retrieved or compatibility cannot be established, the application shall stop before persistent backlog generation, report the incompatibility clearly and shall not fall back to another process or invent type or field mappings.
 
 An additional field marked `alwaysRequired` shall not alone establish incompatibility. The application shall inspect the metadata and, where necessary, validate a candidate payload rather than inventing a value for an unsupported custom field.
 
