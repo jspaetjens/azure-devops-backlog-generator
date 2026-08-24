@@ -13,7 +13,9 @@ authors = [
     { name = "Jack Spaetjens" }
 ]
 
-dependencies = []
+dependencies = [
+    "markdown-it-py==4.2.0",
+]
 
 [project.optional-dependencies]
 dev = [
