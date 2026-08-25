@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.2
+**Version:** 2.3
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-25
 
@@ -36,6 +36,7 @@
 | 2.0 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined persisted source-identity and resolve-or-create responsibilities. |
 | 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined reused-child relationship inspection, recovery and descendant-gating responsibilities. |
 | 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision validation responsibilities. |
+| 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the internal REST Client Foundation boundary and urllib transport responsibilities. |
 
 ---
 
@@ -236,6 +237,10 @@ The Azure DevOps REST Client manages communication with Azure DevOps.
 Version 1.0 shall target Azure DevOps Services only and shall use the Azure DevOps Services organisation/project model. The Services REST base address shall be derived from the configured organisation according to the official Azure DevOps Services URL structure.
 
 Azure DevOps Server instance, port, collection and Server-specific base-address handling are outside Version 1.0 architecture scope.
+
+The REST Client Foundation shall provide a small internal, purpose-specific transport interface. It shall use `urllib` from the Python standard library and shall not introduce a third-party HTTP dependency. It shall own Azure DevOps Services URL construction, HTTP request construction and transmission, Basic authentication-header construction, required common headers, JSON transport mechanics, the fixed timeout, expected-status validation, redirect rejection, no-retry behaviour, controlled transport, network and response failures, and secret-safe diagnostics. It shall not be a general-purpose public HTTP abstraction.
+
+Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations, including compatibility validation, WIQL, Work Item GET, Work Item Create and relationship operations, remain deferred to their later capability slices.
 
 Responsibilities include:
 
