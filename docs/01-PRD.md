@@ -4,11 +4,11 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.9
+**Version:** 1.10
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-23
+**Last Updated:** 2026-08-25
 
 **Target Release:** v1.0.0
 
@@ -33,6 +33,7 @@
 | 1.7 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Tags Mapping contract. |
 | 1.8 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Work Item Identity and Existing Item Resolution contract. |
 | 1.9 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Existing Relationship State and Recovery contract. |
+| 1.10 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision failure behaviour. |
 
 ---
 
@@ -254,6 +255,8 @@ Description shall be mandatory after Tags and Acceptance Criteria exclusion. Mis
 The application shall support repeatable execution without creating duplicate work items.
 
 Document 09 shall remain the sole authority for the logical source identity, consisting of the canonical relative file path and complete normalised semantic-heading hierarchy. Version 1.0 shall persist a deterministic, versioned SHA-256 representation of that logical identity in the generator-reserved Azure DevOps field `Custom.BacklogGeneratorSourceIdentity`. The persisted representation shall not redefine logical source identity.
+
+Before compatibility validation or any Azure DevOps operation, the Backlog Generator shall validate every Epic, Feature, Product Backlog Item and Task from all parsed documents in the execution. Two or more semantic source items with the same canonical relative file path and ordered complete normalised semantic-heading hierarchy shall be a duplicate logical source identity failure. Two structurally distinct logical source identities that produce the same complete persisted marker shall be a persisted-marker collision failure. Both failure classes shall stop processing deterministically; the generator shall not deduplicate, merge, retain one item, generate an alternative marker or continue to WIQL, Work Item GET, Create or relationship processing.
 
 `Custom.BacklogGeneratorSourceIdentity` shall have the display name `Backlog Generator Source Identity`, use the Azure DevOps String/single-line-text type and apply to Epic, Feature, Product Backlog Item and Task. It shall remain optional at Azure DevOps process level, have no default value and be mandatory in every generator-created work item. The field reference shall be fixed Version 1.0 behaviour and shall not be configurable.
 

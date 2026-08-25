@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.1
+**Version:** 2.2
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-23
+**Last Updated:** 2026-08-25
 
 **Target Release:** v1.0.0
 
@@ -35,6 +35,7 @@
 | 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined parent-child relationship orchestration, ownership and failure-handling responsibilities. |
 | 2.0 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined persisted source-identity and resolve-or-create responsibilities. |
 | 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined reused-child relationship inspection, recovery and descendant-gating responsibilities. |
+| 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision validation responsibilities. |
 
 ---
 
@@ -196,6 +197,7 @@ Responsibilities include:
 - Producing each item's canonical relative source path and complete ordered normalised semantic-heading hierarchy, including heading levels, under the authority of `09-Documentation-Input.md`.
 - Preparing candidate work item data for compatibility validation without constructing Azure DevOps HTTP or JSON Patch request representations.
 - Not computing the persisted source-identity digest, constructing WIQL or interpreting Azure DevOps lookup results.
+- Not performing run-level duplicate logical identity or persisted-marker collision validation.
 - Not constructing Azure DevOps relation URLs or relationship JSON Patch payloads.
 - Maintaining traceability between documentation and generated work items.
 
@@ -213,7 +215,7 @@ Responsibilities include:
 - Coordinating candidate work items for REST Client request construction and execution.
 - Maintaining the resolved candidate parent-child hierarchy and resolving created or reused source items to Azure DevOps numeric work-item IDs.
 - Serialising each approved logical source identity using the Version 1.0 binary framing, computing its SHA-256 digest and formatting the persisted identity marker.
-- Detecting collisions in which distinct logical source identities produce the same complete marker and stopping before persistent generation.
+- Validating run-wide logical identity uniqueness and detecting persisted-marker collisions across every semantic item from all parsed documents. The Backlog Generator shall fail deterministically before compatibility validation or REST activity when two or more items have the same logical identity, or when distinct logical identities produce the same complete marker.
 - Coordinating resolve-or-create processing in deterministic source order and interpreting zero, one and multiple lookup outcomes.
 - Associating source items with created or reused Azure DevOps numeric IDs and retaining the current numeric revision returned for reused items.
 - Preventing Create after successful existing-item resolution and not inferring permission to compare or update ordinary fields.
@@ -294,7 +296,7 @@ The application follows the logical execution sequence below.
 4. Approved backlog-input Markdown documents are discovered, parsed, validated, partitioned and rendered for mandatory Description values, optional applicable Acceptance Criteria values and optional Tags values according to `09-Documentation-Input.md` before persistent Azure DevOps operations.
 5. Parsed backlog structures are generated.
 6. Candidate Azure DevOps work items, including prepared Description values, applicable Acceptance Criteria values and applicable Tags values, are prepared.
-7. The Backlog Generator computes every persisted identity marker and validates that distinct logical source identities do not collide before persistent generation.
+7. The Backlog Generator computes every persisted identity marker and performs deterministic run-wide identity validation across all parsed documents. A duplicate logical identity or persisted-marker collision stops processing before compatibility validation, WIQL, Work Item GET, Create, relationship processing or any external mutation.
 8. Azure DevOps Scrum compatibility, including the fixed custom identity-field contract and candidate payload containing the mandatory marker, is validated through work-item type metadata and, where necessary, validation-only requests. The configured project is resolved through Project retrieval and its canonical Azure DevOps project name and ID are retained for later candidate validation.
 9. For every source item in deterministic source order, the Backlog Generator requests an existing-item lookup scoped to the configured project, exact supported type and exact marker.
 10. Zero candidates cause Work Item Create using the approved five-field contract. Exactly one candidate causes Work Item GET, validation of its canonical project name, exact type and ordinal marker, and reuse of its numeric ID and revision without Create. Multiple, malformed or conflicting candidates stop processing before Create.
