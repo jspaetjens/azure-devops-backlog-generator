@@ -43,11 +43,10 @@
 
   ```powershell
   python -m ruff check .
-  python -m ruff format --check .
   python -m pytest
   ```
 
-  These commands reflect the Ruff and pytest configuration in `pyproject.toml`.
+  These commands use the Ruff lint and pytest configuration in `pyproject.toml`.
   If a required check cannot run, state why.
 
 ## Change safety and Git
