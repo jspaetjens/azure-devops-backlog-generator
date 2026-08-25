@@ -3,12 +3,43 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterator
+from enum import StrEnum
 
-from azure_devops_backlog_generator.documentation.models import HeadingIdentity
+from azure_devops_backlog_generator.documentation.models import (
+    DocumentationHierarchy,
+    HeadingIdentity,
+    SemanticWorkItem,
+)
 
 _DOMAIN_PREFIX = b"adbg-source-identity-v1"
 _MARKER_PREFIX = "adbg:source-id:v1:sha256:"
 _MAX_UINT32 = (1 << 32) - 1
+
+
+class SourceIdentityValidationState(StrEnum):
+    """The approved run-level source-identity validation states."""
+
+    UNIQUE = "UNIQUE"
+    DUPLICATE_LOGICAL_IDENTITY = "DUPLICATE_LOGICAL_IDENTITY"
+    PERSISTED_MARKER_COLLISION = "PERSISTED_MARKER_COLLISION"
+
+
+class SourceIdentityValidationError(Exception):
+    """Raised when run-level source-identity validation cannot be satisfied."""
+
+    def __init__(
+        self,
+        state: SourceIdentityValidationState,
+        *,
+        marker: str | None = None,
+    ) -> None:
+        self.state = state
+        self.marker = marker
+        message = f"Source identity validation failed: {state.value}."
+        if marker is not None:
+            message = f"{message} Persisted marker: {marker}."
+        super().__init__(message)
 
 
 def frame_source_identity(
@@ -53,6 +84,44 @@ def build_source_identity_marker(
     """Return the complete Version 1.0 persisted source-identity marker."""
     digest = calculate_source_identity_digest(canonical_relative_path, heading_hierarchy)
     return f"{_MARKER_PREFIX}{digest}"
+
+
+def validate_source_identity_collisions(hierarchy: DocumentationHierarchy) -> None:
+    """Fail on duplicate logical identities or persisted-marker collisions in one run."""
+    seen_logical_identities: set[_LogicalIdentity] = set()
+    identities_by_marker: dict[str, _LogicalIdentity] = {}
+
+    for item in _iter_source_order_items(hierarchy):
+        logical_identity = (item.canonical_relative_path, item.heading_hierarchy)
+        if logical_identity in seen_logical_identities:
+            raise SourceIdentityValidationError(
+                SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY
+            )
+
+        marker = build_source_identity_marker(*logical_identity)
+        existing_identity = identities_by_marker.get(marker)
+        if existing_identity is not None and existing_identity != logical_identity:
+            raise SourceIdentityValidationError(
+                SourceIdentityValidationState.PERSISTED_MARKER_COLLISION,
+                marker=marker,
+            )
+
+        seen_logical_identities.add(logical_identity)
+        identities_by_marker[marker] = logical_identity
+
+
+_LogicalIdentity = tuple[str, tuple[HeadingIdentity, ...]]
+
+
+def _iter_source_order_items(hierarchy: DocumentationHierarchy) -> Iterator[SemanticWorkItem]:
+    for document in hierarchy.documents:
+        yield from _iter_items(document.root_items)
+
+
+def _iter_items(items: tuple[SemanticWorkItem, ...]) -> Iterator[SemanticWorkItem]:
+    for item in sorted(items, key=lambda candidate: candidate.source_order):
+        yield item
+        yield from _iter_items(item.children)
 
 
 def _require_uint32(value: int, name: str) -> None:
