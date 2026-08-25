@@ -27,6 +27,7 @@ from azure_devops_backlog_generator.documentation.models import (
     TokenSpan,
     WorkItemType,
 )
+from azure_devops_backlog_generator.documentation.tags import prepare_tags
 
 _WORK_ITEM_TYPES = {
     1: WorkItemType.EPIC,
@@ -47,6 +48,7 @@ class _PendingItem:
     end_index: int = 0
     description_html: str = ""
     acceptance_criteria_html: str | None = None
+    tags_value: str | None = None
     children: list[_PendingItem] = field(default_factory=list)
 
 
@@ -182,6 +184,16 @@ class DocumentationProcessor:
     ) -> None:
         for item in items:
             body_end = item.children[0].heading_open_index if item.children else item.end_index
+            item.tags_value = prepare_tags(
+                parser=self._parser,
+                tokens=tokens,
+                start=item.heading_close_index + 1,
+                end=body_end,
+                work_item_type=_WORK_ITEM_TYPES[item.level],
+                relative_path=relative_path,
+                source=source,
+                references=environment.get("references", {}),
+            )
             item.acceptance_criteria_html = prepare_acceptance_criteria(
                 parser=self._parser,
                 tokens=tokens,
@@ -234,6 +246,7 @@ def _freeze_item(item: _PendingItem, relative_path: str) -> SemanticWorkItem:
         source_order=item.source_order,
         description_html=item.description_html,
         acceptance_criteria_html=item.acceptance_criteria_html,
+        tags_value=item.tags_value,
         direct_body_token_spans=spans,
         children=children,
     )

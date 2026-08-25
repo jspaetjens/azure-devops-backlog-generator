@@ -32,12 +32,15 @@ def test_semantic_work_item_acceptance_criteria_value_is_immutable() -> None:
         source_order=0,
         description_html="<p>Description</p>\n",
         acceptance_criteria_html="<ul>\n<li>Criterion</li>\n</ul>\n",
+        tags_value="platform; backend",
         direct_body_token_spans=(),
         children=(),
     )
 
     with pytest.raises(FrozenInstanceError):
         item.acceptance_criteria_html = None  # type: ignore[misc]
+    with pytest.raises(FrozenInstanceError):
+        item.tags_value = None  # type: ignore[misc]
 
 
 def test_work_item_type_values_match_the_fixed_source_grammar() -> None:
