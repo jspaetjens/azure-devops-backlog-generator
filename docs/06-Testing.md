@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.2
+**Version:** 2.3
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-25
 
@@ -36,6 +36,7 @@
 | 2.0 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined test coverage for source identity, lookup and existing-item resolution. |
 | 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined test coverage for reused-child relationship-state inspection and recovery. |
 | 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined test coverage for run-level duplicate logical identity and persisted-marker collision validation. |
+| 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the urllib REST Client Foundation and redirect behaviour. |
 
 ---
 
@@ -269,6 +270,20 @@ Tags Mapping validation shall additionally cover:
 - Tags exclusion from source identity; and
 - source-validation failure before persistent backlog generation.
 
+REST Client Foundation validation shall additionally cover:
+
+- use of `urllib` from the Python standard library with no third-party HTTP dependency;
+- Azure DevOps Services URL construction, configured organisation/project addressing, URI path-segment encoding and the fixed `api-version=7.1` contract;
+- exact HTTP method, common `Accept` header, endpoint-specific Content-Type and JSON transport representation where required;
+- HTTP Basic authentication construction from a synthetic PAT using an empty username and confirmation that PATs and Authorization headers do not appear in representations, logs, exceptions or diagnostics;
+- the fixed effective 30-second `urllib` timeout with no externally configurable timeout settings;
+- rejection without following of every HTTP `3xx` response and confirmation that redirect handling does not forward the Authorization header or any credential;
+- no automatic retry or sleep for transport failures, HTTP `408`, HTTP `429`, `5xx`, optimistic-concurrency failures or uncertain mutation results;
+- controlled handling of connection, DNS, TLS and timeout failures, unexpected statuses, malformed JSON, missing required bodies and malformed required response shapes;
+- exact endpoint-specific `200 OK` success validation and rejection of an unexpected success-range status;
+- safe handling of non-JSON error bodies and bounded optional diagnostics without full response-body logging by default; and
+- independent request/response lifecycles with response closure, no retained response object, persistent session, cookie state, redirect state, connection pool or other persistent mutable request state.
+
 Work Item Create Payload validation shall additionally cover:
 
 - the exact Create endpoint, HTTP `POST`, `application/json-patch+json` Content-Type, `api-version=7.1` and validation-only query behaviour;
@@ -437,4 +452,3 @@ Approval of a document version requires:
 The document metadata and Version History record whether the current version has completed this approval process.
 
 Subsequent modifications shall follow the established documentation governance process and be recorded through Version History.
-

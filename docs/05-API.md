@@ -4,9 +4,9 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.4
+**Version:** 2.5
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-25
 
@@ -38,6 +38,7 @@
 | 2.2 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 reused-child relationship-state inspection and recovery contract. |
 | 2.3 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps REST transport and operational failure contract. |
 | 2.4 | 2026-08-25 | Draft | Jack Spaetjens | Defined the Version 1.0 run-level source identity validation contract. |
+| 2.5 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 urllib REST Client Foundation and redirect contract. |
 
 ---
 
@@ -163,7 +164,13 @@ Version 1.0 shall obtain the Azure DevOps Personal Access Token only from `AZDO_
 
 All Azure DevOps Services requests shall use HTTPS and HTTP Basic authentication. The Basic credential shall be constructed from `":" + PAT`, encoded as ASCII bytes and Base64-encoded exactly once. The `Authorization` header shall be `Basic <base64-credential>`. The username component shall be empty. The PAT and derived Authorization header shall exist in memory only for request execution and shall never be logged, included in error output or included in request-dump diagnostics.
 
-Every Azure DevOps REST request shall use a fixed 30-second timeout. The timeout is application behaviour and shall not be configurable through TOML, environment variables or CLI. Version 1.0 shall not define separate connect, read or total timeout configuration. The implementation may use the selected HTTP library's timeout mechanism provided that the effective request timeout is 30 seconds.
+The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations, including compatibility validation, WIQL, Work Item GET, Work Item Create and relationship operations, remain deferred to their later capability slices.
+
+Every Azure DevOps REST request shall use a fixed 30-second timeout. The timeout is application behaviour and shall not be configurable through TOML, environment variables or CLI. Version 1.0 shall not define separate connect, read or total timeout configuration. The implementation shall use `urllib`'s timeout mechanism so that the effective request timeout is 30 seconds.
+
+HTTP redirects shall not be followed automatically. Any HTTP `3xx` response shall be treated as an unexpected HTTP status and shall result in a controlled REST transport failure. Redirect handling shall never forward the Authorization header or any credential to another request.
+
+Each request shall use an independent `urllib` request/response lifecycle. Its response body shall be consumed and the response closed during request processing. The REST Client Foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state.
 
 Version 1.0 shall perform no automatic HTTP retries for any Azure DevOps REST operation. This includes Project retrieval; process, work-item-type and field compatibility calls; validation-only Create; WIQL; Work Item GET; relationship-state GET; persistent Create; relationship PATCH; missing-parent recovery PATCH; and any other Version 1.0 Azure DevOps REST request. Connection errors, DNS failures, TLS failures, timeouts, HTTP `408`, HTTP `429`, HTTP `500`, HTTP `502`, HTTP `503`, HTTP `504`, optimistic-concurrency failures and uncertain persistent Create results shall not be retried.
 
@@ -229,7 +236,7 @@ Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries
 
 Aside from the Work Item Create payload contract in Section 8.1, Parent-Child Relationship contract in Section 8.2, Persisted Source Identity contract in Section 8.3, Existing Item Lookup contract in Section 8.4 and Existing Relationship State and Recovery contract in Section 8.5, this section does not define tag taxonomy or ordinary work-item update operation semantics.
 
-Endpoint definitions shall remain configurable where practical to support future Azure DevOps API versions. This shall not make the Version 1.0 API version externally configurable.
+The approved Version 1.0 endpoint paths, HTTP methods, query parameters, content types and API version are fixed internal API-contract behaviour. They shall not be externally configurable through TOML, environment variables or CLI. A future endpoint or API-version change shall require an explicit API Specification update and shall not be introduced through endpoint configuration.
 
 ---
 
