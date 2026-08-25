@@ -5,10 +5,12 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
 
+from azure_devops_backlog_generator.documentation.description import prepare_description
 from azure_devops_backlog_generator.documentation.exceptions import (
     DocumentationReadError,
     DocumentationValidationError,
@@ -40,6 +42,7 @@ class _PendingItem:
     source_order: int
     hierarchy: tuple[HeadingIdentity, ...]
     end_index: int = 0
+    description_html: str = ""
     children: list[_PendingItem] = field(default_factory=list)
 
 
@@ -84,8 +87,10 @@ class DocumentationProcessor:
             message = f"Source document cannot be read: {relative_path}."
             raise DocumentationReadError(message) from error
 
-        tokens = self._parser.parse(source)
+        environment: dict[str, Any] = {}
+        tokens = self._parser.parse(source, environment)
         pending_items = self._build_pending_items(tokens, relative_path)
+        self._prepare_descriptions(pending_items, tokens, relative_path, source, environment)
         snapshots = tuple(_snapshot_token(token) for token in tokens)
         return ParsedDocument(
             canonical_relative_path=relative_path,
@@ -163,6 +168,28 @@ class DocumentationProcessor:
             )
         return roots
 
+    def _prepare_descriptions(
+        self,
+        items: list[_PendingItem],
+        tokens: list[Token],
+        relative_path: str,
+        source: str,
+        environment: dict[str, Any],
+    ) -> None:
+        for item in items:
+            body_end = item.children[0].heading_open_index if item.children else item.end_index
+            item.description_html = prepare_description(
+                parser=self._parser,
+                tokens=tokens,
+                start=item.heading_close_index + 1,
+                end=body_end,
+                work_item_type=_WORK_ITEM_TYPES[item.level],
+                relative_path=relative_path,
+                source=source,
+                references=environment.get("references", {}),
+            )
+            self._prepare_descriptions(item.children, tokens, relative_path, source, environment)
+
     @staticmethod
     def _validate_parent(level: int, parent: _PendingItem | None, relative_path: str) -> None:
         if level == 1:
@@ -191,6 +218,7 @@ def _freeze_item(item: _PendingItem, relative_path: str) -> SemanticWorkItem:
         canonical_relative_path=relative_path,
         heading_hierarchy=item.hierarchy,
         source_order=item.source_order,
+        description_html=item.description_html,
         direct_body_token_spans=spans,
         children=children,
     )
