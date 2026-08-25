@@ -10,6 +10,9 @@ from typing import Any
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
 
+from azure_devops_backlog_generator.documentation.acceptance_criteria import (
+    prepare_acceptance_criteria,
+)
 from azure_devops_backlog_generator.documentation.description import prepare_description
 from azure_devops_backlog_generator.documentation.exceptions import (
     DocumentationReadError,
@@ -43,6 +46,7 @@ class _PendingItem:
     hierarchy: tuple[HeadingIdentity, ...]
     end_index: int = 0
     description_html: str = ""
+    acceptance_criteria_html: str | None = None
     children: list[_PendingItem] = field(default_factory=list)
 
 
@@ -178,6 +182,16 @@ class DocumentationProcessor:
     ) -> None:
         for item in items:
             body_end = item.children[0].heading_open_index if item.children else item.end_index
+            item.acceptance_criteria_html = prepare_acceptance_criteria(
+                parser=self._parser,
+                tokens=tokens,
+                start=item.heading_close_index + 1,
+                end=body_end,
+                work_item_type=_WORK_ITEM_TYPES[item.level],
+                relative_path=relative_path,
+                source=source,
+                references=environment.get("references", {}),
+            )
             item.description_html = prepare_description(
                 parser=self._parser,
                 tokens=tokens,
@@ -219,6 +233,7 @@ def _freeze_item(item: _PendingItem, relative_path: str) -> SemanticWorkItem:
         heading_hierarchy=item.hierarchy,
         source_order=item.source_order,
         description_html=item.description_html,
+        acceptance_criteria_html=item.acceptance_criteria_html,
         direct_body_token_spans=spans,
         children=children,
     )
