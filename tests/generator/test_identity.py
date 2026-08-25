@@ -3,18 +3,25 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 import pytest
 
+import azure_devops_backlog_generator.generator.identity as identity_module
 from azure_devops_backlog_generator.documentation.models import (
+    DocumentationHierarchy,
     HeadingIdentity,
+    ParsedDocument,
     SemanticWorkItem,
     WorkItemType,
 )
 from azure_devops_backlog_generator.generator.identity import (
+    SourceIdentityValidationError,
+    SourceIdentityValidationState,
     build_source_identity_marker,
     calculate_source_identity_digest,
     frame_source_identity,
+    validate_source_identity_collisions,
 )
 
 _MARKER_PATTERN = re.compile(r"adbg:source-id:v1:sha256:[0-9a-f]{64}\Z")
@@ -184,3 +191,266 @@ def test_framing_does_not_apply_host_path_or_unicode_normalisation() -> None:
 def test_rejects_heading_levels_outside_the_approved_representation(level: int) -> None:
     with pytest.raises(ValueError, match="H1 through H4"):
         frame_source_identity("input.md", (HeadingIdentity(level, "Title"),))
+
+
+def _source_item(
+    *,
+    path: str = "input.md",
+    hierarchy: tuple[HeadingIdentity, ...] = (HeadingIdentity(1, "Platform"),),
+    source_order: int = 0,
+    children: tuple[SemanticWorkItem, ...] = (),
+    description_html: str = "<p>Description</p>\n",
+    acceptance_criteria_html: str | None = "<ul>\n<li>Criterion</li>\n</ul>\n",
+    tags_value: str | None = "platform",
+) -> SemanticWorkItem:
+    return replace(
+        _item(
+            source_order=source_order,
+            description_html=description_html,
+            acceptance_criteria_html=acceptance_criteria_html,
+            tags_value=tags_value,
+        ),
+        work_item_type=WorkItemType(
+            ("Epic", "Feature", "Product Backlog Item", "Task")[len(hierarchy) - 1]
+        ),
+        level=hierarchy[-1].level,
+        title=hierarchy[-1].title,
+        canonical_relative_path=path,
+        heading_hierarchy=hierarchy,
+        children=children,
+    )
+
+
+def _document(path: str, *root_items: SemanticWorkItem) -> ParsedDocument:
+    return ParsedDocument(canonical_relative_path=path, tokens=(), root_items=root_items)
+
+
+def _hierarchy(*documents: ParsedDocument) -> DocumentationHierarchy:
+    return DocumentationHierarchy(documents=documents)
+
+
+def test_run_level_validation_succeeds_for_empty_and_single_item_hierarchies() -> None:
+    assert validate_source_identity_collisions(_hierarchy()) is None
+    assert validate_source_identity_collisions(
+        _hierarchy(_document("input.md", _source_item()))
+    ) is None
+
+
+@pytest.mark.parametrize(
+    "items",
+    [
+        (
+            _source_item(path="first.md", hierarchy=(HeadingIdentity(1, "Platform"),)),
+            _source_item(
+                path="second.md", hierarchy=(HeadingIdentity(1, "Platform"),), source_order=1
+            ),
+        ),
+        (
+            _source_item(
+                hierarchy=(HeadingIdentity(1, "Platform"), HeadingIdentity(2, "API"))
+            ),
+            _source_item(
+                hierarchy=(HeadingIdentity(1, "Product"), HeadingIdentity(2, "API")),
+                source_order=1,
+            ),
+        ),
+        (
+            _source_item(path="Input.md"),
+            _source_item(path="input.md", source_order=1),
+        ),
+        (
+            _source_item(hierarchy=(HeadingIdentity(1, "Platform"),)),
+            _source_item(hierarchy=(HeadingIdentity(1, "platform"),), source_order=1),
+        ),
+        (
+            _source_item(path="caf\u00e9.md", hierarchy=(HeadingIdentity(1, "Cr\u00e8me"),)),
+            _source_item(path="cafe.md", hierarchy=(HeadingIdentity(1, "Creme"),), source_order=1),
+        ),
+    ],
+)
+def test_run_level_validation_accepts_distinct_logical_identities(
+    items: tuple[SemanticWorkItem, SemanticWorkItem],
+) -> None:
+    hierarchy = _hierarchy(_document("input.md", *items))
+
+    assert validate_source_identity_collisions(hierarchy) is None
+
+
+@pytest.mark.parametrize(
+    "changed_item",
+    [
+        _source_item(description_html="<p>Changed Description</p>\n"),
+        _source_item(acceptance_criteria_html="<ul>\n<li>Changed</li>\n</ul>\n"),
+        _source_item(tags_value="changed"),
+        _source_item(source_order=99),
+    ],
+)
+def test_duplicate_logical_identity_ignores_business_values_and_source_order(
+    changed_item: SemanticWorkItem,
+) -> None:
+    hierarchy = _hierarchy(_document("input.md", _source_item(), changed_item))
+
+    with pytest.raises(SourceIdentityValidationError) as error:
+        validate_source_identity_collisions(hierarchy)
+
+    assert error.value.state is SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY
+    assert error.value.marker is None
+
+
+def test_duplicate_logical_identity_takes_precedence_over_marker_collision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    marker = "adbg:source-id:v1:sha256:" + "0" * 64
+    monkeypatch.setattr(identity_module, "build_source_identity_marker", lambda *_: marker)
+    hierarchy = _hierarchy(_document("input.md", _source_item(), _source_item(source_order=1)))
+
+    with pytest.raises(SourceIdentityValidationError) as error:
+        validate_source_identity_collisions(hierarchy)
+
+    assert error.value.state is SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY
+
+
+def test_distinct_logical_identities_with_one_complete_marker_fail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    marker = "adbg:source-id:v1:sha256:" + "f" * 64
+    monkeypatch.setattr(identity_module, "build_source_identity_marker", lambda *_: marker)
+    hierarchy = _hierarchy(
+        _document(
+            "input.md",
+            _source_item(),
+            _source_item(path="other.md", source_order=1),
+        )
+    )
+
+    with pytest.raises(SourceIdentityValidationError) as error:
+        validate_source_identity_collisions(hierarchy)
+
+    assert error.value.state is SourceIdentityValidationState.PERSISTED_MARKER_COLLISION
+    assert error.value.marker == marker
+
+
+def test_complete_marker_not_digest_alone_controls_collision_grouping(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    markers = iter(
+        [
+            "adbg:source-id:v1:sha256:" + "a" * 64,
+            "adbg:source-id:v2:sha256:" + "a" * 64,
+        ]
+    )
+    monkeypatch.setattr(identity_module, "build_source_identity_marker", lambda *_: next(markers))
+    hierarchy = _hierarchy(
+        _document("input.md", _source_item(), _source_item(path="other.md", source_order=1))
+    )
+
+    assert validate_source_identity_collisions(hierarchy) is None
+
+
+def test_run_level_validation_traverses_roots_descendants_and_multiple_documents(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed: list[tuple[str, tuple[HeadingIdentity, ...]]] = []
+    original = identity_module.build_source_identity_marker
+
+    def record_marker(path: str, headings: tuple[HeadingIdentity, ...]) -> str:
+        observed.append((path, headings))
+        return original(path, headings)
+
+    monkeypatch.setattr(identity_module, "build_source_identity_marker", record_marker)
+    task = _source_item(
+        hierarchy=(
+            HeadingIdentity(1, "Epic"),
+            HeadingIdentity(2, "Feature"),
+            HeadingIdentity(3, "PBI"),
+            HeadingIdentity(4, "Task"),
+        ),
+        source_order=3,
+    )
+    pbi = _source_item(
+        hierarchy=(
+            HeadingIdentity(1, "Epic"),
+            HeadingIdentity(2, "Feature"),
+            HeadingIdentity(3, "PBI"),
+        ),
+        source_order=2,
+        children=(task,),
+    )
+    feature = _source_item(
+        hierarchy=(HeadingIdentity(1, "Epic"), HeadingIdentity(2, "Feature")),
+        source_order=1,
+        children=(pbi,),
+    )
+    epic = _source_item(hierarchy=(HeadingIdentity(1, "Epic"),), children=(feature,))
+    second_epic = _source_item(path="second.md", hierarchy=(HeadingIdentity(1, "Second"),))
+
+    assert validate_source_identity_collisions(
+        _hierarchy(_document("input.md", epic), _document("second.md", second_epic))
+    ) is None
+    assert observed == [
+        ("input.md", epic.heading_hierarchy),
+        ("input.md", feature.heading_hierarchy),
+        ("input.md", pbi.heading_hierarchy),
+        ("input.md", task.heading_hierarchy),
+        ("second.md", second_epic.heading_hierarchy),
+    ]
+
+
+def test_duplicate_failure_is_the_first_condition_in_document_source_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed: list[str] = []
+
+    def record_marker(path: str, _: tuple[HeadingIdentity, ...]) -> str:
+        observed.append(path)
+        return "adbg:source-id:v1:sha256:" + path[0] * 64
+
+    monkeypatch.setattr(identity_module, "build_source_identity_marker", record_marker)
+    first = _source_item(path="alpha.md")
+    duplicate = _source_item(path="alpha.md")
+    collision = _source_item(path="beta.md")
+    hierarchy = _hierarchy(
+        _document("first.md", first),
+        _document("second.md", duplicate, collision),
+    )
+
+    with pytest.raises(SourceIdentityValidationError) as error:
+        validate_source_identity_collisions(hierarchy)
+
+    assert error.value.state is SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY
+    assert observed == ["alpha.md"]
+
+
+def test_marker_collision_is_the_first_condition_in_document_source_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    marker = "adbg:source-id:v1:sha256:" + "c" * 64
+    calls: list[str] = []
+
+    def colliding_marker(path: str, _: tuple[HeadingIdentity, ...]) -> str:
+        calls.append(path)
+        return marker
+
+    monkeypatch.setattr(identity_module, "build_source_identity_marker", colliding_marker)
+    hierarchy = _hierarchy(
+        _document("first.md", _source_item(path="alpha.md")),
+        _document("second.md", _source_item(path="beta.md")),
+        _document("third.md", _source_item(path="gamma.md")),
+    )
+
+    with pytest.raises(SourceIdentityValidationError) as error:
+        validate_source_identity_collisions(hierarchy)
+
+    assert error.value.state is SourceIdentityValidationState.PERSISTED_MARKER_COLLISION
+    assert calls == ["alpha.md", "beta.md"]
+
+
+def test_validation_is_generator_owned_and_does_not_mutate_the_hierarchy() -> None:
+    hierarchy = _hierarchy(_document("input.md", _source_item()))
+    original = hierarchy
+
+    assert validate_source_identity_collisions(hierarchy) is None
+    assert hierarchy == original
+    assert SourceIdentityValidationError.__module__ == (
+        "azure_devops_backlog_generator.generator.identity"
+    )
