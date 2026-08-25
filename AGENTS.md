@@ -23,8 +23,12 @@
 
 ## Python, architecture and security
 
-- This project targets Python 3.14.x. Use the project virtual environment and
-  existing tooling; do not rely on globally installed command-line tools.
+- This project targets Python 3.14.x. `.venv` is the canonical project virtual
+  environment. On Windows, do not assume it is activated: invoke project
+  tooling explicitly through `.\.venv\Scripts\python.exe` and never fall back
+  to the system Python or globally installed tooling. If `.venv` does not exist
+  or required tooling is unavailable in it, stop and report the environment
+  problem.
 - Follow the documented package structure, naming conventions, component
   responsibilities and existing patterns. Avoid unnecessary complexity and
   premature abstractions.
@@ -42,8 +46,8 @@
 - Run checks with module invocation:
 
   ```powershell
-  python -m ruff check .
-  python -m pytest
+  .\.venv\Scripts\python.exe -m ruff check .
+  .\.venv\Scripts\python.exe -m pytest
   ```
 
   These commands use the Ruff lint and pytest configuration in `pyproject.toml`.
