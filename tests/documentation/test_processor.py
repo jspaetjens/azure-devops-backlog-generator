@@ -12,7 +12,7 @@ from azure_devops_backlog_generator.documentation.models import WorkItemType
 from azure_devops_backlog_generator.documentation.processor import DocumentationProcessor
 
 
-def _process(tmp_path: Path, filename: str = "input.md", content: str = "# Epic\n"):
+def _process(tmp_path: Path, filename: str = "input.md", content: str = "# Epic\nBody\n"):
     (tmp_path / filename).write_text(content, encoding="utf-8")
     return DocumentationProcessor().process(tmp_path)
 
@@ -28,8 +28,8 @@ def test_discovers_direct_markdown_files_in_deterministic_casefold_order(tmp_pat
     (tmp_path / "nested").mkdir()
     (tmp_path / "nested" / "hidden.md").write_text("# Hidden", encoding="utf-8")
     (tmp_path / "ignore.txt").write_text("# Ignore", encoding="utf-8")
-    (tmp_path / "b.md").write_text("# B", encoding="utf-8")
-    (tmp_path / "A.MD").write_text("# A", encoding="utf-8")
+    (tmp_path / "b.md").write_text("# B\nBody", encoding="utf-8")
+    (tmp_path / "A.MD").write_text("# A\nBody", encoding="utf-8")
 
     hierarchy = DocumentationProcessor().process(tmp_path)
 
@@ -39,7 +39,7 @@ def test_discovers_direct_markdown_files_in_deterministic_casefold_order(tmp_pat
 
 def test_excludes_symlinked_markdown_file_where_supported(tmp_path: Path) -> None:
     target = tmp_path / "target.md"
-    target.write_text("# Target", encoding="utf-8")
+    target.write_text("# Target\nBody", encoding="utf-8")
     linked = tmp_path / "linked.md"
     try:
         linked.symlink_to(target)
@@ -53,7 +53,7 @@ def test_excludes_symlinked_markdown_file_where_supported(tmp_path: Path) -> Non
 
 def test_accepts_utf8_bom_and_preserves_unicode_title(tmp_path: Path) -> None:
     path = tmp_path / "input.md"
-    path.write_bytes("\ufeff# Café\n".encode("utf-8"))
+    path.write_bytes("\ufeff# Café\nBody\n".encode("utf-8"))
 
     hierarchy = DocumentationProcessor().process(tmp_path)
 
@@ -85,8 +85,8 @@ def test_reports_an_unreadable_matching_file(
 
 
 def test_uses_nfc_canonical_filenames_and_repeated_processing_is_identical(tmp_path: Path) -> None:
-    _process(tmp_path, "Cafe\u0301.md", "# First\n")
-    _process(tmp_path, "café.md", "# Second\n")
+    _process(tmp_path, "Cafe\u0301.md", "# First\nBody\n")
+    _process(tmp_path, "café.md", "# Second\nBody\n")
 
     first = DocumentationProcessor().process(tmp_path)
     second = DocumentationProcessor().process(tmp_path)
@@ -99,10 +99,10 @@ def test_uses_nfc_canonical_filenames_and_repeated_processing_is_identical(tmp_p
 @pytest.mark.parametrize(
     ("content", "expected_types"),
     [
-        ("# Epic\n", [WorkItemType.EPIC]),
-        ("# Epic\n## Feature\n", [WorkItemType.EPIC, WorkItemType.FEATURE]),
+        ("# Epic\nBody\n", [WorkItemType.EPIC]),
+        ("# Epic\nBody\n## Feature\nBody\n", [WorkItemType.EPIC, WorkItemType.FEATURE]),
         (
-            "# Epic\n## Feature\n### PBI\n#### Task\n",
+            "# Epic\nBody\n## Feature\nBody\n### PBI\nBody\n#### Task\nBody\n",
             [
                 WorkItemType.EPIC,
                 WorkItemType.FEATURE,
@@ -125,7 +125,10 @@ def test_builds_the_fixed_hierarchy(
 
 
 def test_permits_siblings_multiple_epics_and_resets_hierarchy(tmp_path: Path) -> None:
-    hierarchy = _process(tmp_path, content="# One\n## A\n## B\n# Two\n## C\n")
+    hierarchy = _process(
+        tmp_path,
+        content="# One\nBody\n## A\nBody\n## B\nBody\n# Two\nBody\n## C\nBody\n",
+    )
     first, second = hierarchy.documents[0].root_items
 
     assert [item.title for item in first.children] == ["A", "B"]
@@ -169,7 +172,7 @@ def test_extracts_visible_commonmark_title_text_and_normalises_whitespace(tmp_pa
         tmp_path,
         content=(
             "#  *Em* **Strong** `Code` [Link](https://example.test) "
-            "![Alt *Text*](x)  \u00a0 \n"
+            "![Alt *Text*](x)  \u00a0 \nBody\n"
         ),
     )
 
@@ -192,7 +195,7 @@ def test_rejects_invalid_semantic_titles(content: str, message: str, tmp_path: P
 def test_accepts_a_semantic_title_of_exactly_255_characters(tmp_path: Path) -> None:
     title = "x" * 255
 
-    hierarchy = _process(tmp_path, content=f"# {title}\n")
+    hierarchy = _process(tmp_path, content=f"# {title}\nBody\n")
 
     assert hierarchy.documents[0].root_items[0].title == title
     assert len(hierarchy.documents[0].root_items[0].title) == 255
@@ -201,9 +204,9 @@ def test_accepts_a_semantic_title_of_exactly_255_characters(tmp_path: Path) -> N
 @pytest.mark.parametrize(
     ("content", "expected_title"),
     [
-        ("# Escape \\*marker\\* \\!\n", "Escape *marker* !"),
-        ("# A &amp; B\n", "A & B"),
-        ("# <https://example.test/path>\n", "https://example.test/path"),
+        ("# Escape \\*marker\\* \\!\nBody\n", "Escape *marker* !"),
+        ("# A &amp; B\nBody\n", "A & B"),
+        ("# <https://example.test/path>\nBody\n", "https://example.test/path"),
     ],
 )
 def test_uses_commonmark_visible_text_for_escaped_entity_and_autolink_titles(
@@ -220,7 +223,10 @@ def test_rejects_duplicate_normalised_sibling_titles_but_allows_distinct_parents
     with pytest.raises(DocumentationValidationError, match="Duplicate"):
         _process(tmp_path, content="# Epic\n## Same\n##  Same\n")
 
-    hierarchy = _process(tmp_path, content="# One\n## Same\n# Two\n## Same\n")
+    hierarchy = _process(
+        tmp_path,
+        content="# One\nBody\n## Same\nBody\n# Two\nBody\n## Same\nBody\n",
+    )
     titles = [root.children[0].title for root in hierarchy.documents[0].root_items]
     assert titles == ["Same", "Same"]
 
@@ -249,7 +255,10 @@ def test_preserves_a_non_empty_direct_body_span_to_end_of_file(tmp_path: Path) -
 def test_preserves_structural_direct_body_spans(tmp_path: Path) -> None:
     document = _process(
         tmp_path,
-        content="# Epic\nEpic body\n## Feature\nFeature body\n## Sibling\nSibling body\n# Next\n",
+        content=(
+            "# Epic\nEpic body\n## Feature\nFeature body\n## Sibling\nSibling body\n"
+            "# Next\nNext body\n"
+        ),
     ).documents[0]
     epic, next_epic = document.root_items
     feature, sibling = epic.children
@@ -257,7 +266,9 @@ def test_preserves_structural_direct_body_spans(tmp_path: Path) -> None:
     assert [(span.start, span.end) for span in epic.direct_body_token_spans] == [(3, 6)]
     assert [(span.start, span.end) for span in feature.direct_body_token_spans] == [(9, 12)]
     assert [(span.start, span.end) for span in sibling.direct_body_token_spans] == [(15, 18)]
-    assert next_epic.direct_body_token_spans == ()
+    assert [(span.start, span.end) for span in next_epic.direct_body_token_spans] == [
+        (21, len(document.tokens))
+    ]
     assert document.tokens[feature.direct_body_token_spans[0].start].type == "paragraph_open"
 
 
@@ -293,7 +304,7 @@ def test_preserves_direct_body_spans_for_a_populated_full_hierarchy(tmp_path: Pa
 def test_ignores_h5_looking_text_inside_a_fenced_code_block(tmp_path: Path) -> None:
     hierarchy = _process(
         tmp_path,
-        content="# Epic\n```markdown\n##### Not semantic\n```\n## Feature\n",
+        content="# Epic\n```markdown\n##### Not semantic\n```\n## Feature\nBody\n",
     )
 
     epic = hierarchy.documents[0].root_items[0]
