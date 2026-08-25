@@ -43,11 +43,29 @@
   do not weaken, delete or bypass existing tests.
 - Follow `docs/06-Testing.md`; prefer tests of meaningful external behaviour
   where practical.
+- On Windows, Codex must generate a unique pytest base temporary directory
+  under `.codex-tmp`, such as `.codex-tmp\pytest-<GUID>`, for each run. It must
+  run pytest with `-p no:cacheprovider` and remove that exact directory in the
+  same execution context afterwards, including after failure where practical.
+  Codex sandbox-created persistent pytest directories can receive protected
+  ACLs owned by the sandbox identity; unique paths avoid reuse and same-context
+  cleanup avoids leaving them behind. Disabling the cache provider prevents
+  Codex from creating or mutating the persistent repository `.pytest_cache`.
+  This is a Windows Codex execution constraint, not a general project pytest
+  requirement.
 - Run checks with module invocation:
 
   ```powershell
   .\.venv\Scripts\python.exe -m ruff check .
-  .\.venv\Scripts\python.exe -m pytest
+  $pytestBaseTemp = ".codex-tmp\pytest-$([guid]::NewGuid().ToString('N'))"
+  try {
+      .\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp="$pytestBaseTemp"
+  }
+  finally {
+      if (Test-Path -LiteralPath $pytestBaseTemp) {
+          Remove-Item -LiteralPath $pytestBaseTemp -Recurse -Force
+      }
+  }
   ```
 
   These commands use the Ruff lint and pytest configuration in `pyproject.toml`.
