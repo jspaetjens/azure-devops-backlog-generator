@@ -49,7 +49,7 @@ class ParsedToken:
 
 @dataclass(frozen=True, slots=True)
 class SemanticWorkItem:
-    """A source work item, its prepared Description and structural body boundaries."""
+    """A source work item and its prepared semantic body values."""
 
     work_item_type: WorkItemType
     level: int
@@ -58,6 +58,7 @@ class SemanticWorkItem:
     heading_hierarchy: tuple[HeadingIdentity, ...]
     source_order: int
     description_html: str
+    acceptance_criteria_html: str | None
     direct_body_token_spans: tuple[TokenSpan, ...]
     children: tuple[SemanticWorkItem, ...]
 
