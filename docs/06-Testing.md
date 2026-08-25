@@ -4,7 +4,7 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.3
+**Version:** 2.4
 
 **Status:** Approved Baseline
 
@@ -37,6 +37,7 @@
 | 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined test coverage for reused-child relationship-state inspection and recovery. |
 | 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined test coverage for run-level duplicate logical identity and persisted-marker collision validation. |
 | 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the urllib REST Client Foundation and redirect behaviour. |
+| 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the REST Client Foundation proxy contract. |
 
 ---
 
@@ -278,6 +279,7 @@ REST Client Foundation validation shall additionally cover:
 - HTTP Basic authentication construction from a synthetic PAT using an empty username and confirmation that PATs and Authorization headers do not appear in representations, logs, exceptions or diagnostics;
 - the fixed effective 30-second `urllib` timeout with no externally configurable timeout settings;
 - rejection without following of every HTTP `3xx` response and confirmation that redirect handling does not forward the Authorization header or any credential;
+- explicit disabling of `urllib` proxy handling, so environment proxy variables, Windows or other system proxy configuration and other ambient proxy settings do not affect transport; direct requests retain the configured Azure DevOps Services target; Authorization is not sent through a discovered proxy; and no proxy retry or fallback behaviour occurs;
 - no automatic retry or sleep for transport failures, HTTP `408`, HTTP `429`, `5xx`, optimistic-concurrency failures or uncertain mutation results;
 - controlled handling of connection, DNS, TLS and timeout failures, unexpected statuses, malformed JSON, missing required bodies and malformed required response shapes;
 - exact endpoint-specific `200 OK` success validation and rejection of an unexpected success-range status;
