@@ -4,7 +4,7 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.5
+**Version:** 2.6
 
 **Status:** Approved Baseline
 
@@ -39,6 +39,7 @@
 | 2.3 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps REST transport and operational failure contract. |
 | 2.4 | 2026-08-25 | Draft | Jack Spaetjens | Defined the Version 1.0 run-level source identity validation contract. |
 | 2.5 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 urllib REST Client Foundation and redirect contract. |
+| 2.6 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy contract. |
 
 ---
 
@@ -171,6 +172,8 @@ Every Azure DevOps REST request shall use a fixed 30-second timeout. The timeout
 HTTP redirects shall not be followed automatically. Any HTTP `3xx` response shall be treated as an unexpected HTTP status and shall result in a controlled REST transport failure. Redirect handling shall never forward the Authorization header or any credential to another request.
 
 Each request shall use an independent `urllib` request/response lifecycle. Its response body shall be consumed and the response closed during request processing. The REST Client Foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state.
+
+Version 1.0 shall explicitly disable `urllib` proxy handling, using behaviour equivalent to `urllib.request.ProxyHandler({})`. The REST Client Foundation shall not discover, consume or use `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`, Windows or other system proxy configuration, or any other ambient proxy setting. Authenticated Azure DevOps traffic shall be sent directly to the configured Azure DevOps Services target and shall not be routed through an environment- or system-discovered proxy. Version 1.0 defines no proxy configuration surface, proxy authentication, proxy credentials, PAC support, system-proxy integration or environment-proxy support. Proxy support is deferred to a future approved capability.
 
 Version 1.0 shall perform no automatic HTTP retries for any Azure DevOps REST operation. This includes Project retrieval; process, work-item-type and field compatibility calls; validation-only Create; WIQL; Work Item GET; relationship-state GET; persistent Create; relationship PATCH; missing-parent recovery PATCH; and any other Version 1.0 Azure DevOps REST request. Connection errors, DNS failures, TLS failures, timeouts, HTTP `408`, HTTP `429`, HTTP `500`, HTTP `502`, HTTP `503`, HTTP `504`, optimistic-concurrency failures and uncertain persistent Create results shall not be retried.
 
