@@ -59,6 +59,7 @@ class SemanticWorkItem:
     source_order: int
     description_html: str
     acceptance_criteria_html: str | None
+    tags_value: str | None
     direct_body_token_spans: tuple[TokenSpan, ...]
     children: tuple[SemanticWorkItem, ...]
 
