@@ -4,11 +4,11 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.3
+**Version:** 2.4
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-23
+**Last Updated:** 2026-08-25
 
 **Target Release:** v1.0.0
 
@@ -37,6 +37,7 @@
 | 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 source-identity persistence and existing-item lookup contract. |
 | 2.2 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 reused-child relationship-state inspection and recovery contract. |
 | 2.3 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps REST transport and operational failure contract. |
+| 2.4 | 2026-08-25 | Draft | Jack Spaetjens | Defined the Version 1.0 run-level source identity validation contract. |
 
 ---
 
@@ -58,6 +59,7 @@
   - [8.1 Work Item Create Payload](#81-work-item-create-payload)
   - [8.2 Parent-Child Relationship Payload](#82-parent-child-relationship-payload)
   - [8.3 Persisted Source Identity](#83-persisted-source-identity)
+    - [8.3.1 Run-Level Identity Validation](#831-run-level-identity-validation)
   - [8.4 Existing Item Lookup](#84-existing-item-lookup)
   - [8.5 Existing Relationship State and Recovery](#85-existing-relationship-state-and-recovery)
 - [9. Response Model](#9-response-model)
@@ -445,7 +447,14 @@ adbg:source-id:v1:sha256:<64-lowercase-hex-digits>
 
 It shall match exactly `adbg:source-id:v1:sha256:[0-9a-f]{64}` and shall be compared ordinally and case-sensitively. Uppercase hexadecimal shall not be equivalent. A malformed marker shall be rejected rather than sanitised or repaired.
 
-If two distinct logical source identities produce the same complete marker within one execution, validation shall fail before persistent generation. The generator shall not select one identity, alter the digest or continue persistent generation.
+### 8.3.1 Run-Level Identity Validation
+
+Before compatibility validation or any REST activity, the Backlog Generator shall validate every Epic, Feature, Product Backlog Item and Task from all parsed documents in one execution. Logical identity equality shall be structural equality of the canonical relative source path and the ordered complete normalised semantic-heading hierarchy defined by Document 09. The validation shall classify the first failure in deterministic source-processing order as exactly one of the following:
+
+- `DUPLICATE_LOGICAL_IDENTITY`: two or more semantic items have structurally equal logical identities.
+- `PERSISTED_MARKER_COLLISION`: two structurally distinct logical identities produce the same complete persisted marker.
+
+When no failure is present, every identity shall be `UNIQUE`. Either failure class shall stop processing before compatibility validation, WIQL, Work Item GET, Create, relationship processing or any external mutation. The generator shall not deduplicate or merge items, retain the first or last item, generate an alternative marker or continue processing. This internal validation contract defines no REST endpoint and does not alter the source-identity framing, SHA-256 algorithm, marker syntax or any downstream REST contract.
 
 ---
 

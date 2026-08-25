@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.1
+**Version:** 2.2
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-23
+**Last Updated:** 2026-08-25
 
 **Target Release:** v1.0.0
 
@@ -35,6 +35,7 @@
 | 1.9 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Defined test coverage for the Version 1.0 Parent-Child Relationship contract. |
 | 2.0 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined test coverage for source identity, lookup and existing-item resolution. |
 | 2.1 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined test coverage for reused-child relationship-state inspection and recovery. |
+| 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined test coverage for run-level duplicate logical identity and persisted-marker collision validation. |
 
 ---
 
@@ -288,7 +289,12 @@ Persisted Source Identity and Existing Item Resolution validation shall addition
 - UTF-8 without a byte-order mark, byte rather than code-point lengths, Unicode and non-ASCII inputs, no additional Unicode normalisation, and exclusion of newlines, delimiters, JSON framing, locale encoding, platform path conversion and additional whitespace;
 - exclusion of Description, Acceptance Criteria, Tags, Azure DevOps IDs, project, organisation, work-item type label, parent ID, remote state and configuration from the digest;
 - SHA-256 output as exactly 64 lowercase hexadecimal characters, the exact `adbg:source-id:v1:sha256:` prefix, exact marker-format validation and uppercase or otherwise case-altered marker rejection;
-- pre-persistence failure when distinct logical identities produce the same local marker;
+- run-level validation across zero items, one item and multiple unique items;
+- duplicate logical identity failure when the same canonical relative source path and ordered complete normalised semantic-heading hierarchy occur more than once in one execution;
+- persisted-marker collision failure when structurally distinct logical identities are forced to produce the same complete marker;
+- deterministic first failure when multiple duplicate logical identity or persisted-marker collision conditions are present;
+- inclusion of roots and descendants from multiple parsed documents in run-level identity validation; and
+- confirmation that either run-level identity validation failure prevents compatibility validation, WIQL, Work Item GET, Create, relationship processing and external mutation;
 - the fixed custom-field reference, display name, String/single-line-text type, applicability to all four supported types, Create writability, optional process status, absent default and mandatory generator Create value;
 - compatibility failure for missing, wrongly typed, read-only, inapplicable, process-required or otherwise incompatible identity-field support and confirmation that the generator performs no process or field provisioning;
 - the exact WIQL endpoint, HTTP `POST`, `application/json` Content-Type, `$top=2`, `api-version=7.1`, `@project`, fixed field references, fixed operators, fixed supported type literals and validated-marker insertion;
