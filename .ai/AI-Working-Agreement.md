@@ -2,11 +2,11 @@
 
 > *This document defines the collaboration agreement between Jack Spaetjens and ChatGPT for software engineering projects.*
 
-**Version:** 1.3
+**Version:** 1.4
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-20
+**Last Updated:** 2026-08-25
 
 **Author:** Jack Spaetjens
 
@@ -20,6 +20,7 @@
 | 1.1 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Strengthened documentation governance and established working practices. |
 | 1.2 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Generalized the agreement for reuse across projects and refined governance terminology. |
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Aligned the Git workflow with the authoritative Development Standards and removed the obsolete develop-branch requirement. |
+| 1.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined GitHub Pull Request handoff and PowerShell command presentation requirements. |
 
 ---
 
@@ -189,6 +190,23 @@ Whenever Git commands are generated they shall include:
 - git push origin <feature-branch>
 
 Generated Git workflows shall follow the approved project branching strategy: feature branch → Pull Request → main.
+
+Whenever ChatGPT provides instructions for pushing a feature or documentation branch and creating a GitHub Pull Request, ChatGPT MUST provide together:
+
+- The PowerShell push command or commands.
+- The direct GitHub Pull Request creation URL for the current repository and branch, targeting the correct base branch.
+- The proposed Pull Request title.
+- The proposed Pull Request description.
+- The expected base branch and compare branch.
+
+The direct GitHub Pull Request creation URL MUST NOT be omitted when the repository and branch are known.
+
+When multiple related PowerShell commands form one execution step or workflow, ChatGPT MUST provide them together in one copy/paste-ready PowerShell code block. ChatGPT MUST NOT unnecessarily split related PowerShell commands into separate code blocks.
+
+Separate PowerShell code blocks are appropriate only when:
+
+- The user must inspect or validate output before proceeding; or
+- An explicit stop or checkpoint is required by the workflow.
 
 Repository filenames shall always be used exactly as they exist.
 
