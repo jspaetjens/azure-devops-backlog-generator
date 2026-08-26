@@ -15,6 +15,7 @@ from azure_devops_backlog_generator.azure_devops.exceptions import (
     AzureDevOpsResponseError,
     AzureDevOpsTransportError,
 )
+from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsProject
 
 API_VERSION = "7.1"
 REQUEST_TIMEOUT_SECONDS = 30
@@ -114,6 +115,23 @@ class AzureDevOpsRestClient:
                 "Azure DevOps response body is not valid JSON."
             ) from error
 
+    def retrieve_project(self, *, personal_access_token: str) -> AzureDevOpsProject:
+        """Retrieve and validate the configured Azure DevOps project evidence."""
+        response = self.send_json_request(
+            method="GET",
+            path_segments=("_apis", "projects", self._project),
+            personal_access_token=personal_access_token,
+            project_scoped=False,
+        )
+        if not isinstance(response, Mapping):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps project response must be a JSON object."
+            )
+
+        project_id = _required_project_value(response, "id")
+        project_name = _required_project_value(response, "name")
+        return AzureDevOpsProject(id=project_id, name=project_name)
+
 
 class _RejectRedirectHandler(HTTPRedirectHandler):
     """Reject redirects so authenticated requests are never reissued elsewhere."""
@@ -144,6 +162,15 @@ def _serialize_json_body(json_body: Any | None) -> bytes | None:
         raise AzureDevOpsResponseError(
             "Azure DevOps request body is not JSON serializable."
         ) from error
+
+
+def _required_project_value(response: Mapping[str, Any], name: str) -> str:
+    value = response.get(name)
+    if not isinstance(value, str) or not value.strip():
+        raise AzureDevOpsResponseError(
+            f"Azure DevOps project response requires a non-empty string {name!r}."
+        )
+    return value
 
 
 def _consume_response(response: Any) -> tuple[int, bytes]:
