@@ -16,6 +16,7 @@ from azure_devops_backlog_generator.azure_devops.exceptions import (
     AzureDevOpsTransportError,
 )
 from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsProject
+from azure_devops_backlog_generator.documentation.models import WorkItemType
 
 API_VERSION = "7.1"
 REQUEST_TIMEOUT_SECONDS = 30
@@ -131,6 +132,27 @@ class AzureDevOpsRestClient:
         project_id = _required_project_value(response, "id")
         project_name = _required_project_value(response, "name")
         return AzureDevOpsProject(id=project_id, name=project_name)
+
+    def retrieve_work_item_type(
+        self,
+        work_item_type: WorkItemType,
+        *,
+        personal_access_token: str,
+    ) -> Mapping[str, Any]:
+        """Retrieve metadata for one fixed Version 1.0 work-item type."""
+        if not isinstance(work_item_type, WorkItemType):
+            raise ValueError("A supported WorkItemType is required.")
+
+        response = self.send_json_request(
+            method="GET",
+            path_segments=("_apis", "wit", "workitemtypes", work_item_type),
+            personal_access_token=personal_access_token,
+        )
+        if not isinstance(response, Mapping):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps work-item type response must be a JSON object."
+            )
+        return response
 
 
 class _RejectRedirectHandler(HTTPRedirectHandler):
