@@ -21,6 +21,15 @@ from azure_devops_backlog_generator.documentation.models import WorkItemType
 API_VERSION = "7.1"
 REQUEST_TIMEOUT_SECONDS = 30
 _ACCEPT_HEADER = "application/json"
+_COMPATIBILITY_FIELD_REFERENCES = frozenset(
+    {
+        "System.Title",
+        "System.Description",
+        "Microsoft.VSTS.Common.AcceptanceCriteria",
+        "System.Tags",
+        "Custom.BacklogGeneratorSourceIdentity",
+    }
+)
 
 
 class AzureDevOpsRestClient:
@@ -151,6 +160,41 @@ class AzureDevOpsRestClient:
         if not isinstance(response, Mapping):
             raise AzureDevOpsResponseError(
                 "Azure DevOps work-item type response must be a JSON object."
+            )
+        return response
+
+    def retrieve_work_item_type_field(
+        self,
+        work_item_type: WorkItemType,
+        field_reference: str,
+        *,
+        personal_access_token: str,
+    ) -> Mapping[str, Any]:
+        """Retrieve metadata for one approved field on a fixed work-item type."""
+        if not isinstance(work_item_type, WorkItemType):
+            raise ValueError("A supported WorkItemType is required.")
+        if (
+            type(field_reference) is not str
+            or field_reference not in _COMPATIBILITY_FIELD_REFERENCES
+        ):
+            raise ValueError("An approved field reference is required.")
+
+        response = self.send_json_request(
+            method="GET",
+            path_segments=(
+                "_apis",
+                "wit",
+                "workitemtypes",
+                work_item_type,
+                "fields",
+                field_reference,
+            ),
+            personal_access_token=personal_access_token,
+            query={"$expand": "All"},
+        )
+        if not isinstance(response, Mapping):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps work-item type field response must be a JSON object."
             )
         return response
 

@@ -377,3 +377,101 @@ def test_work_item_type_retrieval_reuses_the_transport_failure_without_retry(
         client.retrieve_work_item_type(WorkItemType.EPIC, personal_access_token="secret-pat")
 
     assert len(opener.calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("work_item_type", "encoded_type"),
+    [
+        (WorkItemType.EPIC, "Epic"),
+        (WorkItemType.FEATURE, "Feature"),
+        (WorkItemType.PRODUCT_BACKLOG_ITEM, "Product%20Backlog%20Item"),
+        (WorkItemType.TASK, "Task"),
+    ],
+)
+@pytest.mark.parametrize(
+    "field_reference",
+    [
+        "System.Title",
+        "System.Description",
+        "Microsoft.VSTS.Common.AcceptanceCriteria",
+        "System.Tags",
+        "Custom.BacklogGeneratorSourceIdentity",
+    ],
+)
+def test_retrieves_metadata_for_every_approved_work_item_type_field_pair(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    work_item_type: WorkItemType,
+    encoded_type: str,
+    field_reference: str,
+) -> None:
+    metadata = {"referenceName": field_reference}
+    opener.response = _Response(body=json.dumps(metadata).encode())
+
+    returned_metadata = client.retrieve_work_item_type_field(
+        work_item_type,
+        field_reference,
+        personal_access_token="secret-pat",
+    )
+
+    request, _ = opener.calls[0]
+    assert request.get_method() == "GET"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/Example%20Project/"
+        f"_apis/wit/workitemtypes/{encoded_type}/fields/{field_reference}"
+        "?%24expand=All&api-version=7.1"
+    )
+    assert request.data is None
+    assert request.get_header("Content-type") is None
+    assert returned_metadata == metadata
+
+
+def test_rejects_an_unsupported_work_item_type_for_field_metadata(
+    client: AzureDevOpsRestClient,
+) -> None:
+    with pytest.raises(ValueError, match="supported WorkItemType"):
+        client.retrieve_work_item_type_field(  # type: ignore[arg-type]
+            "User Story",
+            "System.Title",
+            personal_access_token="secret-pat",
+        )
+
+
+def test_rejects_an_unsupported_field_reference(
+    client: AzureDevOpsRestClient,
+) -> None:
+    with pytest.raises(ValueError, match="approved field reference"):
+        client.retrieve_work_item_type_field(
+            WorkItemType.EPIC,
+            "System.State",
+            personal_access_token="secret-pat",
+        )
+
+
+@pytest.mark.parametrize("body", [b"[]", b'"field"', b"1", b"null"])
+def test_rejects_non_object_work_item_type_field_response(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    opener.response = _Response(body=body)
+
+    with pytest.raises(AzureDevOpsResponseError, match="JSON object"):
+        client.retrieve_work_item_type_field(
+            WorkItemType.EPIC,
+            "System.Title",
+            personal_access_token="secret-pat",
+        )
+
+
+def test_work_item_type_field_retrieval_reuses_transport_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = URLError("offline")
+
+    with pytest.raises(AzureDevOpsTransportError):
+        client.retrieve_work_item_type_field(
+            WorkItemType.EPIC,
+            "System.Title",
+            personal_access_token="secret-pat",
+        )
+
+    assert len(opener.calls) == 1
