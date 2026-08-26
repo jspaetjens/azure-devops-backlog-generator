@@ -195,6 +195,30 @@ class AzureDevOpsRestClient:
         if not isinstance(response, Mapping):
             raise AzureDevOpsResponseError(
                 "Azure DevOps work-item type field response must be a JSON object."
+        )
+        return response
+
+    def retrieve_field(
+        self,
+        field_reference: str,
+        *,
+        personal_access_token: str,
+    ) -> Mapping[str, Any]:
+        """Retrieve global metadata for one approved compatibility field."""
+        if (
+            type(field_reference) is not str
+            or field_reference not in _COMPATIBILITY_FIELD_REFERENCES
+        ):
+            raise ValueError("An approved field reference is required.")
+
+        response = self.send_json_request(
+            method="GET",
+            path_segments=("_apis", "wit", "fields", field_reference),
+            personal_access_token=personal_access_token,
+        )
+        if not isinstance(response, Mapping):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps field response must be a JSON object."
             )
         return response
 

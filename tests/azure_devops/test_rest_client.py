@@ -475,3 +475,67 @@ def test_work_item_type_field_retrieval_reuses_transport_failure_without_retry(
         )
 
     assert len(opener.calls) == 1
+
+
+@pytest.mark.parametrize(
+    "field_reference",
+    [
+        "System.Title",
+        "System.Description",
+        "Microsoft.VSTS.Common.AcceptanceCriteria",
+        "System.Tags",
+        "Custom.BacklogGeneratorSourceIdentity",
+    ],
+)
+def test_retrieves_global_metadata_for_every_approved_field(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    field_reference: str,
+) -> None:
+    metadata = {"referenceName": field_reference}
+    opener.response = _Response(body=json.dumps(metadata).encode())
+
+    returned_metadata = client.retrieve_field(
+        field_reference,
+        personal_access_token="secret-pat",
+    )
+
+    request, _ = opener.calls[0]
+    assert request.get_method() == "GET"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/Example%20Project/"
+        f"_apis/wit/fields/{field_reference}?api-version=7.1"
+    )
+    assert request.data is None
+    assert request.get_header("Content-type") is None
+    assert returned_metadata == metadata
+
+
+def test_rejects_an_unsupported_global_field_reference_before_transmission(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    with pytest.raises(ValueError, match="approved field reference"):
+        client.retrieve_field("System.State", personal_access_token="secret-pat")
+
+    assert opener.calls == []
+
+
+@pytest.mark.parametrize("body", [b"[]", b'"field"', b"1", b"null"])
+def test_rejects_non_object_global_field_response(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    opener.response = _Response(body=body)
+
+    with pytest.raises(AzureDevOpsResponseError, match="JSON object"):
+        client.retrieve_field("System.Title", personal_access_token="secret-pat")
+
+
+def test_global_field_retrieval_reuses_transport_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = URLError("offline")
+
+    with pytest.raises(AzureDevOpsTransportError):
+        client.retrieve_field("System.Title", personal_access_token="secret-pat")
+
+    assert len(opener.calls) == 1
