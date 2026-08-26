@@ -225,3 +225,93 @@ def test_closes_a_successful_response_after_consuming_its_body(
     assert _request(client) == {"id": 1}
     assert response.read_called
     assert response.closed
+
+
+def test_retrieves_the_configured_project_through_the_organisation_endpoint(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(body=b'{"id":"project-id","name":"Canonical Project"}')
+
+    project = client.retrieve_project(personal_access_token="secret-pat")
+
+    request, _ = opener.calls[0]
+    assert request.get_method() == "GET"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/_apis/projects/Example%20Project"
+        "?api-version=7.1"
+    )
+    assert request.data is None
+    assert request.get_header("Content-type") is None
+    assert project.id == "project-id"
+    assert project.name == "Canonical Project"
+
+
+def test_retrieves_an_identifier_style_configured_project(
+    opener: _Opener,
+) -> None:
+    client = AzureDevOpsRestClient("example organization", "123e4567-e89b-12d3-a456-426614174000")
+    opener.response = _Response(body=b'{"id":"canonical-id","name":"Canonical Project"}')
+
+    client.retrieve_project(personal_access_token="secret-pat")
+
+    request, _ = opener.calls[0]
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/_apis/projects/"
+        "123e4567-e89b-12d3-a456-426614174000?api-version=7.1"
+    )
+
+
+def test_retrieved_project_model_is_immutable(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(body=b'{"id":"project-id","name":"Canonical Project"}')
+
+    project = client.retrieve_project(personal_access_token="secret-pat")
+
+    with pytest.raises(AttributeError):
+        project.name = "Changed"  # type: ignore[misc]
+
+
+@pytest.mark.parametrize(
+    ("body", "field"),
+    [
+        (b'{"name":"Canonical Project"}', "id"),
+        (b'{"id":null,"name":"Canonical Project"}', "id"),
+        (b'{"id":"","name":"Canonical Project"}', "id"),
+        (b'{"id":"   ","name":"Canonical Project"}', "id"),
+        (b'{"id":1,"name":"Canonical Project"}', "id"),
+        (b'{"id":"project-id"}', "name"),
+        (b'{"id":"project-id","name":null}', "name"),
+        (b'{"id":"project-id","name":""}', "name"),
+        (b'{"id":"project-id","name":"   "}', "name"),
+        (b'{"id":"project-id","name":1}', "name"),
+    ],
+)
+def test_rejects_missing_or_invalid_required_project_evidence(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes, field: str
+) -> None:
+    opener.response = _Response(body=body)
+
+    with pytest.raises(AzureDevOpsResponseError, match=field):
+        client.retrieve_project(personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize("body", [b"[]", b'"project"', b"1", b"null"])
+def test_rejects_non_object_project_response(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    opener.response = _Response(body=body)
+
+    with pytest.raises(AzureDevOpsResponseError, match="JSON object"):
+        client.retrieve_project(personal_access_token="secret-pat")
+
+
+def test_project_retrieval_reuses_the_transport_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = URLError("offline")
+
+    with pytest.raises(AzureDevOpsTransportError):
+        client.retrieve_project(personal_access_token="secret-pat")
+
+    assert len(opener.calls) == 1
