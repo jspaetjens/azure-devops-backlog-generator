@@ -4,11 +4,11 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.6
+**Version:** 2.7
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-25
+**Last Updated:** 2026-08-26
 
 **Target Release:** v1.0.0
 
@@ -40,6 +40,7 @@
 | 2.4 | 2026-08-25 | Draft | Jack Spaetjens | Defined the Version 1.0 run-level source identity validation contract. |
 | 2.5 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 urllib REST Client Foundation and redirect contract. |
 | 2.6 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy contract. |
+| 2.7 | 2026-08-26 | Draft | Jack Spaetjens | Clarified the Version 1.0 Scrum compatibility evidence, validation-only coverage and execution contract. |
 
 ---
 
@@ -57,6 +58,7 @@
 - [6. Communication Standards](#6-communication-standards)
   - [6.1 REST Transport and Operational Failure Contract](#61-rest-transport-and-operational-failure-contract)
 - [7. API Endpoints](#7-api-endpoints)
+  - [7.1 Scrum Compatibility Evidence](#71-scrum-compatibility-evidence)
 - [8. Request Model](#8-request-model)
   - [8.1 Work Item Create Payload](#81-work-item-create-payload)
   - [8.2 Parent-Child Relationship Payload](#82-parent-child-relationship-payload)
@@ -210,6 +212,8 @@ Version 1.0 shall use the following Azure DevOps REST API endpoints required to 
 |-----------|-------------|---------------|--------------|------------|--------------|
 | Project retrieval | `GET` | `/_apis/projects/{projectId}` | `https://dev.azure.com/{organization}/_apis/projects/{projectId}?api-version=7.1` | `{organization}` is the configured Azure DevOps Services organisation; `{projectId}` is the configured project name or identifier accepted by the Azure DevOps Projects Get operation; `api-version=7.1` | None |
 | Work-item type compatibility metadata | `GET` | `/{project}/_apis/wit/workitemtypes/{type}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitemtypes/{type}?api-version=7.1` | `{organization}`, `{project}` and `{type}`; `api-version=7.1` | None |
+| Work-item-type field compatibility metadata | `GET` | `/{project}/_apis/wit/workitemtypes/{type}/fields/{field}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitemtypes/{type}/fields/{field}?$expand=All&api-version=7.1` | `{organization}`, `{project}`, `{type}` and `{field}`; `$expand=All`; `api-version=7.1` | None |
+| Global field compatibility metadata | `GET` | `/{project}/_apis/wit/fields/{fieldNameOrRefName}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/fields/{fieldNameOrRefName}?api-version=7.1` | `{organization}`, `{project}` and `{fieldNameOrRefName}`; `api-version=7.1` | None |
 | Work-item creation | `POST` | `/{project}/_apis/wit/workitems/{type}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{type}?api-version=7.1` | `{organization}`, `{project}` and `{type}`; `api-version=7.1` | `application/json-patch+json` |
 | Work-item update | `PATCH` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?api-version=7.1` | `{organization}`, `{project}` and `{id}`; `api-version=7.1` | `application/json-patch+json` |
 | Parent-child relationship update | `PATCH` | `/{project}/_apis/wit/workitems/{childId}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{childId}?api-version=7.1` | `{organization}`, `{project}` and numeric `{childId}`; `api-version=7.1` | `application/json-patch+json` |
@@ -221,17 +225,7 @@ Work-item creation shall use the approved Version 1.0 work-item type values `Epi
 
 Version 1.0 shall support Azure DevOps Services projects compatible with the Scrum work-item model `Epic` → `Feature` → `Product Backlog Item` → `Task`. Agile/User Story, Basic/Issue, CMMI/Requirement and arbitrary process-to-work-item-type mappings are outside the Version 1.0 API contract. Standard Scrum or an inherited/customised Scrum-compatible process may be used only when the approved work-item types, required field reference names and candidate payload remain compatible. Custom display names for standard fields do not affect compatibility when their required reference names and field contracts remain compatible; the generator-reserved custom identity field is the explicit exception and shall use its exact approved display name. Process mappings, work-item type mappings, field mappings and required-field overrides shall not be configurable.
 
-Before persistent backlog generation, the Work Item Types Get operation shall be used for each required work-item type to verify its availability and inspect field metadata and required-field compatibility. The standard compatibility field reference names are `System.Title`, `System.Description`, `Microsoft.VSTS.Common.AcceptanceCriteria` where applicable, and `System.Tags`. The fixed custom integration field shall have reference name `Custom.BacklogGeneratorSourceIdentity`, display name `Backlog Generator Source Identity`, String/single-line-text type, no default value, applicability to all four supported work-item types, effective Create writability and optional process status. Reference names define API integration compatibility; the exact approved custom-field display name shall additionally be validated under this contract.
-
-The custom identity field shall be provisioned manually outside the generator. The generator shall not create or modify an inherited process, field, work-item-type field association, project process or field rule; select another field; or accept a configurable field mapping. Missing, wrongly typed, read-only, inapplicable, process-required or otherwise incompatible identity-field support shall prevent persistent generation. Validation-only Create shall verify acceptance of the mandatory identity marker without weakening existing standard-field compatibility validation.
-
-`System.Description` shall receive the normative HTML fragment prepared by the Documentation Processor under the approved Description Mapping Contract in `09-Documentation-Input.md`. This contract does not define JSON Patch add or replace semantics.
-
-When present, the normative HTML fragment prepared by the Documentation Processor under the approved Acceptance Criteria Mapping Contract in `09-Documentation-Input.md` shall be mapped to `Microsoft.VSTS.Common.AcceptanceCriteria` for Epic, Feature and Product Backlog Item. When the approved source construct is absent, no Acceptance Criteria value shall be produced and the field shall be omitted. Task shall not receive Acceptance Criteria through a fallback field, Description or a custom field.
-
-Tags shall apply to Epic, Feature, Product Backlog Item and Task. When present, the prepared plain-text Tags value from the approved Tags Mapping Contract in `09-Documentation-Input.md` shall be mapped to `System.Tags`. The value shall consist of normalised source-order tags joined by exactly `; `. When the approved source construct is absent, no Tags value shall be produced and the field shall be omitted. This contract does not define JSON Patch add or replace semantics, create or update payloads, or tag merge or replacement behaviour.
-
-An additional field marked `alwaysRequired` shall not alone establish incompatibility. Its metadata shall be inspected and, when static metadata alone cannot establish whether the candidate payload satisfies project/process rules, the approved Work Items Create operation may use `validateOnly=true`. Validation-only creation requests shall not persist work items, shall use the same candidate field contract intended for persistent creation, and validation failure shall prevent persistent backlog generation. Validation errors shall be reported meaningfully without exposing secrets.
+The Scrum compatibility evidence and validation order are defined in Section 7.1.
 
 Version 1.0 shall use the configured project-scoped Work Items Update form consistently. Parent-child relationships shall be created or updated using the same Work Items Update endpoint, HTTP `PATCH` and `application/json-patch+json`. Version 1.0 does not require a separate relationship-creation endpoint. Relationship changes shall be performed through the work item's relations collection using the Work Items Update operation.
 
@@ -240,6 +234,26 @@ Version 1.0 shall use the project-scoped WIQL endpoint for repeatability queries
 Aside from the Work Item Create payload contract in Section 8.1, Parent-Child Relationship contract in Section 8.2, Persisted Source Identity contract in Section 8.3, Existing Item Lookup contract in Section 8.4 and Existing Relationship State and Recovery contract in Section 8.5, this section does not define tag taxonomy or ordinary work-item update operation semantics.
 
 The approved Version 1.0 endpoint paths, HTTP methods, query parameters, content types and API version are fixed internal API-contract behaviour. They shall not be externally configurable through TOML, environment variables or CLI. A future endpoint or API-version change shall require an explicit API Specification update and shall not be introduced through endpoint configuration.
+
+---
+
+## 7.1 Scrum Compatibility Evidence
+
+Before persistent backlog generation, the application shall establish structural compatibility for the configured Azure DevOps Services project and then validate acceptance of the actual candidate contract. Structural metadata validation and candidate acceptance are separate evidence levels. Successful structural metadata validation shall not be treated as proof that Azure DevOps will accept a complete Create request.
+
+Work Item Types Get shall be used for each fixed Version 1.0 work-item type, `Epic`, `Feature`, `Product Backlog Item` and `Task`, to establish work-item type existence. Work Item Type Field Get shall be the authoritative type-specific evidence for a requested field's reference name, display name, applicability, `alwaysRequired`, `defaultValue` and other returned type-specific rule information explicitly required by this contract. Fields Get shall be the authoritative global field-definition evidence for returned `name`, `referenceName`, `type`, `readOnly`, `isLocked`, `isDeleted` and `isQueryable` properties where relevant. Global field metadata shall not be treated as evidence that a field applies to a specific work-item type.
+
+The required standard field reference names are `System.Title`, `System.Description`, `Microsoft.VSTS.Common.AcceptanceCriteria` where applicable to Epic, Feature and Product Backlog Item, and `System.Tags`. Structural validation shall use the documented metadata endpoints to establish required field existence, applicability and any explicitly required writeability or type constraint. Task shall not require or receive `Microsoft.VSTS.Common.AcceptanceCriteria`. Field mappings, work-item type mappings and required-field overrides shall not be configurable.
+
+The fixed custom identity field shall have reference name `Custom.BacklogGeneratorSourceIdentity`, display name `Backlog Generator Source Identity`, and the documented Azure DevOps `String` type corresponding to the Version 1.0 single-line-text requirement. Structural evidence shall establish that the field exists; that its reference name and display name exactly match; that it is not `readOnly` for the purposes represented by returned metadata; that it applies to all four fixed work-item types; that its type-specific `defaultValue` state has no configured default; and that its type-specific `alwaysRequired` state is `false`, satisfying the requirement that the identity field is optional at process level. The generator shall not create or modify an inherited process, field, work-item-type field association, project process or field rule; select another field; or accept a configurable field mapping.
+
+Metadata shall be used only for properties returned by the documented endpoints. If a returned property cannot directly establish an identity-field requirement, the application shall report that limitation as structural evidence and shall not invent a metadata rule. Final acceptance of the actual identity marker and complete candidate remains the responsibility of validation-only Create.
+
+An additional field with `alwaysRequired=true` shall not by itself establish incompatibility. The generator shall not reproduce every Azure DevOps process rule locally. Structural validation shall fail only on conditions that are deterministically incompatible with this contract. After structural validation succeeds, the actual candidate shall be submitted through non-persisting Work Item Create with `validateOnly=true`. If Azure DevOps rejects the candidate because an additional required field or another process rule is unsatisfied, compatibility validation shall fail before persistent generation.
+
+Validation-only Create is mandatory before persistent generation for every fixed work-item type that occurs in the processed input for the current run. At least one representative candidate for each occurring type shall be validated. Each candidate shall use the exact JSON Patch contract intended for persistent Create, including its generator-produced identity marker and every field the generator would emit for that candidate. When optional emitted fields produce materially different candidate shapes within one work-item type, sufficient representative coverage for those shapes remains an unresolved design decision; the application shall not invent a coverage rule. Validation-only requests shall include `validateOnly=true`, use `application/json-patch+json`, remain non-persisting, follow the common transport contract and shall not retry automatically. No persistent work item may be created until all required validation-only candidate checks succeed.
+
+The Version 1.0 execution order shall be: configuration validation; documentation processing; source-identity generation and run-level collision validation; canonical project retrieval; required work-item type existence validation; type-specific and global field metadata retrieval; structural Scrum compatibility evaluation; candidate JSON Patch construction; mandatory validation-only Create compatibility checks; existing-item resolution; persistent work-item creation; parent-child relationship creation or recovery; and execution summary or application completion.
 
 ---
 
@@ -259,7 +273,7 @@ Each request shall include, where applicable:
 
 Requests shall be validated before transmission to minimise API failures.
 
-Where static compatibility metadata is insufficient, validation-only creation requests shall be used before persistent backlog generation to validate the candidate work-item request against project/process rules. A validation-only request shall include `validateOnly=true`, shall not persist a work item and shall use the same candidate field contract intended for persistent creation.
+Validation-only creation requests shall follow the mandatory compatibility-validation coverage and escalation contract in Section 7.1.
 
 ## 8.1 Work Item Create Payload
 

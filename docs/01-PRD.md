@@ -4,11 +4,11 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.10
+**Version:** 1.11
 
 **Status:** Draft
 
-**Last Updated:** 2026-08-25
+**Last Updated:** 2026-08-26
 
 **Target Release:** v1.0.0
 
@@ -34,6 +34,7 @@
 | 1.8 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Work Item Identity and Existing Item Resolution contract. |
 | 1.9 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Existing Relationship State and Recovery contract. |
 | 1.10 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision failure behaviour. |
+| 1.11 | 2026-08-26 | Draft | Jack Spaetjens | Aligned mandatory validation-only candidate acceptance with the Scrum compatibility contract. |
 
 ---
 
@@ -290,9 +291,11 @@ The application shall provide logging sufficient to monitor execution and diagno
 
 The application shall detect, report and handle execution errors without causing unexpected application termination where recovery is possible.
 
-Before persistent backlog generation, the application shall validate that the configured Azure DevOps Services project is compatible with the Version 1.0 Scrum work-item model. Validation shall confirm that the configured project and the required work-item types Epic, Feature, Product Backlog Item and Task exist; that required standard fields are available and compatible where applicable; that `Custom.BacklogGeneratorSourceIdentity` has the exact approved reference name, display name and String/single-line-text contract, applies to all four supported types, is writable during Create and is not process-required; and that a candidate payload including the mandatory identity marker can satisfy project/process rules when static metadata alone is insufficient. If required compatibility metadata cannot be retrieved or compatibility cannot be established, the application shall stop before persistent backlog generation, report the incompatibility clearly and shall not fall back to another process or invent type or field mappings.
+Before persistent backlog generation, the application shall validate that the configured Azure DevOps Services project is compatible with the Version 1.0 Scrum work-item model. Structural metadata validation shall confirm that the configured project and the required work-item types Epic, Feature, Product Backlog Item and Task exist; that required standard fields are available and compatible where applicable; and that `Custom.BacklogGeneratorSourceIdentity` has the exact approved reference name, display name and String/single-line-text contract, applies to all four supported types, is writable during Create, has no configured default and is not process-required. Structural metadata validation alone shall not be treated as final proof that an actual candidate Create request will be accepted by the configured project/process.
 
-An additional field marked `alwaysRequired` shall not alone establish incompatibility. The application shall inspect the metadata and, where necessary, validate a candidate payload rather than inventing a value for an unsupported custom field.
+After structural compatibility succeeds, the generator shall construct the applicable candidate contract and submit every candidate required by the approved compatibility contract through non-persisting Work Item Create with `validateOnly=true`. The validation-only request shall use the same candidate contract intended for persistent Create, including the mandatory identity marker. Successful validation-only candidate checks shall be mandatory before any persistent work-item generation. If required compatibility metadata cannot be retrieved, structural compatibility cannot be established or Azure DevOps rejects a validation-only candidate, the application shall stop before persistent backlog generation, report the incompatibility clearly and shall not fall back to another process, provision fields, invent type or field mappings, retry automatically or persist the validation-only request.
+
+An additional field marked `alwaysRequired` shall not alone establish incompatibility. The application shall not reproduce every Azure DevOps process rule locally or invent a value for an unsupported custom field. If such a field or another process rule rejects the applicable validation-only candidate, compatibility validation shall fail before persistent generation.
 
 Before persistent backlog generation, the application shall validate that approved backlog-input Markdown documents from the configured dedicated source directory conform to `09-Documentation-Input.md`. Invalid source input shall prevent persistent backlog generation.
 
