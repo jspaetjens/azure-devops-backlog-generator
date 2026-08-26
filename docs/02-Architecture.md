@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.4
+**Version:** 2.5
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-25
+**Last Updated:** 2026-08-26
 
 **Target Release:** v1.0.0
 
@@ -38,6 +38,7 @@
 | 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision validation responsibilities. |
 | 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the internal REST Client Foundation boundary and urllib transport responsibilities. |
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy boundary. |
+| 2.5 | 2026-08-26 | Draft | Jack Spaetjens | Clarified Scrum compatibility evidence, mandatory validation-only coverage and execution ordering responsibilities. |
 
 ---
 
@@ -228,6 +229,7 @@ Responsibilities include:
 - Selecting missing-parent repair, correct-parent reuse without PATCH or conflict failure and gating descendant persistence until the intended parent relationship is known to be correct.
 - Preventing duplicate work item creation.
 - Initiating persistent backlog generation only after Scrum compatibility validation succeeds.
+- Coordinating mandatory validation-only candidate checks for every occurring work-item type after structural compatibility succeeds and before existing-item resolution or persistent generation.
 
 ---
 
@@ -250,8 +252,10 @@ Responsibilities include:
 - Authentication.
 - REST API communication.
 - Retrieving required work-item type metadata for Scrum compatibility validation.
+- Retrieving type-specific work-item field metadata and global field metadata as separate compatibility evidence sources.
 - Verifying the fixed `Custom.BacklogGeneratorSourceIdentity` reference name, `Backlog Generator Source Identity` display name, String/single-line-text type, applicability, writability and optional process status during compatibility validation.
-- Using validation-only creation requests when static metadata alone cannot establish candidate payload compatibility.
+- Distinguishing structural metadata compatibility from final candidate acceptance, without treating global field metadata as proof of work-item-type applicability.
+- Using mandatory non-persisting validation-only creation requests for every occurring work-item type after structural compatibility succeeds.
 - Exclusively constructing Work Item Create JSON Patch request representations from prepared candidate values, using only the approved field paths and canonical operation order.
 - Holding the custom identity-field reference as a fixed API constant, constructing and transmitting the fixed project/type/marker WIQL request, retrieving the sole candidate work item and validating transport and response structure.
 - Returning the required candidate ID, revision, project, type and identity-field state without computing logical source identity or deciding business-field updates.
@@ -305,16 +309,18 @@ The application follows the logical execution sequence below.
 5. Parsed backlog structures are generated.
 6. Candidate Azure DevOps work items, including prepared Description values, applicable Acceptance Criteria values and applicable Tags values, are prepared.
 7. The Backlog Generator computes every persisted identity marker and performs deterministic run-wide identity validation across all parsed documents. A duplicate logical identity or persisted-marker collision stops processing before compatibility validation, WIQL, Work Item GET, Create, relationship processing or any external mutation.
-8. Azure DevOps Scrum compatibility, including the fixed custom identity-field contract and candidate payload containing the mandatory marker, is validated through work-item type metadata and, where necessary, validation-only requests. The configured project is resolved through Project retrieval and its canonical Azure DevOps project name and ID are retained for later candidate validation.
-9. For every source item in deterministic source order, the Backlog Generator requests an existing-item lookup scoped to the configured project, exact supported type and exact marker.
-10. Zero candidates cause Work Item Create using the approved five-field contract. Exactly one candidate causes Work Item GET, validation of its canonical project name, exact type and ordinal marker, and reuse of its numeric ID and revision without Create. Multiple, malformed or conflicting candidates stop processing before Create.
-11. For a newly created non-root child, the parent shall be created or resolved before the child, and the child-to-parent relationship PATCH shall occur immediately after successful child creation using the child ID and revision returned by Create.
-12. For a reused non-root child, the REST Client retrieves its fresh relationship state, validates the response and reverse-hierarchy target URI structure, and returns the fresh revision and parsed target IDs. The Backlog Generator compares those IDs with the intended parent ID and classifies the state as MISSING, CORRECT or CONFLICTING.
-13. MISSING causes the approved Parent-Child Relationship PATCH using the fresh relationship-state revision; CORRECT causes no PATCH; and CONFLICTING stops processing without remote mutation.
-14. Descendants become eligible for persistent processing only after a newly created child's relationship PATCH succeeds, a reused child is observed as CORRECT or a reused child's MISSING relationship is successfully repaired.
-15. Root Epic items require neither relationship-state retrieval nor a parent relationship PATCH.
-16. Results are logged.
-17. Execution summary is presented.
+8. The configured project is resolved through Project retrieval and its canonical Azure DevOps project name and ID are retained for later candidate validation.
+9. Required work-item type existence is validated, followed by type-specific and global field metadata retrieval and structural Scrum compatibility evaluation.
+10. Candidate JSON Patch documents are constructed from prepared values and generator-produced identity markers. At least one representative candidate for every work-item type occurring in the processed input is validated non-persistently using the approved validation-only Create contract. No persistent Azure DevOps mutation may occur until all required validation-only checks succeed.
+11. For every source item in deterministic source order, the Backlog Generator requests an existing-item lookup scoped to the configured project, exact supported type and exact marker.
+12. Zero candidates cause Work Item Create using the approved five-field contract. Exactly one candidate causes Work Item GET, validation of its canonical project name, exact type and ordinal marker, and reuse of its numeric ID and revision without Create. Multiple, malformed or conflicting candidates stop processing before Create.
+13. For a newly created non-root child, the parent shall be created or resolved before the child, and the child-to-parent relationship PATCH shall occur immediately after successful child creation using the child ID and revision returned by Create.
+14. For a reused non-root child, the REST Client retrieves its fresh relationship state, validates the response and reverse-hierarchy target URI structure, and returns the fresh revision and parsed target IDs. The Backlog Generator compares those IDs with the intended parent ID and classifies the state as MISSING, CORRECT or CONFLICTING.
+15. MISSING causes the approved Parent-Child Relationship PATCH using the fresh relationship-state revision; CORRECT causes no PATCH; and CONFLICTING stops processing without remote mutation.
+16. Descendants become eligible for persistent processing only after a newly created child's relationship PATCH succeeds, a reused child is observed as CORRECT or a reused child's MISSING relationship is successfully repaired.
+17. Root Epic items require neither relationship-state retrieval nor a parent relationship PATCH.
+18. Results are logged.
+19. Execution summary is presented.
 
 This flow permits deterministic recovery when an earlier execution created a child but its immediate relationship PATCH failed: the later execution resolves the parent and child, observes MISSING using a fresh relationship-state GET, repairs the relationship using the fresh revision and continues only after success.
 

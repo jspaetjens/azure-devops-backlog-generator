@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.4
+**Version:** 2.5
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-25
+**Last Updated:** 2026-08-26
 
 **Target Release:** v1.0.0
 
@@ -38,6 +38,7 @@
 | 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined test coverage for run-level duplicate logical identity and persisted-marker collision validation. |
 | 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the urllib REST Client Foundation and redirect behaviour. |
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the REST Client Foundation proxy contract. |
+| 2.5 | 2026-08-26 | Draft | Jack Spaetjens | Clarified test coverage for Scrum compatibility evidence and mandatory validation-only candidate checks. |
 
 ---
 
@@ -141,7 +142,7 @@ Integration testing shall validate:
 - Work item generation.
 - Parent-child relationship creation.
 - Scrum compatibility validation.
-- Validation-only candidate creation where static metadata is insufficient.
+- Mandatory validation-only candidate creation after structural compatibility validation.
 
 ---
 
@@ -285,6 +286,19 @@ REST Client Foundation validation shall additionally cover:
 - exact endpoint-specific `200 OK` success validation and rejection of an unexpected success-range status;
 - safe handling of non-JSON error bodies and bounded optional diagnostics without full response-body logging by default; and
 - independent request/response lifecycles with response closure, no retained response object, persistent session, cookie state, redirect state, connection pool or other persistent mutable request state.
+
+Scrum Compatibility validation shall additionally cover:
+
+- Work Item Types Get evidence for the fixed Epic, Feature, Product Backlog Item and Task types;
+- Work Item Type Field Get with `$expand=All` as type-specific evidence, and Fields Get as global field-definition evidence, without treating global metadata as proof of type applicability;
+- structural validation of required standard fields and the fixed `Custom.BacklogGeneratorSourceIdentity` reference name, display name, String type, non-read-only state, applicability, no-default state and `alwaysRequired=false` optional process-level state, using only properties returned by the approved endpoints;
+- failure before persistent generation for absent, malformed, wrongly typed, read-only, inapplicable, defaulted, process-required or otherwise incompatible required-field evidence;
+- additional `alwaysRequired` fields not causing compatibility failure solely from that property;
+- mandatory non-persisting validation-only Create checks after structural compatibility and before existing-item resolution or persistent generation for every work-item type occurring in processed input;
+- use of the exact candidate JSON Patch contract, including the identity marker and all fields emitted for the candidate, with `validateOnly=true` as the only approved request difference from persistent Create;
+- validation-only rejection caused by an additional required field or other process rule stopping processing before persistent generation;
+- no automatic retry, no persistent work-item creation and secret-safe diagnostics throughout compatibility validation; and
+- explicit handling of materially different optional-field candidate shapes within one work-item type when representative coverage is defined by a later approved decision.
 
 Work Item Create Payload validation shall additionally cover:
 
