@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.1
+**Version:** 1.2
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-27
 
@@ -25,6 +25,7 @@
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Release Management document. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Release Management baseline. |
 | 1.1 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded the current pre-release implementation status. |
+| 1.2 | 2026-08-27 | Draft | Jack Spaetjens | Updated the current pre-release implementation status through existing/new Work Item resolution. |
 
 ---
 
@@ -101,8 +102,10 @@ Release management shall follow the following principles:
 
 Version 1.0 has not been approved or published. The project is in implementation: its
 configuration, documentation-processing, source-identity, REST foundation, compatibility,
-candidate, JSON Patch and validation-only Create foundations are complete, while the remaining
-generation, orchestration, CLI/logging and end-to-end/integration release validation work is
+candidate, JSON Patch, validation-only Create, WIQL identity lookup, Work Item GET evidence
+retrieval and existing/new Work Item resolution foundations are complete, while persistent Work
+Item Create, relationships, relationship recovery, application orchestration, the
+CLI/logging/process-exit lifecycle, and end-to-end/integration release validation remain
 incomplete. The release criteria in this document remain unchanged.
 
 ---
