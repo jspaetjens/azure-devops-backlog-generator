@@ -1,0 +1,6 @@
+[azure_devops]
+organization = "your-organization"
+project = "your-project"
+
+[documentation]
+source_directory = "path-to-backlog-input"
