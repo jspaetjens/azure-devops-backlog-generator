@@ -19,3 +19,7 @@ class AzureDevOpsHttpError(AzureDevOpsRestClientError):
 
 class AzureDevOpsResponseError(AzureDevOpsRestClientError):
     """Raised when a successful Azure DevOps response cannot be used."""
+
+
+class AzureDevOpsCompatibilityError(AzureDevOpsRestClientError):
+    """Raised when supplied Azure DevOps metadata is structurally incompatible."""
