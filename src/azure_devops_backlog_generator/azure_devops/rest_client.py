@@ -17,6 +17,7 @@ from azure_devops_backlog_generator.azure_devops.exceptions import (
 )
 from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsProject
 from azure_devops_backlog_generator.documentation.models import WorkItemType
+from azure_devops_backlog_generator.generator.candidates import WorkItemCandidate
 
 API_VERSION = "7.1"
 REQUEST_TIMEOUT_SECONDS = 30
@@ -30,6 +31,41 @@ _COMPATIBILITY_FIELD_REFERENCES = frozenset(
         "Custom.BacklogGeneratorSourceIdentity",
     }
 )
+
+
+def build_work_item_create_json_patch(candidate: WorkItemCandidate) -> list[dict[str, str]]:
+    """Return the approved JSON Patch body for one later Work Item Create."""
+    operations = [
+        {"op": "add", "path": "/fields/System.Title", "value": candidate.title},
+        {
+            "op": "add",
+            "path": "/fields/System.Description",
+            "value": candidate.description_html,
+        },
+    ]
+    if (
+        candidate.work_item_type is not WorkItemType.TASK
+        and candidate.acceptance_criteria_html is not None
+    ):
+        operations.append(
+            {
+                "op": "add",
+                "path": "/fields/Microsoft.VSTS.Common.AcceptanceCriteria",
+                "value": candidate.acceptance_criteria_html,
+            }
+        )
+    if candidate.tags_value is not None:
+        operations.append(
+            {"op": "add", "path": "/fields/System.Tags", "value": candidate.tags_value}
+        )
+    operations.append(
+        {
+            "op": "add",
+            "path": "/fields/Custom.BacklogGeneratorSourceIdentity",
+            "value": candidate.source_identity,
+        }
+    )
+    return operations
 
 
 class AzureDevOpsRestClient:

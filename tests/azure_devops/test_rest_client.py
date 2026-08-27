@@ -20,8 +20,10 @@ from azure_devops_backlog_generator.azure_devops.rest_client import (
     API_VERSION,
     REQUEST_TIMEOUT_SECONDS,
     AzureDevOpsRestClient,
+    build_work_item_create_json_patch,
 )
 from azure_devops_backlog_generator.documentation.models import WorkItemType
+from azure_devops_backlog_generator.generator.candidates import WorkItemCandidate
 
 
 class _Response:
@@ -539,3 +541,135 @@ def test_global_field_retrieval_reuses_transport_failure_without_retry(
         client.retrieve_field("System.Title", personal_access_token="secret-pat")
 
     assert len(opener.calls) == 1
+
+
+def _candidate(
+    work_item_type: WorkItemType = WorkItemType.EPIC,
+    *,
+    acceptance_criteria_html: str | None = None,
+    tags_value: str | None = None,
+) -> WorkItemCandidate:
+    return WorkItemCandidate(
+        work_item_type=work_item_type,
+        title="Prepared title",
+        description_html="<p>Prepared description</p>\n",
+        acceptance_criteria_html=acceptance_criteria_html,
+        tags_value=tags_value,
+        source_identity="adbg:source-id:v1:sha256:" + "a" * 64,
+    )
+
+
+def test_builds_the_exact_three_operation_work_item_create_json_patch() -> None:
+    candidate = _candidate()
+
+    assert build_work_item_create_json_patch(candidate) == [
+        {"op": "add", "path": "/fields/System.Title", "value": candidate.title},
+        {
+            "op": "add",
+            "path": "/fields/System.Description",
+            "value": candidate.description_html,
+        },
+        {
+            "op": "add",
+            "path": "/fields/Custom.BacklogGeneratorSourceIdentity",
+            "value": candidate.source_identity,
+        },
+    ]
+
+
+def test_builds_the_exact_four_operation_json_patch_with_acceptance_criteria() -> None:
+    candidate = _candidate(acceptance_criteria_html="<ul>\n<li>Criterion</li>\n</ul>\n")
+
+    assert build_work_item_create_json_patch(candidate) == [
+        {"op": "add", "path": "/fields/System.Title", "value": candidate.title},
+        {
+            "op": "add",
+            "path": "/fields/System.Description",
+            "value": candidate.description_html,
+        },
+        {
+            "op": "add",
+            "path": "/fields/Microsoft.VSTS.Common.AcceptanceCriteria",
+            "value": candidate.acceptance_criteria_html,
+        },
+        {
+            "op": "add",
+            "path": "/fields/Custom.BacklogGeneratorSourceIdentity",
+            "value": candidate.source_identity,
+        },
+    ]
+
+
+def test_builds_the_exact_four_operation_json_patch_with_tags() -> None:
+    candidate = _candidate(tags_value="platform; generator")
+
+    assert build_work_item_create_json_patch(candidate) == [
+        {"op": "add", "path": "/fields/System.Title", "value": candidate.title},
+        {
+            "op": "add",
+            "path": "/fields/System.Description",
+            "value": candidate.description_html,
+        },
+        {"op": "add", "path": "/fields/System.Tags", "value": candidate.tags_value},
+        {
+            "op": "add",
+            "path": "/fields/Custom.BacklogGeneratorSourceIdentity",
+            "value": candidate.source_identity,
+        },
+    ]
+
+
+def test_builds_the_exact_five_operation_work_item_create_json_patch() -> None:
+    candidate = _candidate(
+        acceptance_criteria_html="<ul>\n<li>Criterion</li>\n</ul>\n",
+        tags_value="platform; generator",
+    )
+
+    operations = build_work_item_create_json_patch(candidate)
+
+    assert [operation["path"] for operation in operations] == [
+        "/fields/System.Title",
+        "/fields/System.Description",
+        "/fields/Microsoft.VSTS.Common.AcceptanceCriteria",
+        "/fields/System.Tags",
+        "/fields/Custom.BacklogGeneratorSourceIdentity",
+    ]
+    assert all(operation["op"] == "add" for operation in operations)
+    assert operations[-1]["value"] == candidate.source_identity
+
+
+@pytest.mark.parametrize(
+    "work_item_type",
+    (WorkItemType.EPIC, WorkItemType.FEATURE, WorkItemType.PRODUCT_BACKLOG_ITEM),
+)
+def test_emits_acceptance_criteria_for_each_applicable_work_item_type(
+    work_item_type: WorkItemType,
+) -> None:
+    candidate = _candidate(work_item_type, acceptance_criteria_html="<p>Criterion</p>\n")
+
+    assert "/fields/Microsoft.VSTS.Common.AcceptanceCriteria" in [
+        operation["path"] for operation in build_work_item_create_json_patch(candidate)
+    ]
+
+
+def test_never_emits_task_acceptance_criteria() -> None:
+    candidate = _candidate(WorkItemType.TASK, acceptance_criteria_html="<p>Invalid</p>\n")
+
+    assert "/fields/Microsoft.VSTS.Common.AcceptanceCriteria" not in [
+        operation["path"] for operation in build_work_item_create_json_patch(candidate)
+    ]
+
+
+def test_empty_optional_values_are_not_treated_as_absent() -> None:
+    candidate = _candidate(acceptance_criteria_html="", tags_value="")
+
+    operations = build_work_item_create_json_patch(candidate)
+
+    assert operations[2]["value"] == ""
+    assert operations[3]["value"] == ""
+
+
+def test_json_patch_construction_does_not_transmit_a_request(opener: _Opener) -> None:
+    build_work_item_create_json_patch(_candidate())
+
+    assert opener.calls == []
