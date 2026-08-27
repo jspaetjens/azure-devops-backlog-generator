@@ -26,6 +26,20 @@ together with those dependencies.
 python -m pip install -e ".[dev]"
 ```
 
+## Configuration bootstrap
+
+Copy the tracked configuration template to the default local runtime path:
+
+```powershell
+Copy-Item -LiteralPath "config\config.example.toml" -Destination "config\config.toml"
+```
+
+Edit `config/config.toml` with the required non-secret Azure DevOps and documentation
+values. The application uses `config/config.toml` as its default configuration path.
+
+Set `AZDO_PAT` separately as an environment variable. Do not store Personal Access Tokens
+in TOML configuration files.
+
 Run the required quality checks:
 
 ```powershell

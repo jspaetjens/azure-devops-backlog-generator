@@ -4,11 +4,11 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.7
+**Version:** 1.8
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-23
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -31,6 +31,7 @@
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Clarified the dedicated backlog-input source-directory contract. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 1.7 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Aligned the Version 1.0 process exit-status boundary with the approved REST operational contract. |
+| 1.8 | 2026-08-27 | Draft | Jack Spaetjens | Defined the Version 1.0 configuration bootstrap template convention. |
 
 ---
 
@@ -136,6 +137,13 @@ Configuration files shall be parsed using the Python standard-library `tomllib` 
 ## 5.2 Configuration File Selection and Discovery
 
 The canonical configuration-file path shall be `config/config.toml`.
+
+`config/config.toml` shall be local, user-specific runtime configuration and shall not be
+tracked by the repository. The repository shall provide the tracked bootstrap template
+`config/config.example.toml`. Before use, users shall copy that template to
+`config/config.toml` and edit the required non-secret values for their target environment.
+The template shall contain no secrets. A PAT shall remain exclusively supplied through
+`AZDO_PAT`.
 
 The optional `--config-file` CLI option shall supply an explicit configuration-file path. No short alias shall be supported in Version 1.0. The option shall accept exactly one file-path operand.
 

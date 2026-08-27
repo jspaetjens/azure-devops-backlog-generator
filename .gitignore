@@ -6,6 +6,9 @@ __pycache__/
 venv/
 .codex-tmp/
 
+# Local runtime configuration
+config/config.toml
+
 # Python coverage
 .coverage
 .coverage.*
