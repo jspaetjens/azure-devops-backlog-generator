@@ -6,7 +6,7 @@
 
 **Version:** 1.4
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-27
 
@@ -27,7 +27,7 @@
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Added the approved Configuration Specification to the documentation overview. |
 | 1.2 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Added the Documentation Input Specification to the documentation overview. |
 | 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
-| 1.4 | 2026-08-27 | Draft | Jack Spaetjens | Removed stale project-specific context from the Repository Philosophy. |
+| 1.4 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Removed stale project-specific context from the Repository Philosophy. |
 
 ---
 
