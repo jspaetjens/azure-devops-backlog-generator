@@ -16,7 +16,10 @@ from azure_devops_backlog_generator.azure_devops.exceptions import (
     AzureDevOpsResponseError,
     AzureDevOpsTransportError,
 )
-from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsProject
+from azure_devops_backlog_generator.azure_devops.models import (
+    AzureDevOpsProject,
+    AzureDevOpsWorkItem,
+)
 from azure_devops_backlog_generator.documentation.models import WorkItemType
 from azure_devops_backlog_generator.generator.candidates import WorkItemCandidate
 
@@ -24,6 +27,11 @@ API_VERSION = "7.1"
 REQUEST_TIMEOUT_SECONDS = 30
 _ACCEPT_HEADER = "application/json"
 _SOURCE_IDENTITY_MARKER_PATTERN = re.compile(r"adbg:source-id:v1:sha256:[0-9a-f]{64}\Z")
+_WORK_ITEM_EVIDENCE_FIELDS = (
+    "System.TeamProject",
+    "System.WorkItemType",
+    "Custom.BacklogGeneratorSourceIdentity",
+)
 _COMPATIBILITY_FIELD_REFERENCES = frozenset(
     {
         "System.Title",
@@ -215,6 +223,24 @@ class AzureDevOpsRestClient:
         )
         return _work_item_ids_from_wiql_response(response)
 
+    def retrieve_work_item(
+        self,
+        work_item_id: int,
+        *,
+        personal_access_token: str,
+    ) -> AzureDevOpsWorkItem:
+        """Retrieve the fixed persisted evidence for one Work Item ID."""
+        if type(work_item_id) is not int:
+            raise ValueError("A numeric Work Item ID is required.")
+
+        response = self.send_json_request(
+            method="GET",
+            path_segments=("_apis", "wit", "workitems", str(work_item_id)),
+            personal_access_token=personal_access_token,
+            query={"fields": ",".join(_WORK_ITEM_EVIDENCE_FIELDS)},
+        )
+        return _work_item_evidence_from_response(response)
+
     def retrieve_work_item_type(
         self,
         work_item_type: WorkItemType,
@@ -382,6 +408,45 @@ def _work_item_ids_from_wiql_response(response: Any) -> tuple[int, ...]:
             )
         work_item_ids.append(work_item_id)
     return tuple(work_item_ids)
+
+
+def _work_item_evidence_from_response(response: Any) -> AzureDevOpsWorkItem:
+    if not isinstance(response, Mapping):
+        raise AzureDevOpsResponseError("Azure DevOps Work Item response must be a JSON object.")
+
+    work_item_id = _required_work_item_integer(response, "id")
+    revision = _required_work_item_integer(response, "rev")
+    fields = response.get("fields")
+    if not isinstance(fields, Mapping):
+        raise AzureDevOpsResponseError("Azure DevOps Work Item response requires a fields object.")
+
+    return AzureDevOpsWorkItem(
+        id=work_item_id,
+        revision=revision,
+        project_name=_required_work_item_field(fields, "System.TeamProject"),
+        work_item_type=_required_work_item_field(fields, "System.WorkItemType"),
+        source_identity=_required_work_item_field(
+            fields, "Custom.BacklogGeneratorSourceIdentity"
+        ),
+    )
+
+
+def _required_work_item_integer(response: Mapping[str, Any], name: str) -> int:
+    value = response.get(name)
+    if type(value) is not int:
+        raise AzureDevOpsResponseError(
+            f"Azure DevOps Work Item response requires a numeric {name!r}."
+        )
+    return value
+
+
+def _required_work_item_field(fields: Mapping[str, Any], name: str) -> str:
+    value = fields.get(name)
+    if not isinstance(value, str):
+        raise AzureDevOpsResponseError(
+            f"Azure DevOps Work Item response requires string field {name!r}."
+        )
+    return value
 
 
 def _consume_response(response: Any) -> tuple[int, bytes]:
