@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.5
+**Version:** 2.6
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-27
 
@@ -39,6 +39,7 @@
 | 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the internal REST Client Foundation boundary and urllib transport responsibilities. |
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy boundary. |
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified Scrum compatibility evidence, mandatory validation-only coverage and execution ordering responsibilities. |
+| 2.6 | 2026-08-27 | Draft | Jack Spaetjens | Clarified the PAT runtime-secret input boundary. |
 
 ---
 
@@ -352,7 +353,7 @@ Scrum compatibility shall remain a fixed Version 1.0 product constraint. Configu
 Version 1.0 shall follow the following security principles:
 
 - Sensitive information shall not be hard-coded.
-- Personal Access Tokens shall be provided through configuration.
+- Personal Access Tokens are runtime secrets supplied exclusively through `AZDO_PAT` and remain outside TOML configuration.
 - Authentication credentials shall not be written to log files.
 - Communication with Azure DevOps shall use secure HTTPS connections.
 - Configuration files containing sensitive information shall be excluded from version control where appropriate.

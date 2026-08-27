@@ -4,11 +4,11 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.0
+**Version:** 1.1
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -24,6 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Release Management document. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Release Management baseline. |
+| 1.1 | 2026-08-27 | Draft | Jack Spaetjens | Recorded the current pre-release implementation status. |
 
 ---
 
@@ -37,17 +38,18 @@
 - [2. Purpose](#2-purpose)
 - [3. Release Objectives](#3-release-objectives)
 - [4. Release Principles](#4-release-principles)
-- [5. Versioning Strategy](#5-versioning-strategy)
-- [6. Release Types](#6-release-types)
+- [5. Current Release Status](#5-current-release-status)
+- [6. Versioning Strategy](#6-versioning-strategy)
+- [7. Release Types](#7-release-types)
   - [Major Release](#major-release)
   - [Minor Release](#minor-release)
   - [Patch Release](#patch-release)
-- [7. Release Criteria](#7-release-criteria)
-- [8. Release Preparation](#8-release-preparation)
-- [9. Release Approval](#9-release-approval)
-- [10. Post-Release Activities](#10-post-release-activities)
-- [11. Traceability](#11-traceability)
-- [12. Approval](#12-approval)
+- [8. Release Criteria](#8-release-criteria)
+- [9. Release Preparation](#9-release-preparation)
+- [10. Release Approval](#10-release-approval)
+- [11. Post-Release Activities](#11-post-release-activities)
+- [12. Traceability](#12-traceability)
+- [13. Approval](#13-approval)
 
 
 ---
@@ -95,7 +97,17 @@ Release management shall follow the following principles:
 
 ---
 
-# 5. Versioning Strategy
+# 5. Current Release Status
+
+Version 1.0 has not been approved or published. The project is in implementation: its
+configuration, documentation-processing, source-identity, REST foundation, compatibility,
+candidate, JSON Patch and validation-only Create foundations are complete, while the remaining
+generation, orchestration, CLI/logging and end-to-end/integration release validation work is
+incomplete. The release criteria in this document remain unchanged.
+
+---
+
+# 6. Versioning Strategy
 
 Version 1.0 shall follow a consistent versioning strategy throughout the project lifecycle.
 
@@ -113,7 +125,7 @@ All released versions shall be recorded through Version History and Git tags whe
 
 ---
 
-# 6. Release Types
+# 7. Release Types
 
 The project shall support the following release types.
 
@@ -149,7 +161,7 @@ Patch releases shall remain fully compatible with the corresponding major and mi
 
 ---
 
-# 7. Release Criteria
+# 8. Release Criteria
 
 A software release shall not be approved until the following criteria have been satisfied:
 
@@ -165,7 +177,7 @@ Only approved releases shall be published.
 
 ---
 
-# 8. Release Preparation
+# 9. Release Preparation
 
 Release preparation shall include:
 
@@ -181,7 +193,7 @@ Release preparation shall be completed before release approval is requested.
 
 ---
 
-# 9. Release Approval
+# 10. Release Approval
 
 A release shall be approved only after all release criteria have been satisfied.
 
@@ -198,7 +210,7 @@ Only approved releases shall be published.
 
 ---
 
-# 10. Post-Release Activities
+# 11. Post-Release Activities
 
 Following publication of a release, the following activities shall be completed:
 
@@ -213,7 +225,7 @@ Post-release activities shall ensure the integrity and traceability of released 
 
 ---
 
-# 11. Traceability
+# 12. Traceability
 
 This Release Management document defines the governance activities supporting delivery of the approved documentation baseline.
 
@@ -234,7 +246,7 @@ Release activities shall remain aligned with the approved documentation baseline
 
 ---
 
-# 12. Approval
+# 13. Approval
 
 This document becomes part of the approved documentation baseline following:
 
