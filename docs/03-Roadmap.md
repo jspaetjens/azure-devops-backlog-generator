@@ -6,7 +6,7 @@
 
 **Version:** 1.3
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-27
 
@@ -26,7 +26,7 @@
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Development Roadmap baseline. |
 | 1.1 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded the current implementation baseline and remaining Version 1.0 work. |
 | 1.2 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded merged WIQL identity lookup and Work Item GET evidence retrieval in the current implementation baseline. |
-| 1.3 | 2026-08-27 | Draft | Jack Spaetjens | Recorded merged existing/new Work Item resolution in the current implementation baseline. |
+| 1.3 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded merged existing/new Work Item resolution in the current implementation baseline. |
 
 ---
 
