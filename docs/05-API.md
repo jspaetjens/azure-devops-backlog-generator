@@ -6,7 +6,7 @@
 
 **Version:** 2.8
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-27
 
@@ -41,7 +41,7 @@
 | 2.5 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 urllib REST Client Foundation and redirect contract. |
 | 2.6 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy contract. |
 | 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the Version 1.0 Scrum compatibility evidence, validation-only coverage and execution contract. |
-| 2.8 | 2026-08-27 | Draft | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
+| 2.8 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 
 ---
 
