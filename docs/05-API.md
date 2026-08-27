@@ -6,9 +6,9 @@
 
 **Version:** 2.7
 
-**Status:** Draft
+**Status:** Approved Baseline
 
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -40,7 +40,7 @@
 | 2.4 | 2026-08-25 | Draft | Jack Spaetjens | Defined the Version 1.0 run-level source identity validation contract. |
 | 2.5 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 urllib REST Client Foundation and redirect contract. |
 | 2.6 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy contract. |
-| 2.7 | 2026-08-26 | Draft | Jack Spaetjens | Clarified the Version 1.0 Scrum compatibility evidence, validation-only coverage and execution contract. |
+| 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the Version 1.0 Scrum compatibility evidence, validation-only coverage and execution contract. |
 
 ---
 
