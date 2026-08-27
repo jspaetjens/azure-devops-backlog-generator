@@ -2,11 +2,11 @@
 
 > *This document defines the collaboration agreement between Jack Spaetjens and ChatGPT for software engineering projects.*
 
-**Version:** 1.4
+**Version:** 1.5
 
 **Status:** Approved Baseline
 
-**Last Updated:** 2026-08-25
+**Last Updated:** 2026-08-27
 
 **Author:** Jack Spaetjens
 
@@ -21,6 +21,7 @@
 | 1.2 | 2026-07-30 | Approved Baseline | Jack Spaetjens | Generalized the agreement for reuse across projects and refined governance terminology. |
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Aligned the Git workflow with the authoritative Development Standards and removed the obsolete develop-branch requirement. |
 | 1.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined GitHub Pull Request handoff and PowerShell command presentation requirements. |
+| 1.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Formalized the required GitHub Pull Request title, branch, URL and description handoff standard. |
 
 ---
 
@@ -200,6 +201,26 @@ Whenever ChatGPT provides instructions for pushing a feature or documentation br
 - The expected base branch and compare branch.
 
 The direct GitHub Pull Request creation URL MUST NOT be omitted when the repository and branch are known.
+
+Whenever ChatGPT prepares a GitHub Pull Request for this project, the Pull Request title shall follow the project's Conventional Commit naming convention. ChatGPT MUST explicitly state the target base branch and source compare branch, and provide the direct GitHub Pull Request creation URL for those branches.
+
+ChatGPT MUST provide one complete copy/paste-ready Markdown Pull Request description. Its sections shall appear in exactly this order and shall not be omitted or replaced with alternative headings:
+
+```markdown
+## Summary
+
+## Changes
+
+## Reason
+
+## Validation
+
+## Notes
+```
+
+When there are no special notes, the `## Notes` section shall remain and state that there are no additional notes. ChatGPT shall not deviate from this Pull Request description format unless Jack Spaetjens explicitly approves the deviation.
+
+When providing Git commands for any feature, docs, chore or other Pull Request workflow, ChatGPT MUST provide the branch name, Conventional Commit message, push command, Pull Request title, base branch, compare branch, direct GitHub Pull Request creation URL and the complete Pull Request description together with the push workflow. The description shall not be split into unrelated fragments.
 
 When multiple related PowerShell commands form one execution step or workflow, ChatGPT MUST provide them together in one copy/paste-ready PowerShell code block. ChatGPT MUST NOT unnecessarily split related PowerShell commands into separate code blocks.
 
