@@ -6,7 +6,7 @@
 
 **Version:** 2.6
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-27
 
@@ -39,7 +39,7 @@
 | 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the internal REST Client Foundation boundary and urllib transport responsibilities. |
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy boundary. |
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified Scrum compatibility evidence, mandatory validation-only coverage and execution ordering responsibilities. |
-| 2.6 | 2026-08-27 | Draft | Jack Spaetjens | Clarified the PAT runtime-secret input boundary. |
+| 2.6 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the PAT runtime-secret input boundary. |
 
 ---
 
