@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.2
+**Version:** 1.3
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-27
 
@@ -26,6 +26,7 @@
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Development Roadmap baseline. |
 | 1.1 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded the current implementation baseline and remaining Version 1.0 work. |
 | 1.2 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded merged WIQL identity lookup and Work Item GET evidence retrieval in the current implementation baseline. |
+| 1.3 | 2026-08-27 | Draft | Jack Spaetjens | Recorded merged existing/new Work Item resolution in the current implementation baseline. |
 
 ---
 
@@ -109,10 +110,10 @@ discovery, parsing and preparation; source identity and collision validation; th
 REST Client Foundation; project and compatibility metadata retrieval; structural Scrum
 compatibility evaluation; Work Item Candidate construction; Work Item Create JSON Patch
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
-GET evidence retrieval.
+GET evidence retrieval; and existing/new Work Item resolution.
 
-Version 1.0 remains in development. Existing/new resolution, persistent Create, relationships,
-relationship recovery, application orchestration, the CLI/logging/process-exit lifecycle, and
+Version 1.0 remains in development. Persistent Create, relationships, relationship recovery,
+application orchestration, the CLI/logging/process-exit lifecycle, and
 end-to-end/integration release validation remain to be implemented or completed.
 
 ---
