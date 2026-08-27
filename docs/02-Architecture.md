@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.6
+**Version:** 2.7
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-27
 
@@ -40,6 +40,7 @@
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy boundary. |
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified Scrum compatibility evidence, mandatory validation-only coverage and execution ordering responsibilities. |
 | 2.6 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the PAT runtime-secret input boundary. |
+| 2.7 | 2026-08-27 | Draft | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 
 ---
 
@@ -244,7 +245,7 @@ Azure DevOps Server instance, port, collection and Server-specific base-address 
 
 The REST Client Foundation shall provide a small internal, purpose-specific transport interface. It shall use `urllib` from the Python standard library and shall not introduce a third-party HTTP dependency. It shall own Azure DevOps Services URL construction, HTTP request construction and transmission, Basic authentication-header construction, required common headers, JSON transport mechanics, the fixed timeout, expected-status validation, redirect rejection, no-retry behaviour, controlled transport, network and response failures, and secret-safe diagnostics. It shall not be a general-purpose public HTTP abstraction.
 
-Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations, including compatibility validation, WIQL, Work Item GET, Work Item Create and relationship operations, remain deferred to their later capability slices.
+Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL and Work Item GET. Persistent Work Item Create and relationship operations remain deferred to their later capability slices.
 
 The foundation shall explicitly disable `urllib` proxy handling and shall not inherit ambient or system proxy state. Proxy configuration, proxy authentication, proxy credentials, PAC support, system-proxy integration and environment-proxy support are outside Version 1.0 and remain deferred to a future approved capability.
 

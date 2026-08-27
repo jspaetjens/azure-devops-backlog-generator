@@ -4,9 +4,9 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.7
+**Version:** 2.8
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-27
 
@@ -41,6 +41,7 @@
 | 2.5 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 urllib REST Client Foundation and redirect contract. |
 | 2.6 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy contract. |
 | 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the Version 1.0 Scrum compatibility evidence, validation-only coverage and execution contract. |
+| 2.8 | 2026-08-27 | Draft | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 
 ---
 
@@ -167,7 +168,7 @@ Version 1.0 shall obtain the Azure DevOps Personal Access Token only from `AZDO_
 
 All Azure DevOps Services requests shall use HTTPS and HTTP Basic authentication. The Basic credential shall be constructed from `":" + PAT`, encoded as ASCII bytes and Base64-encoded exactly once. The `Authorization` header shall be `Basic <base64-credential>`. The username component shall be empty. The PAT and derived Authorization header shall exist in memory only for request execution and shall never be logged, included in error output or included in request-dump diagnostics.
 
-The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations, including compatibility validation, WIQL, Work Item GET, Work Item Create and relationship operations, remain deferred to their later capability slices.
+The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations include compatibility validation, WIQL and Work Item GET. Persistent Work Item Create and relationship operations remain deferred to their later capability slices.
 
 Every Azure DevOps REST request shall use a fixed 30-second timeout. The timeout is application behaviour and shall not be configurable through TOML, environment variables or CLI. Version 1.0 shall not define separate connect, read or total timeout configuration. The implementation shall use `urllib`'s timeout mechanism so that the effective request timeout is 30 seconds.
 
