@@ -673,3 +673,78 @@ def test_json_patch_construction_does_not_transmit_a_request(opener: _Opener) ->
     build_work_item_create_json_patch(_candidate())
 
     assert opener.calls == []
+
+
+@pytest.mark.parametrize(
+    ("work_item_type", "encoded_type"),
+    [
+        (WorkItemType.EPIC, "Epic"),
+        (WorkItemType.FEATURE, "Feature"),
+        (WorkItemType.PRODUCT_BACKLOG_ITEM, "Product%20Backlog%20Item"),
+        (WorkItemType.TASK, "Task"),
+    ],
+)
+def test_validates_work_item_create_with_the_exact_endpoint_contract(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    work_item_type: WorkItemType,
+    encoded_type: str,
+) -> None:
+    candidate = _candidate(work_item_type, tags_value="platform; generator")
+    opener.response = _Response(body=b'{"validation":"accepted"}')
+
+    assert client.validate_work_item_create(candidate, personal_access_token="secret-pat") is None
+
+    request, _ = opener.calls[0]
+    assert request.get_method() == "POST"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/Example%20Project/"
+        f"_apis/wit/workitems/{encoded_type}?validateOnly=true&api-version=7.1"
+    )
+    assert request.get_header("Content-type") == "application/json-patch+json"
+    assert request.get_header("Accept") == "application/json"
+    assert request.get_header("Authorization") == "Basic OnNlY3JldC1wYXQ="
+    assert json.loads(request.data.decode("utf-8")) == build_work_item_create_json_patch(candidate)
+    assert "bypassRules" not in request.full_url
+    assert "suppressNotifications" not in request.full_url
+    assert "%24expand" not in request.full_url
+
+
+def test_validation_only_create_uses_the_existing_controlled_http_failure(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    response = _Response(status=400)
+    opener.response = response
+
+    with pytest.raises(AzureDevOpsHttpError) as error:
+        client.validate_work_item_create(_candidate(), personal_access_token="secret-pat")
+
+    assert error.value.status == 400
+    assert len(opener.calls) == 1
+    assert response.read_called
+    assert response.closed
+
+
+@pytest.mark.parametrize("body", [b"", b"not json", b"\xff"])
+def test_validation_only_create_reuses_response_validation(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    response = _Response(body=body)
+    opener.response = response
+
+    with pytest.raises(AzureDevOpsResponseError):
+        client.validate_work_item_create(_candidate(), personal_access_token="secret-pat")
+
+    assert response.read_called
+    assert response.closed
+
+
+def test_validation_only_create_reuses_transport_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = URLError("offline")
+
+    with pytest.raises(AzureDevOpsTransportError):
+        client.validate_work_item_create(_candidate(), personal_access_token="secret-pat")
+
+    assert len(opener.calls) == 1

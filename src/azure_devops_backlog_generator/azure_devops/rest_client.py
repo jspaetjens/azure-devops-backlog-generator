@@ -178,6 +178,22 @@ class AzureDevOpsRestClient:
         project_name = _required_project_value(response, "name")
         return AzureDevOpsProject(id=project_id, name=project_name)
 
+    def validate_work_item_create(
+        self,
+        candidate: WorkItemCandidate,
+        *,
+        personal_access_token: str,
+    ) -> None:
+        """Validate one candidate Create request without persisting a work item."""
+        self.send_json_request(
+            method="POST",
+            path_segments=("_apis", "wit", "workitems", candidate.work_item_type.value),
+            personal_access_token=personal_access_token,
+            query={"validateOnly": "true"},
+            json_body=build_work_item_create_json_patch(candidate),
+            content_type="application/json-patch+json",
+        )
+
     def retrieve_work_item_type(
         self,
         work_item_type: WorkItemType,
