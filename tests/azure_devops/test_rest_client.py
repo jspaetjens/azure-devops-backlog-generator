@@ -16,6 +16,7 @@ from azure_devops_backlog_generator.azure_devops.exceptions import (
     AzureDevOpsResponseError,
     AzureDevOpsTransportError,
 )
+from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsWorkItem
 from azure_devops_backlog_generator.azure_devops.rest_client import (
     API_VERSION,
     REQUEST_TIMEOUT_SECONDS,
@@ -871,3 +872,194 @@ def test_rejects_malformed_wiql_response_shape(
 
     with pytest.raises(AzureDevOpsResponseError):
         client.lookup_work_item_ids(_candidate(), personal_access_token="secret-pat")
+
+
+def _work_item_response(**additional_properties: object) -> dict[str, object]:
+    response: dict[str, object] = {
+        "id": 17,
+        "rev": 3,
+        "fields": {
+            "System.TeamProject": "Canonical Project",
+            "System.WorkItemType": "Epic",
+            "Custom.BacklogGeneratorSourceIdentity": "adbg:source-id:v1:sha256:" + "a" * 64,
+        },
+    }
+    response.update(additional_properties)
+    return response
+
+
+def test_retrieves_work_item_evidence_with_the_exact_get_endpoint_contract(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(body=json.dumps(_work_item_response()).encode())
+
+    result = client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+    assert result == AzureDevOpsWorkItem(
+        id=17,
+        revision=3,
+        project_name="Canonical Project",
+        work_item_type="Epic",
+        source_identity="adbg:source-id:v1:sha256:" + "a" * 64,
+    )
+    request, _ = opener.calls[0]
+    assert request.get_method() == "GET"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/Example%20Project/"
+        "_apis/wit/workitems/17?fields=System.TeamProject%2CSystem.WorkItemType%2C"
+        "Custom.BacklogGeneratorSourceIdentity&api-version=7.1"
+    )
+    assert request.get_header("Accept") == "application/json"
+    assert request.get_header("Content-type") is None
+    assert request.data is None
+    assert len(opener.calls) == 1
+    assert "/wiql" not in request.full_url
+    assert "/workitems/Epic" not in request.full_url
+    assert "/relations" not in request.full_url
+    with pytest.raises(AttributeError):
+        result.id = 18  # type: ignore[misc]
+
+
+@pytest.mark.parametrize("work_item_id", [0, -1])
+def test_does_not_apply_undocumented_work_item_id_positivity_validation(
+    client: AzureDevOpsRestClient, opener: _Opener, work_item_id: int
+) -> None:
+    opener.response = _Response(body=json.dumps(_work_item_response()).encode())
+
+    client.retrieve_work_item(work_item_id, personal_access_token="secret-pat")
+
+    request, _ = opener.calls[0]
+    assert f"/workitems/{work_item_id}?fields=" in request.full_url
+
+
+@pytest.mark.parametrize("work_item_id", [True, "17", 17.0, None])
+def test_rejects_non_integer_work_item_ids_before_transmission(
+    client: AzureDevOpsRestClient, opener: _Opener, work_item_id: object
+) -> None:
+    with pytest.raises(ValueError, match="numeric Work Item ID"):
+        client.retrieve_work_item(  # type: ignore[arg-type]
+            work_item_id, personal_access_token="secret-pat"
+        )
+
+    assert opener.calls == []
+
+
+@pytest.mark.parametrize("body", [b"[]", b'"work item"', b"1", b"null"])
+def test_rejects_non_object_work_item_response(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    opener.response = _Response(body=body)
+
+    with pytest.raises(AzureDevOpsResponseError, match="JSON object"):
+        client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize(
+    ("property_name", "value"),
+    [
+        ("id", None),
+        ("id", "17"),
+        ("id", 17.0),
+        ("id", True),
+        ("rev", None),
+        ("rev", "3"),
+        ("rev", 3.0),
+        ("rev", True),
+    ],
+)
+def test_rejects_missing_or_malformed_work_item_numeric_evidence(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    property_name: str,
+    value: object,
+) -> None:
+    response = _work_item_response()
+    response.pop(property_name)
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="numeric"):
+        client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+    response = _work_item_response(**{property_name: value})
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="numeric"):
+        client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize("fields", [None, [], "fields"])
+def test_rejects_missing_or_malformed_work_item_fields(
+    client: AzureDevOpsRestClient, opener: _Opener, fields: object
+) -> None:
+    response = _work_item_response()
+    response.pop("fields")
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="fields object"):
+        client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+    response = _work_item_response(fields=fields)
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="fields object"):
+        client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize(
+    ("field_name", "value"),
+    [
+        ("System.TeamProject", None),
+        ("System.TeamProject", 1),
+        ("System.WorkItemType", None),
+        ("System.WorkItemType", 1),
+        ("Custom.BacklogGeneratorSourceIdentity", None),
+        ("Custom.BacklogGeneratorSourceIdentity", 1),
+    ],
+)
+def test_rejects_missing_or_non_string_required_work_item_fields(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    field_name: str,
+    value: object,
+) -> None:
+    response = _work_item_response()
+    fields = response["fields"]
+    assert isinstance(fields, dict)
+    fields.pop(field_name)
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="string field"):
+        client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+    response = _work_item_response()
+    fields = response["fields"]
+    assert isinstance(fields, dict)
+    fields[field_name] = value
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="string field"):
+        client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+
+def test_ignores_unknown_work_item_response_properties_and_fields(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    response = _work_item_response(unexpected="ignored")
+    fields = response["fields"]
+    assert isinstance(fields, dict)
+    fields["System.Title"] = "Ignored title"
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    assert client.retrieve_work_item(17, personal_access_token="secret-pat").id == 17
+
+
+def test_work_item_get_preserves_a_404_http_failure(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(status=404)
+
+    with pytest.raises(AzureDevOpsHttpError) as error:
+        client.retrieve_work_item(17, personal_access_token="secret-pat")
+
+    assert error.value.status == 404
+    assert len(opener.calls) == 1

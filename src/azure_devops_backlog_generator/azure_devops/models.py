@@ -9,3 +9,14 @@ class AzureDevOpsProject:
 
     id: str
     name: str
+
+
+@dataclass(frozen=True, slots=True)
+class AzureDevOpsWorkItem:
+    """Persisted Work Item evidence returned by the fixed verification GET."""
+
+    id: int
+    revision: int
+    project_name: str
+    work_item_type: str
+    source_identity: str
