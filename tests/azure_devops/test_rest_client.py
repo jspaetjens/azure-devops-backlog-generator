@@ -548,6 +548,7 @@ def _candidate(
     *,
     acceptance_criteria_html: str | None = None,
     tags_value: str | None = None,
+    source_identity: str = "adbg:source-id:v1:sha256:" + "a" * 64,
 ) -> WorkItemCandidate:
     return WorkItemCandidate(
         work_item_type=work_item_type,
@@ -555,7 +556,7 @@ def _candidate(
         description_html="<p>Prepared description</p>\n",
         acceptance_criteria_html=acceptance_criteria_html,
         tags_value=tags_value,
-        source_identity="adbg:source-id:v1:sha256:" + "a" * 64,
+        source_identity=source_identity,
     )
 
 
@@ -748,3 +749,125 @@ def test_validation_only_create_reuses_transport_failure_without_retry(
         client.validate_work_item_create(_candidate(), personal_access_token="secret-pat")
 
     assert len(opener.calls) == 1
+
+
+@pytest.mark.parametrize("work_item_type", tuple(WorkItemType))
+def test_looks_up_work_item_ids_with_the_exact_wiql_endpoint_contract(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    work_item_type: WorkItemType,
+) -> None:
+    candidate = _candidate(work_item_type)
+    opener.response = _Response(body=b'{"workItems":[{"id":17}]}')
+
+    assert client.lookup_work_item_ids(candidate, personal_access_token="secret-pat") == (17,)
+
+    request, _ = opener.calls[0]
+    assert request.get_method() == "POST"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/Example%20Project/"
+        "_apis/wit/wiql?%24top=2&api-version=7.1"
+    )
+    assert request.get_header("Content-type") == "application/json"
+    assert request.get_header("Accept") == "application/json"
+    assert json.loads(request.data.decode("utf-8")) == {
+        "query": (
+            "SELECT [System.Id]\n"
+            "FROM WorkItems\n"
+            "WHERE [System.TeamProject] = @project\n"
+            f"  AND [System.WorkItemType] = '{work_item_type.value}'\n"
+            f"  AND [Custom.BacklogGeneratorSourceIdentity] = '{candidate.source_identity}'"
+        )
+    }
+    assert len(opener.calls) == 1
+    assert "/_apis/wit/workitems/" not in request.full_url
+
+
+@pytest.mark.parametrize(
+    ("work_items", "expected"),
+    [
+        ([], ()),
+        ([{"id": 1}], (1,)),
+        ([{"id": 1}, {"id": 2}], (1, 2)),
+        ([{"id": 1}, {"id": 2}, {"id": 3}], (1, 2, 3)),
+    ],
+)
+def test_returns_wiql_ids_as_immutable_lookup_evidence(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    work_items: list[dict[str, int]],
+    expected: tuple[int, ...],
+) -> None:
+    opener.response = _Response(body=json.dumps({"workItems": work_items}).encode())
+
+    result = client.lookup_work_item_ids(_candidate(), personal_access_token="secret-pat")
+
+    assert result == expected
+    assert isinstance(result, tuple)
+
+
+@pytest.mark.parametrize(
+    "source_identity",
+    [
+        None,
+        "",
+        "adbg:source-id:v1:sha256:" + "A" * 64,
+        "adbg:source-id:v1:sha256:" + "a" * 63,
+        "adbg:source-id:v1:sha256:" + "a" * 64 + "' OR 1=1",
+    ],
+)
+def test_rejects_invalid_source_identity_before_wiql_transmission(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    source_identity: object,
+) -> None:
+    with pytest.raises(ValueError, match="source identity marker"):
+        client.lookup_work_item_ids(
+            _candidate(source_identity=source_identity),  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    assert opener.calls == []
+
+
+def test_rejects_an_unsupported_work_item_type_before_wiql_transmission(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    with pytest.raises(ValueError, match="supported WorkItemType"):
+        client.lookup_work_item_ids(
+            _candidate("User Story"),  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    assert opener.calls == []
+
+
+@pytest.mark.parametrize(
+    "work_items",
+    [
+        [{"id": 1}, {"id": 1}],
+        [{}],
+        [{"id": None}],
+        [{"id": "1"}],
+        [{"id": 1.0}],
+        [{"id": True}],
+        [1],
+    ],
+)
+def test_rejects_malformed_wiql_work_item_entries(
+    client: AzureDevOpsRestClient, opener: _Opener, work_items: list[object]
+) -> None:
+    opener.response = _Response(body=json.dumps({"workItems": work_items}).encode())
+
+    with pytest.raises(AzureDevOpsResponseError):
+        client.lookup_work_item_ids(_candidate(), personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize("body", [b"{}", b'{"workItems":null}', b'{"workItems":{}}', b"[]"])
+def test_rejects_malformed_wiql_response_shape(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    opener.response = _Response(body=body)
+
+    with pytest.raises(AzureDevOpsResponseError):
+        client.lookup_work_item_ids(_candidate(), personal_access_token="secret-pat")
