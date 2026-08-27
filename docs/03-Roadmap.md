@@ -6,7 +6,7 @@
 
 **Version:** 1.1
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-27
 
@@ -24,7 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Development Roadmap. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Development Roadmap baseline. |
-| 1.1 | 2026-08-27 | Draft | Jack Spaetjens | Recorded the current implementation baseline and remaining Version 1.0 work. |
+| 1.1 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded the current implementation baseline and remaining Version 1.0 work. |
 
 ---
 

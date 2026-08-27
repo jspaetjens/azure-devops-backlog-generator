@@ -4,7 +4,7 @@
 
 **Version:** 1.6
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-27
 
@@ -22,7 +22,7 @@
 | 1.3 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Aligned the Git workflow with the authoritative Development Standards and removed the obsolete develop-branch requirement. |
 | 1.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined GitHub Pull Request handoff and PowerShell command presentation requirements. |
 | 1.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Formalized the required GitHub Pull Request title, branch, URL and description handoff standard. |
-| 1.6 | 2026-08-27 | Draft | Jack Spaetjens | Removed stale project-specific contextual references. |
+| 1.6 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Removed stale project-specific contextual references. |
 
 ---
 

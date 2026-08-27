@@ -6,7 +6,7 @@
 
 **Version:** 1.1
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-27
 
@@ -24,7 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Development Standards document. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Development Standards baseline. |
-| 1.1 | 2026-08-27 | Draft | Jack Spaetjens | Defined `pyproject.toml` as the canonical dependency declaration and removed the obsolete requirements-file convention. |
+| 1.1 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Defined `pyproject.toml` as the canonical dependency declaration and removed the obsolete requirements-file convention. |
 
 ---
 
