@@ -6,9 +6,9 @@
 
 **Version:** 1.11
 
-**Status:** Draft
+**Status:** Approved Baseline
 
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -34,7 +34,7 @@
 | 1.8 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Work Item Identity and Existing Item Resolution contract. |
 | 1.9 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Existing Relationship State and Recovery contract. |
 | 1.10 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision failure behaviour. |
-| 1.11 | 2026-08-26 | Draft | Jack Spaetjens | Aligned mandatory validation-only candidate acceptance with the Scrum compatibility contract. |
+| 1.11 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Aligned mandatory validation-only candidate acceptance with the Scrum compatibility contract. |
 
 ---
 

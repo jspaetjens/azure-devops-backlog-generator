@@ -6,9 +6,9 @@
 
 **Version:** 2.5
 
-**Status:** Draft
+**Status:** Approved Baseline
 
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -38,7 +38,7 @@
 | 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined test coverage for run-level duplicate logical identity and persisted-marker collision validation. |
 | 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the urllib REST Client Foundation and redirect behaviour. |
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the REST Client Foundation proxy contract. |
-| 2.5 | 2026-08-26 | Draft | Jack Spaetjens | Clarified test coverage for Scrum compatibility evidence and mandatory validation-only candidate checks. |
+| 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified test coverage for Scrum compatibility evidence and mandatory validation-only candidate checks. |
 
 ---
 

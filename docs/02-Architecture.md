@@ -6,9 +6,9 @@
 
 **Version:** 2.5
 
-**Status:** Draft
+**Status:** Approved Baseline
 
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -38,7 +38,7 @@
 | 2.2 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision validation responsibilities. |
 | 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the internal REST Client Foundation boundary and urllib transport responsibilities. |
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 REST Client Foundation proxy boundary. |
-| 2.5 | 2026-08-26 | Draft | Jack Spaetjens | Clarified Scrum compatibility evidence, mandatory validation-only coverage and execution ordering responsibilities. |
+| 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified Scrum compatibility evidence, mandatory validation-only coverage and execution ordering responsibilities. |
 
 ---
 
