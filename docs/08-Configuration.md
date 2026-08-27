@@ -6,7 +6,7 @@
 
 **Version:** 1.8
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-27
 
@@ -31,7 +31,7 @@
 | 1.5 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Clarified the dedicated backlog-input source-directory contract. |
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 1.7 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Aligned the Version 1.0 process exit-status boundary with the approved REST operational contract. |
-| 1.8 | 2026-08-27 | Draft | Jack Spaetjens | Defined the Version 1.0 configuration bootstrap template convention. |
+| 1.8 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 configuration bootstrap template convention. |
 
 ---
 
