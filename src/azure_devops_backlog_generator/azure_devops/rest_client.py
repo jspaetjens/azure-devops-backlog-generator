@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -22,6 +23,7 @@ from azure_devops_backlog_generator.generator.candidates import WorkItemCandidat
 API_VERSION = "7.1"
 REQUEST_TIMEOUT_SECONDS = 30
 _ACCEPT_HEADER = "application/json"
+_SOURCE_IDENTITY_MARKER_PATTERN = re.compile(r"adbg:source-id:v1:sha256:[0-9a-f]{64}\Z")
 _COMPATIBILITY_FIELD_REFERENCES = frozenset(
     {
         "System.Title",
@@ -194,6 +196,25 @@ class AzureDevOpsRestClient:
             content_type="application/json-patch+json",
         )
 
+    def lookup_work_item_ids(
+        self,
+        candidate: WorkItemCandidate,
+        *,
+        personal_access_token: str,
+    ) -> tuple[int, ...]:
+        """Return validated candidate IDs from the fixed source-identity WIQL lookup."""
+        _validate_lookup_candidate(candidate)
+        query = _build_identity_lookup_query(candidate.work_item_type, candidate.source_identity)
+        response = self.send_json_request(
+            method="POST",
+            path_segments=("_apis", "wit", "wiql"),
+            personal_access_token=personal_access_token,
+            query={"$top": "2"},
+            json_body={"query": query},
+            content_type="application/json",
+        )
+        return _work_item_ids_from_wiql_response(response)
+
     def retrieve_work_item_type(
         self,
         work_item_type: WorkItemType,
@@ -313,6 +334,54 @@ def _required_project_value(response: Mapping[str, Any], name: str) -> str:
             f"Azure DevOps project response requires a non-empty string {name!r}."
         )
     return value
+
+
+def _validate_lookup_candidate(candidate: WorkItemCandidate) -> None:
+    if not isinstance(candidate, WorkItemCandidate):
+        raise ValueError("A WorkItemCandidate is required.")
+    if not isinstance(candidate.work_item_type, WorkItemType):
+        raise ValueError("A supported WorkItemType is required.")
+    if (
+        type(candidate.source_identity) is not str
+        or not _SOURCE_IDENTITY_MARKER_PATTERN.fullmatch(candidate.source_identity)
+    ):
+        raise ValueError("A valid source identity marker is required.")
+
+
+def _build_identity_lookup_query(work_item_type: WorkItemType, source_identity: str) -> str:
+    return (
+        "SELECT [System.Id]\n"
+        "FROM WorkItems\n"
+        "WHERE [System.TeamProject] = @project\n"
+        f"  AND [System.WorkItemType] = '{work_item_type.value}'\n"
+        f"  AND [Custom.BacklogGeneratorSourceIdentity] = '{source_identity}'"
+    )
+
+
+def _work_item_ids_from_wiql_response(response: Any) -> tuple[int, ...]:
+    if not isinstance(response, Mapping):
+        raise AzureDevOpsResponseError("Azure DevOps WIQL response must be a JSON object.")
+    work_items = response.get("workItems")
+    if not isinstance(work_items, list):
+        raise AzureDevOpsResponseError("Azure DevOps WIQL response requires a workItems array.")
+
+    work_item_ids: list[int] = []
+    for work_item in work_items:
+        if not isinstance(work_item, Mapping):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps WIQL workItems entries must be JSON objects."
+            )
+        work_item_id = work_item.get("id")
+        if type(work_item_id) is not int:
+            raise AzureDevOpsResponseError(
+                "Azure DevOps WIQL workItems entries require numeric IDs."
+            )
+        if work_item_id in work_item_ids:
+            raise AzureDevOpsResponseError(
+                "Azure DevOps WIQL response contains duplicate work-item IDs."
+            )
+        work_item_ids.append(work_item_id)
+    return tuple(work_item_ids)
 
 
 def _consume_response(response: Any) -> tuple[int, bytes]:
