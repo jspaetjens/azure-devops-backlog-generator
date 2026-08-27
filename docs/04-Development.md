@@ -4,11 +4,11 @@
 
 > *This document defines the development standards, coding conventions and engineering practices for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.0
+**Version:** 1.1
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -24,6 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Development Standards document. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Development Standards baseline. |
+| 1.1 | 2026-08-27 | Draft | Jack Spaetjens | Defined `pyproject.toml` as the canonical dependency declaration and removed the obsolete requirements-file convention. |
 
 ---
 
@@ -124,7 +125,6 @@ The primary project structure for Version 1.0 is:
 ├── LICENSE
 ├── pyproject.toml
 ├── README.md
-└── requirements.txt
 ```
 
 Project directories shall have clearly defined responsibilities and shall not contain unrelated artefacts.
@@ -239,8 +239,7 @@ External dependencies shall be managed using standard Python package management 
 
 The project shall:
 
-- Define project dependencies in `pyproject.toml`.
-- Record runtime dependencies in `requirements.txt` where applicable.
+- Declare runtime and development dependencies in `pyproject.toml`, which is the canonical dependency declaration.
 - Minimise unnecessary external dependencies.
 - Use actively maintained libraries where practical.
 - Review dependency updates before adoption.

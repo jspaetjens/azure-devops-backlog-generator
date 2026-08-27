@@ -4,11 +4,11 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.0
+**Version:** 1.1
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-07-31
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -24,6 +24,7 @@
 |----------|------------|-------------------|-----------------|------------------------------------------------|
 | 0.1 | 2026-07-31 | Draft | Jack Spaetjens | Initial Development Roadmap. |
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Development Roadmap baseline. |
+| 1.1 | 2026-08-27 | Draft | Jack Spaetjens | Recorded the current implementation baseline and remaining Version 1.0 work. |
 
 ---
 
@@ -36,20 +37,21 @@
 - [2. Purpose](#2-purpose)
 - [3. Roadmap Objectives](#3-roadmap-objectives)
 - [4. Development Principles](#4-development-principles)
-- [5. Development Phases](#5-development-phases)
+- [5. Current Implementation Baseline](#5-current-implementation-baseline)
+- [6. Development Phases](#6-development-phases)
   - [Phase 1 – Project Foundation](#phase-1--project-foundation)
   - [Phase 2 – Core Infrastructure](#phase-2--core-infrastructure)
   - [Phase 3 – Documentation Processing](#phase-3--documentation-processing)
   - [Phase 4 – Backlog Generation](#phase-4--backlog-generation)
   - [Phase 5 – Validation and Testing](#phase-5--validation-and-testing)
   - [Phase 6 – Release Preparation](#phase-6--release-preparation)
-- [6. Phase Deliverables](#6-phase-deliverables)
-- [7. Milestones](#7-milestones)
-- [8. Dependencies](#8-dependencies)
-- [9. Risks](#9-risks)
-- [10. Success Criteria](#10-success-criteria)
-- [11. Roadmap Traceability](#11-roadmap-traceability)
-- [12. Approval](#12-approval)
+- [7. Phase Deliverables](#7-phase-deliverables)
+- [8. Milestones](#8-milestones)
+- [9. Dependencies](#9-dependencies)
+- [10. Risks](#10-risks)
+- [11. Success Criteria](#11-success-criteria)
+- [12. Roadmap Traceability](#12-roadmap-traceability)
+- [13. Approval](#13-approval)
 
 ---
 
@@ -99,7 +101,22 @@ Development shall follow the following principles:
 
 ---
 
-# 5. Development Phases
+# 5. Current Implementation Baseline
+
+The current implementation baseline includes configuration loading and validation; documentation
+discovery, parsing and preparation; source identity and collision validation; the Azure DevOps
+REST Client Foundation; project and compatibility metadata retrieval; structural Scrum
+compatibility evaluation; Work Item Candidate construction; Work Item Create JSON Patch
+construction; and validation-only Work Item Create transport.
+
+Version 1.0 remains in development. WIQL identity lookup, Work Item GET verification,
+existing/new resolution, persistent Create, relationships, relationship recovery, application
+orchestration, the CLI/logging/process-exit lifecycle, and end-to-end/integration release
+validation remain to be implemented or completed.
+
+---
+
+# 6. Development Phases
 
 Version 1.0 shall be implemented through the following development phases.
 
@@ -170,7 +187,7 @@ Objectives:
 
 ---
 
-# 6. Phase Deliverables
+# 7. Phase Deliverables
 
 Each development phase shall produce clearly defined deliverables.
 
@@ -187,7 +204,7 @@ Completion of each phase shall be verified before the next phase begins.
 
 ---
 
-# 7. Milestones
+# 8. Milestones
 
 The following milestones define the progression of Version 1.0.
 
@@ -205,7 +222,7 @@ Each milestone represents a measurable checkpoint within the development lifecyc
 
 ---
 
-# 8. Dependencies
+# 9. Dependencies
 
 Version 1.0 depends upon:
 
@@ -222,7 +239,7 @@ Dependencies shall be satisfied before implementation activities that rely upon 
 
 ---
 
-# 9. Risks
+# 10. Risks
 
 The successful implementation of Version 1.0 depends upon managing the following project risks.
 
@@ -238,7 +255,7 @@ Project risks shall be monitored throughout the implementation of Version 1.0.
 
 ---
 
-# 10. Success Criteria
+# 11. Success Criteria
 
 The Development Roadmap shall be considered successfully executed when:
 
@@ -251,7 +268,7 @@ The Development Roadmap shall be considered successfully executed when:
 
 ---
 
-# 11. Roadmap Traceability
+# 12. Roadmap Traceability
 
 This Development Roadmap translates the approved documentation baseline into an implementation plan.
 
@@ -270,7 +287,7 @@ The Development Roadmap shall not introduce functionality that is not traceable 
 
 ---
 
-# 12. Approval
+# 13. Approval
 
 This document becomes part of the approved documentation baseline following:
 
