@@ -4,11 +4,11 @@
 
 > *This document provides an overview of the Azure DevOps Backlog Generator project, its objectives, documentation structure, and guiding principles.*
 
-**Version:** 1.3
+**Version:** 1.4
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-21
+**Last Updated:** 2026-08-27
 
 **Target Release:** v1.0.0
 
@@ -27,6 +27,7 @@
 | 1.1 | 2026-08-20 | Approved Baseline | Jack Spaetjens | Added the approved Configuration Specification to the documentation overview. |
 | 1.2 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Added the Documentation Input Specification to the documentation overview. |
 | 1.3 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
+| 1.4 | 2026-08-27 | Draft | Jack Spaetjens | Removed stale project-specific context from the Repository Philosophy. |
 
 ---
 
@@ -83,8 +84,6 @@ The objectives of this project are:
 This repository contains a reusable Azure DevOps automation tool.
 
 The repository is independent of any individual software project.
-
-The Vehicle Weather Shield project serves as the initial reference implementation and validation project. The architecture shall remain generic and reusable for future software projects.
 
 The repository shall contain only functionality directly related to Azure DevOps backlog generation and maintenance.
 
