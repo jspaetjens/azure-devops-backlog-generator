@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.5
+**Version:** 2.6
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-27
+**Last Updated:** 2026-08-28
 
 **Target Release:** v1.0.0
 
@@ -39,6 +39,7 @@
 | 2.3 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the urllib REST Client Foundation and redirect behaviour. |
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the REST Client Foundation proxy contract. |
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified test coverage for Scrum compatibility evidence and mandatory validation-only candidate checks. |
+| 2.6 | 2026-08-28 | Draft | Jack Spaetjens | Defined test coverage for successful Parent-Child Relationship PATCH response validation. |
 
 ---
 
@@ -360,6 +361,11 @@ Parent-Child Relationship validation shall additionally cover:
 - the canonical numeric-parent target URL `https://dev.azure.com/{organization}/_apis/wit/workItems/{parentId}`, including no project segment, no `api-version`, no query parameters and no browser/UI URL;
 - a relation object containing exactly `rel` and `url`, with no relation attributes or other relation-specific fields;
 - absence of ordinary field operations, `validateOnly`, `bypassRules`, `suppressNotifications` and `$expand` from relationship PATCH requests;
+- exact HTTP `200 OK` acceptance, a non-empty valid UTF-8 JSON object response with no required properties, ignored unknown response properties and a `None` return;
+- rejection through the existing controlled Azure DevOps response-error contract of empty bodies, invalid UTF-8, invalid JSON and top-level JSON arrays, strings, numbers, booleans and `null`;
+- exact-`int` child Work Item ID acceptance and rejection of `bool` and non-integer child IDs before URL construction;
+- preservation of existing HTTP and transport failures, response consumption and closure, and no retry;
+- absence of PATCH-response requirements for `id`, `rev`, revision advancement, `fields`, `relations`, parent-target verification, relationship classification, automatic GET-after-PATCH or a dedicated response model;
 - exactly one relationship PATCH for each newly created Feature, Product Backlog Item and Task, no relationship PATCH for a root Epic, and no relationship-state expectation for reused non-root items under this contract;
 - permitted direct hierarchy edges Epic → Feature, Feature → Product Backlog Item and Product Backlog Item → Task; rejected direct shortcuts; and exactly one intended immediate parent for each non-root child;
 - parent resolution-or-creation before newly created child persistence, immediate child-to-parent relationship PATCH timing, and parent/child ID plus child-revision lifecycle;
