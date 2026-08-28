@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.9
+**Version:** 2.10
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -43,6 +43,7 @@
 | 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 | 2.8 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented in the current architecture baseline. |
 | 2.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
+| 2.10 | 2026-08-28 | Draft | Jack Spaetjens | Defined successful Parent-Child Relationship PATCH response-validation and no-evidence return semantics. |
 
 ---
 
@@ -247,7 +248,7 @@ Azure DevOps Server instance, port, collection and Server-specific base-address 
 
 The REST Client Foundation shall provide a small internal, purpose-specific transport interface. It shall use `urllib` from the Python standard library and shall not introduce a third-party HTTP dependency. It shall own Azure DevOps Services URL construction, HTTP request construction and transmission, Basic authentication-header construction, required common headers, JSON transport mechanics, the fixed timeout, expected-status validation, redirect rejection, no-retry behaviour, controlled transport, network and response failures, and secret-safe diagnostics. It shall not be a general-purpose public HTTP abstraction.
 
-Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET and Persistent Work Item Create REST transport. Persistent Create reuses the approved JSON Patch builder and returns structurally validated `AzureDevOpsWorkItem` evidence; the REST Client remains transport-only. Parent-Child Relationship JSON Patch construction is implemented with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Relationship PATCH transport, its successful response evidence and validation, reused-child inspection and recovery, relationship decision-making, lifecycle orchestration and descendant gating remain deferred to later capability slices.
+Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET and Persistent Work Item Create REST transport. Persistent Create reuses the approved JSON Patch builder and returns structurally validated `AzureDevOpsWorkItem` evidence; the REST Client remains transport-only. Parent-Child Relationship JSON Patch construction is implemented with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Future Parent-Child Relationship PATCH transport shall be a purpose-specific REST Client operation using that approved request contract. Its exact `200 OK` response shall have a non-empty valid UTF-8 JSON object body; no response property is required, unknown properties are ignored and the REST Client shall return `None` after validation. It shall not interpret relationship state. Reused-child relationship inspection and recovery, relationship decision-making, lifecycle orchestration and descendant gating remain deferred to later capability slices; future orchestration shall own descendant eligibility after normal PATCH completion.
 
 The foundation shall explicitly disable `urllib` proxy handling and shall not inherit ambient or system proxy state. Proxy configuration, proxy authentication, proxy credentials, PAC support, system-proxy integration and environment-proxy support are outside Version 1.0 and remain deferred to a future approved capability.
 
@@ -265,7 +266,7 @@ Responsibilities include:
 - Returning the required candidate ID, revision, project, type and identity-field state without computing logical source identity or deciding business-field updates.
 - Applying only JSON serialization escaping to prepared values and performing no semantic transformation, Markdown rendering, HTML transformation or Tags reinterpretation.
 - Using the same logical candidate JSON Patch document for validation-only and persistent creation, with `validateOnly=true` as the only Create-payload contract difference.
-- Constructing Parent-Child Relationship PATCH requests, including the canonical parent relation target URL, the relationship-specific `/rev` `test` operation and the `/relations/-` `add` operation.
+- In future Parent-Child Relationship PATCH transport, constructing and sending requests with the canonical parent relation target URL, the relationship-specific `/rev` `test` operation and the `/relations/-` `add` operation; validating only the approved successful response object shape and returning `None` without relationship-state interpretation.
 - Constructing and sending the reused-child relationship-state GET using API version `7.1` and `$expand=relations`.
 - Validating the returned work-item ID, fresh revision and relation collection and member structure, including the approved omitted-or-empty zero-state representations.
 - Strictly parsing reverse-hierarchy relation target URIs, validating their fixed Azure DevOps Services structure and extracting numeric target work-item IDs.

@@ -4,9 +4,9 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.10
+**Version:** 2.11
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -44,6 +44,7 @@
 | 2.8 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 | 2.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented. |
 | 2.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
+| 2.11 | 2026-08-28 | Draft | Jack Spaetjens | Defined the successful Parent-Child Relationship PATCH response and validation contract. |
 
 ---
 
@@ -170,7 +171,7 @@ Version 1.0 shall obtain the Azure DevOps Personal Access Token only from `AZDO_
 
 All Azure DevOps Services requests shall use HTTPS and HTTP Basic authentication. The Basic credential shall be constructed from `":" + PAT`, encoded as ASCII bytes and Base64-encoded exactly once. The `Authorization` header shall be `Basic <base64-credential>`. The username component shall be empty. The PAT and derived Authorization header shall exist in memory only for request execution and shall never be logged, included in error output or included in request-dump diagnostics.
 
-The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET and Persistent Work Item Create REST transport. Persistent Create uses the project-scoped Create endpoint with existing Work Item Type path encoding, `api-version=7.1`, no `validateOnly`, `application/json-patch+json`, the approved JSON Patch builder, exact `200 OK` handling, `AzureDevOpsWorkItem` evidence and shared structural response validation, existing controlled exceptions and no retry. Parent-Child Relationship JSON Patch construction is implemented with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Relationship PATCH transport remains deferred because successful PATCH response evidence and structural validation are not yet defined; reused-child inspection and recovery, generator/application decision-making, `WorkItemResolution` coordination, validation-only sequencing enforcement, updates and retry reconciliation also remain deferred.
+The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET and Persistent Work Item Create REST transport. Persistent Create uses the project-scoped Create endpoint with existing Work Item Type path encoding, `api-version=7.1`, no `validateOnly`, `application/json-patch+json`, the approved JSON Patch builder, exact `200 OK` handling, `AzureDevOpsWorkItem` evidence and shared structural response validation, existing controlled exceptions and no retry. Parent-Child Relationship JSON Patch construction is implemented with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. The successful Relationship PATCH response contract is defined in Section 8.2, but Relationship PATCH transport remains deferred. Reused-child inspection and recovery, generator/application decision-making, `WorkItemResolution` coordination, validation-only sequencing enforcement, updates and retry reconciliation also remain deferred.
 
 Every Azure DevOps REST request shall use a fixed 30-second timeout. The timeout is application behaviour and shall not be configurable through TOML, environment variables or CLI. Version 1.0 shall not define separate connect, read or total timeout configuration. The implementation shall use `urllib`'s timeout mechanism so that the effective request timeout is 30 seconds.
 
@@ -433,6 +434,12 @@ The representative payload below illustrates the normative contract:
 ```
 
 Relationship PATCH requests shall include only `api-version=7.1`. They shall not include `validateOnly`, `bypassRules`, `suppressNotifications` or `$expand`, and no configuration shall be introduced for these options. Version 1.0 shall not use or define a validation-only Parent-Child Relationship PATCH; the approved validation-only Work Item Create contract remains unchanged.
+
+A successful Parent-Child Relationship PATCH shall return exact HTTP `200 OK` with a non-empty valid UTF-8 JSON response whose top-level value is a JSON object. No response property is required by Version 1.0, and unknown response properties shall be ignored. The REST Client shall return `None` after this validation. The existing `send_json_request()` behaviour shall be reused for request transmission, exact `200 OK` handling, response consumption and closure, non-empty response handling, UTF-8 decoding, JSON parsing, controlled HTTP, transport and response failures, and no retry; the endpoint-specific operation shall additionally validate only the top-level JSON object.
+
+The PATCH response shall not be used to validate child Work Item ID, returned revision, revision advancement, parent relationship presence, parent target URI, reverse-hierarchy relation cardinality, duplicate-parent state or relationship correctness. It shall not require `System.TeamProject`, `System.WorkItemType`, `Custom.BacklogGeneratorSourceIdentity`, `id`, `rev`, `fields` or `relations`, and Version 1.0 shall not introduce a relationship response model. The caller already possesses the child ID, parent ID and request revision. The future PATCH transport shall require `child_work_item_id` to be an exact Python `int`, rejecting `bool`, before URL construction; no response ID comparison is required. The request revision remains governed by the approved JSON Patch builder, while the successful response need not contain `rev`, equal the request revision or prove revision advancement, and shall define no revision arithmetic or monotonicity requirement.
+
+An empty body, invalid UTF-8, invalid JSON or a top-level JSON array, string, number, boolean or `null` value in an HTTP `200 OK` response shall fail under the existing `AzureDevOpsResponseError` contract. The same successful-response contract applies to an immediate newly created-child PATCH and a missing-parent recovery PATCH. Successful-response parsing failure shall not authorise reread, retry, relationship-state GET, rollback, child deletion, relation removal or repair. Relationship-state interpretation remains governed exclusively by Section 8.5 for reused non-root children, including fresh revision retrieval, relation and reverse-hierarchy URI parsing, parent target validation, and MISSING, CORRECT and CONFLICTING classification.
 
 Only the following direct hierarchy edges are permitted: Epic → Feature, Feature → Product Backlog Item and Product Backlog Item → Task. Each newly created Feature, Product Backlog Item and Task shall have exactly one intended immediate parent in the candidate hierarchy and shall receive exactly one relationship PATCH. A reused non-root item classified MISSING under Section 8.5 shall receive the same relationship PATCH unchanged. Root Epic items shall receive no relationship PATCH. Direct hierarchy shortcuts, including Epic → Product Backlog Item, Epic → Task and Feature → Task, are prohibited. Relationship operations shall not be batched for multiple children.
 
