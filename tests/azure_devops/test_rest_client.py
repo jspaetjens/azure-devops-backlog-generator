@@ -16,7 +16,10 @@ from azure_devops_backlog_generator.azure_devops.exceptions import (
     AzureDevOpsResponseError,
     AzureDevOpsTransportError,
 )
-from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsWorkItem
+from azure_devops_backlog_generator.azure_devops.models import (
+    AzureDevOpsWorkItem,
+    AzureDevOpsWorkItemRelationshipState,
+)
 from azure_devops_backlog_generator.azure_devops.rest_client import (
     API_VERSION,
     REQUEST_TIMEOUT_SECONDS,
@@ -872,6 +875,326 @@ def test_parent_child_relationship_patch_preserves_transport_failure_without_ret
     assert len(opener.calls) == 1
 
 
+@pytest.mark.parametrize("child_work_item_id", [17, 0, -1])
+def test_retrieves_work_item_relationship_state_with_the_exact_get_contract(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    child_work_item_id: int,
+) -> None:
+    response = _Response(
+        body=json.dumps(
+            _relationship_state_response(child_work_item_id=child_work_item_id)
+        ).encode()
+    )
+    opener.response = response
+
+    result = client.retrieve_work_item_relationship_state(
+        child_work_item_id, personal_access_token="secret-pat"
+    )
+
+    assert result == AzureDevOpsWorkItemRelationshipState(revision=3, reverse_parent_ids=())
+    request, timeout = opener.calls[0]
+    assert request.get_method() == "GET"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/Example%20Project/"
+        f"_apis/wit/workitems/{child_work_item_id}?%24expand=relations&api-version=7.1"
+    )
+    assert request.get_header("Accept") == "application/json"
+    assert request.get_header("Authorization") == "Basic OnNlY3JldC1wYXQ="
+    assert request.get_header("Content-type") is None
+    assert request.data is None
+    assert timeout == REQUEST_TIMEOUT_SECONDS
+    assert "fields" not in request.full_url
+    assert len(opener.calls) == 1
+    assert response.read_called
+    assert response.closed
+
+
+@pytest.mark.parametrize("child_work_item_id", [True, False, "17", 17.0, None, object()])
+def test_rejects_non_integer_child_work_item_id_for_relationship_state_before_transport(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    child_work_item_id: object,
+) -> None:
+    with pytest.raises(ValueError, match=r"A numeric child Work Item ID is required\."):
+        client.retrieve_work_item_relationship_state(
+            child_work_item_id,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    assert opener.calls == []
+
+
+@pytest.mark.parametrize(
+    "body", [b"[]", b'"work item"', b"1", b"1.5", b"true", b"false", b"null"]
+)
+def test_rejects_non_object_work_item_relationship_state_response(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    opener.response = _Response(body=body)
+
+    with pytest.raises(
+        AzureDevOpsResponseError,
+        match=r"Azure DevOps Work Item relationship-state response must be a JSON object\.",
+    ):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"rev": 3},
+        {"id": None, "rev": 3},
+        {"id": True, "rev": 3},
+        {"id": "17", "rev": 3},
+        {"id": 17.0, "rev": 3},
+    ],
+)
+def test_rejects_missing_or_invalid_relationship_state_response_id(
+    client: AzureDevOpsRestClient, opener: _Opener, response: dict[str, object]
+) -> None:
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="numeric"):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+def test_rejects_mismatched_relationship_state_response_id(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(body=json.dumps(_relationship_state_response(18)).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="does not match"):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize(
+    "revision", [None, True, False, "3", 3.0]
+)
+def test_rejects_invalid_relationship_state_revision(
+    client: AzureDevOpsRestClient, opener: _Opener, revision: object
+) -> None:
+    opener.response = _Response(
+        body=json.dumps(_relationship_state_response(revision=revision)).encode()
+    )
+
+    with pytest.raises(AzureDevOpsResponseError, match="numeric"):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+def test_rejects_missing_relationship_state_revision(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    response = _relationship_state_response()
+    response.pop("rev")
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    with pytest.raises(AzureDevOpsResponseError, match="numeric"):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize("revision", [0, -1])
+def test_accepts_non_positive_relationship_state_revision(
+    client: AzureDevOpsRestClient, opener: _Opener, revision: int
+) -> None:
+    opener.response = _Response(
+        body=json.dumps(_relationship_state_response(revision=revision)).encode()
+    )
+
+    assert client.retrieve_work_item_relationship_state(
+        17, personal_access_token="secret-pat"
+    ).revision == revision
+
+
+@pytest.mark.parametrize("relations", [None, []])
+def test_accepts_relationship_state_zero_relation_representations(
+    client: AzureDevOpsRestClient, opener: _Opener, relations: object
+) -> None:
+    response = _relationship_state_response()
+    if relations is not None:
+        response["relations"] = relations
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    assert client.retrieve_work_item_relationship_state(
+        17, personal_access_token="secret-pat"
+    ).reverse_parent_ids == ()
+
+
+@pytest.mark.parametrize("relations", [None, {}, "relations", 1, 1.5, True])
+def test_rejects_invalid_relationship_state_relations_property(
+    client: AzureDevOpsRestClient, opener: _Opener, relations: object
+) -> None:
+    opener.response = _Response(
+        body=json.dumps(_relationship_state_response(relations=relations)).encode()
+    )
+
+    with pytest.raises(AzureDevOpsResponseError, match="relations array"):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize(
+    "relations",
+    [
+        ["relation"],
+        [{"rel": "Related", "url": "https://example.test"}, 1],
+        [{}],
+        [{"rel": "", "url": "https://example.test"}],
+        [{"rel": 1, "url": "https://example.test"}],
+        [{"rel": "Related"}],
+        [{"rel": "Related", "url": ""}],
+        [{"rel": "Related", "url": 1}],
+    ],
+)
+def test_rejects_malformed_relationship_state_relation_members(
+    client: AzureDevOpsRestClient, opener: _Opener, relations: list[object]
+) -> None:
+    opener.response = _Response(
+        body=json.dumps(_relationship_state_response(relations=relations)).encode()
+    )
+
+    with pytest.raises(AzureDevOpsResponseError):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+def test_ignores_well_formed_unrelated_relationship_state_relations(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    relations = [
+        {
+            "rel": "System.LinkTypes.Hierarchy-Forward",
+            "url": "https://example.test/forward",
+            "attributes": {"name": "Child"},
+            "unexpected": "ignored",
+        },
+        {"rel": "Related", "url": "https://example.test/related"},
+    ]
+    opener.response = _Response(
+        body=json.dumps(_relationship_state_response(relations=relations)).encode()
+    )
+
+    assert client.retrieve_work_item_relationship_state(
+        17, personal_access_token="secret-pat"
+    ).reverse_parent_ids == ()
+
+
+def test_returns_ordered_duplicate_preserving_reverse_parent_ids(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    relations = [
+        _reverse_relation(11),
+        {"rel": "Related", "url": "https://example.test/related"},
+        _reverse_relation(12),
+        _reverse_relation(11),
+    ]
+    opener.response = _Response(
+        body=json.dumps(_relationship_state_response(relations=relations)).encode()
+    )
+
+    assert client.retrieve_work_item_relationship_state(
+        17, personal_access_token="secret-pat"
+    ) == AzureDevOpsWorkItemRelationshipState(revision=3, reverse_parent_ids=(11, 12, 11))
+
+
+def test_rejects_case_altered_reverse_relationship_reference(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(
+        body=json.dumps(
+            _relationship_state_response(
+                relations=[
+                    {
+                        "rel": "system.linktypes.hierarchy-reverse",
+                        "url": "https://example.test/ignored",
+                    }
+                ]
+            )
+        ).encode()
+    )
+
+    with pytest.raises(AzureDevOpsResponseError, match="case-altered"):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/example%20organization/_apis/wit/workItems/11",
+        "http://dev.azure.com/example%20organization/_apis/wit/workItems/11",
+        "https://example.test/example%20organization/_apis/wit/workItems/11",
+        "https://dev.azure.com/other/_apis/wit/workItems/11",
+        "https://dev.azure.com/_apis/wit/workItems/11",
+        "https://dev.azure.com/example%20organization/_apis/wit/workitems/11",
+        "https://dev.azure.com/example%20organization/Example%20Project/_apis/wit/workItems/11",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/11?x=1",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/11#fragment",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/11/extra",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/abc",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/1a",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/+1",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/-1",
+        "https://dev.azure.com/example%20organization/_apis/wit/workItems/0",
+        "https://user@dev.azure.com/example%20organization/_apis/wit/workItems/11",
+        "https://dev.azure.com:443/example%20organization/_apis/wit/workItems/11",
+        "https://[::1/example%20organization/_apis/wit/workItems/11",
+    ],
+)
+def test_rejects_invalid_reverse_parent_relationship_urls(
+    client: AzureDevOpsRestClient, opener: _Opener, url: str
+) -> None:
+    opener.response = _Response(
+        body=json.dumps(
+            _relationship_state_response(
+                relations=[{"rel": "System.LinkTypes.Hierarchy-Reverse", "url": url}]
+            )
+        ).encode()
+    )
+
+    with pytest.raises(AzureDevOpsResponseError, match="invalid reverse hierarchy"):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+
+@pytest.mark.parametrize("body", [b"", b"\xff", b"not json"])
+def test_relationship_state_reuses_malformed_response_validation(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    response = _Response(body=body)
+    opener.response = response
+
+    with pytest.raises(AzureDevOpsResponseError):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+    assert response.read_called
+    assert response.closed
+
+
+def test_relationship_state_preserves_http_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    response = _Response(status=404)
+    opener.response = response
+
+    with pytest.raises(AzureDevOpsHttpError) as error:
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+    assert error.value.status == 404
+    assert len(opener.calls) == 1
+    assert response.read_called
+    assert response.closed
+
+
+def test_relationship_state_preserves_transport_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = URLError("offline")
+
+    with pytest.raises(AzureDevOpsTransportError):
+        client.retrieve_work_item_relationship_state(17, personal_access_token="secret-pat")
+
+    assert len(opener.calls) == 1
+
+
 @pytest.mark.parametrize(
     ("work_item_type", "encoded_type"),
     [
@@ -1169,6 +1492,26 @@ def _work_item_response(**additional_properties: object) -> dict[str, object]:
     }
     response.update(additional_properties)
     return response
+
+
+def _relationship_state_response(
+    child_work_item_id: int = 17,
+    revision: object = 3,
+    **additional_properties: object,
+) -> dict[str, object]:
+    response: dict[str, object] = {"id": child_work_item_id, "rev": revision}
+    response.update(additional_properties)
+    return response
+
+
+def _reverse_relation(parent_work_item_id: int) -> dict[str, str]:
+    return {
+        "rel": "System.LinkTypes.Hierarchy-Reverse",
+        "url": (
+            "https://dev.azure.com/example%20organization/_apis/wit/workItems/"
+            f"{parent_work_item_id}"
+        ),
+    }
 
 
 def test_retrieves_work_item_evidence_with_the_exact_get_endpoint_contract(
