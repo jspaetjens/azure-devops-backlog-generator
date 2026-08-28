@@ -5,6 +5,7 @@ from enum import StrEnum
 from azure_devops_backlog_generator.azure_devops.models import (
     AzureDevOpsWorkItemRelationshipState,
 )
+from azure_devops_backlog_generator.azure_devops.rest_client import AzureDevOpsRestClient
 
 
 class ReusedChildRelationshipClassification(StrEnum):
@@ -31,3 +32,20 @@ def classify_reused_child_relationship_state(
     ):
         return ReusedChildRelationshipClassification.CORRECT
     return ReusedChildRelationshipClassification.CONFLICTING
+
+
+def recover_missing_parent_relationship(
+    intended_parent_work_item_id: int,
+    child_work_item_id: int,
+    relationship_state: AzureDevOpsWorkItemRelationshipState,
+    rest_client: AzureDevOpsRestClient,
+    *,
+    personal_access_token: str,
+) -> None:
+    """Add the intended Parent-Child Relationship using fresh reused-child evidence."""
+    rest_client.patch_parent_child_relationship(
+        intended_parent_work_item_id,
+        child_work_item_id,
+        relationship_state.revision,
+        personal_access_token=personal_access_token,
+    )
