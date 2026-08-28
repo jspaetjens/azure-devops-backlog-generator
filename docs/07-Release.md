@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.5
+**Version:** 1.6
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -29,6 +29,7 @@
 | 1.3 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through Persistent Work Item Create transport. |
 | 1.4 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through Parent-Child Relationship JSON Patch construction. |
 | 1.5 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through Parent-Child Relationship HTTP PATCH transport. |
+| 1.6 | 2026-08-28 | Draft | Jack Spaetjens | Updated the current pre-release implementation status through reused-child relationship-state GET and structural evidence parsing. |
 
 ---
 
@@ -107,9 +108,10 @@ Version 1.0 has not been approved or published. The project is in implementation
 configuration, documentation-processing, source-identity, REST foundation, compatibility,
 candidate, JSON Patch, validation-only Create, WIQL identity lookup, Work Item GET evidence
 retrieval, existing/new Work Item resolution, Persistent Work Item Create REST transport,
-Parent-Child Relationship JSON Patch construction and Parent-Child Relationship HTTP PATCH
-transport are complete, while generator/application lifecycle coordination for persistent Create,
-reused-child relationship-state GET, relationship-state parsing and classification,
+Parent-Child Relationship JSON Patch construction, Parent-Child Relationship HTTP PATCH
+transport, and reused-child relationship-state GET with structural relationship evidence validation
+and reverse-parent target-ID extraction are complete, while generator/application lifecycle coordination for persistent Create,
+reused-child relationship-state classification and intended-parent comparison,
 missing-parent recovery coordination, relationship lifecycle orchestration and descendant gating,
 run/application orchestration, the CLI/logging/process-exit lifecycle, and
 end-to-end/integration release validation remain incomplete. The release criteria in this

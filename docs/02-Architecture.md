@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.11
+**Version:** 2.12
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -45,6 +45,7 @@
 | 2.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
 | 2.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined successful Parent-Child Relationship PATCH response-validation and no-evidence return semantics. |
 | 2.11 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship HTTP PATCH transport as implemented. |
+| 2.12 | 2026-08-28 | Draft | Jack Spaetjens | Recorded reused-child Parent-Child Relationship state GET transport and structural evidence parsing as implemented. |
 
 ---
 
@@ -249,7 +250,7 @@ Azure DevOps Server instance, port, collection and Server-specific base-address 
 
 The REST Client Foundation shall provide a small internal, purpose-specific transport interface. It shall use `urllib` from the Python standard library and shall not introduce a third-party HTTP dependency. It shall own Azure DevOps Services URL construction, HTTP request construction and transmission, Basic authentication-header construction, required common headers, JSON transport mechanics, the fixed timeout, expected-status validation, redirect rejection, no-retry behaviour, controlled transport, network and response failures, and secret-safe diagnostics. It shall not be a general-purpose public HTTP abstraction.
 
-Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET, Persistent Work Item Create and Parent-Child Relationship PATCH REST transport. Persistent Create reuses the approved JSON Patch builder and returns structurally validated `AzureDevOpsWorkItem` evidence; the REST Client remains transport-only. Parent-Child Relationship JSON Patch construction and HTTP PATCH transport are implemented. The transport reuses the approved JSON Patch builder and this REST Client foundation with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Its exact `200 OK` response has a non-empty valid UTF-8 JSON object body; no response property is required, unknown properties are ignored and the REST Client returns `None` after validation. It does not interpret relationship state. Reused-child relationship inspection and recovery, relationship decision-making, lifecycle orchestration and descendant gating remain deferred to later capability slices; future orchestration shall own descendant eligibility after normal PATCH completion.
+Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET, Persistent Work Item Create, Parent-Child Relationship PATCH and reused-child relationship-state GET REST transport. Persistent Create reuses the approved JSON Patch builder and returns structurally validated `AzureDevOpsWorkItem` evidence; the REST Client remains transport-only. Parent-Child Relationship JSON Patch construction and HTTP PATCH transport are implemented. The transport reuses the approved JSON Patch builder and this REST Client foundation with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Its exact `200 OK` response has a non-empty valid UTF-8 JSON object body; no response property is required, unknown properties are ignored and the REST Client returns `None` after validation. The reused-child relationship-state GET requests `$expand=relations`, validates the child ID, fresh revision and relation structure, validates and parses exact reverse-hierarchy target URIs, and returns ordered duplicate-preserving reverse-parent IDs. Relationship-state classification, intended-parent comparison, recovery selection, lifecycle orchestration and descendant gating remain deferred to later capability slices; future orchestration shall own descendant eligibility after normal PATCH completion.
 
 The foundation shall explicitly disable `urllib` proxy handling and shall not inherit ambient or system proxy state. Proxy configuration, proxy authentication, proxy credentials, PAC support, system-proxy integration and environment-proxy support are outside Version 1.0 and remain deferred to a future approved capability.
 
