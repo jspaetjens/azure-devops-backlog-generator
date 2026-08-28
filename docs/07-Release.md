@@ -6,7 +6,7 @@
 
 **Version:** 1.3
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -26,7 +26,7 @@
 | 1.0 | 2026-07-31 | Approved Baseline | Jack Spaetjens | Initial approved Release Management baseline. |
 | 1.1 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded the current pre-release implementation status. |
 | 1.2 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through existing/new Work Item resolution. |
-| 1.3 | 2026-08-28 | Draft | Jack Spaetjens | Updated the current pre-release implementation status through Persistent Work Item Create transport. |
+| 1.3 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through Persistent Work Item Create transport. |
 
 ---
 

@@ -6,7 +6,7 @@
 
 **Version:** 2.8
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -41,7 +41,7 @@
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified Scrum compatibility evidence, mandatory validation-only coverage and execution ordering responsibilities. |
 | 2.6 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the PAT runtime-secret input boundary. |
 | 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
-| 2.8 | 2026-08-28 | Draft | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented in the current architecture baseline. |
+| 2.8 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented in the current architecture baseline. |
 
 ---
 
