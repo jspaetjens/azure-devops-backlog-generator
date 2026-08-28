@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.8
+**Version:** 1.9
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -32,6 +32,7 @@
 | 1.6 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through reused-child relationship-state GET and structural evidence parsing. |
 | 1.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through reused-child relationship-state classification. |
 | 1.8 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated current pre-release status after the missing-parent recovery ownership governance correction. |
+| 1.9 | 2026-08-28 | Draft | Jack Spaetjens | Updated current pre-release implementation status through MISSING missing-parent recovery coordination. |
 
 ---
 
@@ -112,10 +113,11 @@ candidate, JSON Patch, validation-only Create, WIQL identity lookup, Work Item G
 retrieval, existing/new Work Item resolution, Persistent Work Item Create REST transport,
 Parent-Child Relationship JSON Patch construction, Parent-Child Relationship HTTP PATCH
 transport, reused-child relationship-state GET with structural relationship evidence validation
-and reverse-parent target-ID extraction, and generator-level intended-parent comparison with
-MISSING, CORRECT and CONFLICTING classification are complete, while generator/application lifecycle coordination for persistent Create,
-missing-parent recovery coordination, lifecycle handling,
-descendant gating, persistent relationship lifecycle orchestration, run/application orchestration,
+and reverse-parent target-ID extraction, generator-level intended-parent comparison with MISSING,
+CORRECT and CONFLICTING classification, and MISSING missing-parent recovery coordination using
+the existing Parent-Child Relationship PATCH with the fresh relationship-state revision are complete,
+while generator/application lifecycle coordination for persistent Create, CORRECT continuation,
+CONFLICTING lifecycle handling, descendant gating, persistent relationship lifecycle orchestration, run/application orchestration,
 the CLI/logging/process-exit lifecycle, and
 end-to-end/integration release validation remain incomplete. The release criteria in this
 document remain unchanged.
