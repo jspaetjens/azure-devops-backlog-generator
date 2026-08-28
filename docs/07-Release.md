@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.3
+**Version:** 1.4
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -27,6 +27,7 @@
 | 1.1 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded the current pre-release implementation status. |
 | 1.2 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through existing/new Work Item resolution. |
 | 1.3 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated the current pre-release implementation status through Persistent Work Item Create transport. |
+| 1.4 | 2026-08-28 | Draft | Jack Spaetjens | Updated the current pre-release implementation status through Parent-Child Relationship JSON Patch construction. |
 
 ---
 
@@ -104,11 +105,13 @@ Release management shall follow the following principles:
 Version 1.0 has not been approved or published. The project is in implementation: its
 configuration, documentation-processing, source-identity, REST foundation, compatibility,
 candidate, JSON Patch, validation-only Create, WIQL identity lookup, Work Item GET evidence
-retrieval, existing/new Work Item resolution and Persistent Work Item Create REST transport
-foundations are complete, while generator/application lifecycle coordination for persistent
-Create, relationships, relationship recovery, application orchestration, the
-CLI/logging/process-exit lifecycle, and end-to-end/integration release validation remain
-incomplete. The release criteria in this document remain unchanged.
+retrieval, existing/new Work Item resolution, Persistent Work Item Create REST transport and
+Parent-Child Relationship JSON Patch construction foundations are complete, while
+generator/application lifecycle coordination for persistent Create, Parent-Child Relationship
+PATCH transport and its successful response evidence and validation contract, relationship
+recovery, application orchestration, the CLI/logging/process-exit lifecycle, and
+end-to-end/integration release validation remain incomplete. The release criteria in this
+document remain unchanged.
 
 ---
 

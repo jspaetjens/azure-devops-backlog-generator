@@ -4,9 +4,9 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.9
+**Version:** 2.10
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -43,6 +43,7 @@
 | 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the Version 1.0 Scrum compatibility evidence, validation-only coverage and execution contract. |
 | 2.8 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 | 2.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented. |
+| 2.10 | 2026-08-28 | Draft | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
 
 ---
 
@@ -169,7 +170,7 @@ Version 1.0 shall obtain the Azure DevOps Personal Access Token only from `AZDO_
 
 All Azure DevOps Services requests shall use HTTPS and HTTP Basic authentication. The Basic credential shall be constructed from `":" + PAT`, encoded as ASCII bytes and Base64-encoded exactly once. The `Authorization` header shall be `Basic <base64-credential>`. The username component shall be empty. The PAT and derived Authorization header shall exist in memory only for request execution and shall never be logged, included in error output or included in request-dump diagnostics.
 
-The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET and Persistent Work Item Create REST transport. Persistent Create uses the project-scoped Create endpoint with existing Work Item Type path encoding, `api-version=7.1`, no `validateOnly`, `application/json-patch+json`, the approved JSON Patch builder, exact `200 OK` handling, `AzureDevOpsWorkItem` evidence and shared structural response validation, existing controlled exceptions and no retry. Generator/application decision-making, `WorkItemResolution` coordination, validation-only sequencing enforcement, relationship operations, updates and retry reconciliation remain deferred to later capability slices.
+The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET and Persistent Work Item Create REST transport. Persistent Create uses the project-scoped Create endpoint with existing Work Item Type path encoding, `api-version=7.1`, no `validateOnly`, `application/json-patch+json`, the approved JSON Patch builder, exact `200 OK` handling, `AzureDevOpsWorkItem` evidence and shared structural response validation, existing controlled exceptions and no retry. Parent-Child Relationship JSON Patch construction is implemented with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Relationship PATCH transport remains deferred because successful PATCH response evidence and structural validation are not yet defined; reused-child inspection and recovery, generator/application decision-making, `WorkItemResolution` coordination, validation-only sequencing enforcement, updates and retry reconciliation also remain deferred.
 
 Every Azure DevOps REST request shall use a fixed 30-second timeout. The timeout is application behaviour and shall not be configurable through TOML, environment variables or CLI. Version 1.0 shall not define separate connect, read or total timeout configuration. The implementation shall use `urllib`'s timeout mechanism so that the effective request timeout is 30 seconds.
 
