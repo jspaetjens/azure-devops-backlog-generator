@@ -6,7 +6,7 @@
 
 **Version:** 2.7
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -40,7 +40,7 @@
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the REST Client Foundation proxy contract. |
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified test coverage for Scrum compatibility evidence and mandatory validation-only candidate checks. |
 | 2.6 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined test coverage for successful Parent-Child Relationship PATCH response validation. |
-| 2.7 | 2026-08-28 | Draft | Jack Spaetjens | Defined authorization-failure and least-privilege test coverage for Version 1.0. |
+| 2.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined authorization-failure and least-privilege test coverage for Version 1.0. |
 
 ---
 
