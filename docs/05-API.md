@@ -6,7 +6,7 @@
 
 **Version:** 2.12
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -45,7 +45,7 @@
 | 2.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented. |
 | 2.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
 | 2.11 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined the successful Parent-Child Relationship PATCH response and validation contract. |
-| 2.12 | 2026-08-28 | Draft | Jack Spaetjens | Recorded Parent-Child Relationship HTTP PATCH transport as implemented. |
+| 2.12 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship HTTP PATCH transport as implemented. |
 
 ---
 
