@@ -6,7 +6,7 @@
 
 **Version:** 2.14
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -47,7 +47,7 @@
 | 2.11 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship HTTP PATCH transport as implemented. |
 | 2.12 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded reused-child Parent-Child Relationship state GET transport and structural evidence parsing as implemented. |
 | 2.13 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level reused-child relationship-state classification as implemented. |
-| 2.14 | 2026-08-28 | Draft | Jack Spaetjens | Recorded generator-level MISSING missing-parent recovery coordination as implemented. |
+| 2.14 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level MISSING missing-parent recovery coordination as implemented. |
 
 ---
 

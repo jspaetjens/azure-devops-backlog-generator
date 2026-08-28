@@ -6,7 +6,7 @@
 
 **Version:** 1.10
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -33,7 +33,7 @@
 | 1.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child relationship-state GET and structural evidence parsing in the current implementation baseline. |
 | 1.8 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child relationship-state classification in the current implementation baseline. |
 | 1.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded completion of the missing-parent recovery ownership governance correction. |
-| 1.10 | 2026-08-28 | Draft | Jack Spaetjens | Recorded merged MISSING missing-parent recovery coordination in the current implementation baseline. |
+| 1.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged MISSING missing-parent recovery coordination in the current implementation baseline. |
 
 ---
 
