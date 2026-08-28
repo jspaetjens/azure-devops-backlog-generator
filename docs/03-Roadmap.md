@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.7
+**Version:** 1.8
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -31,6 +31,7 @@
 | 1.5 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged Parent-Child Relationship JSON Patch construction in the current implementation baseline. |
 | 1.6 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged Parent-Child Relationship HTTP PATCH transport in the current implementation baseline. |
 | 1.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child relationship-state GET and structural evidence parsing in the current implementation baseline. |
+| 1.8 | 2026-08-28 | Draft | Jack Spaetjens | Recorded merged reused-child relationship-state classification in the current implementation baseline. |
 
 ---
 
@@ -114,12 +115,12 @@ discovery, parsing and preparation; source identity and collision validation; th
 REST Client Foundation; project and compatibility metadata retrieval; structural Scrum
 compatibility evaluation; Work Item Candidate construction; Work Item Create JSON Patch
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
-GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; and reused-child relationship-state GET transport with structural relationship evidence validation and reverse-parent target-ID extraction.
+GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child relationship-state GET transport with structural relationship evidence validation and reverse-parent target-ID extraction; and generator-level intended-parent comparison with MISSING, CORRECT and CONFLICTING classification.
 
 Version 1.0 remains in development. Generator/application Persistent Create coordination and
-lifecycle sequencing; reused-child relationship-state classification and intended-parent comparison;
-missing-parent recovery; persistent relationship lifecycle orchestration and descendant gating;
-run/application orchestration; the CLI/logging/process-exit lifecycle; and
+lifecycle sequencing; recovery ownership governance correction; missing-parent recovery coordination;
+lifecycle failure handling for CONFLICTING; continuation and descendant gating; persistent relationship
+lifecycle orchestration; run/application orchestration; the CLI/logging/process-exit lifecycle; and
 end-to-end/integration release validation remain to be implemented or completed.
 
 ---
