@@ -6,7 +6,7 @@
 
 **Version:** 2.9
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -42,7 +42,7 @@
 | 2.6 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the PAT runtime-secret input boundary. |
 | 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 | 2.8 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented in the current architecture baseline. |
-| 2.9 | 2026-08-28 | Draft | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
+| 2.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
 
 ---
 
