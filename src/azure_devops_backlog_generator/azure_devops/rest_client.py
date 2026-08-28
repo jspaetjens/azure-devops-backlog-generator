@@ -8,7 +8,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode, urlsplit
+from urllib.parse import quote, unquote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 from azure_devops_backlog_generator.azure_devops.exceptions import (
@@ -19,6 +19,7 @@ from azure_devops_backlog_generator.azure_devops.exceptions import (
 from azure_devops_backlog_generator.azure_devops.models import (
     AzureDevOpsProject,
     AzureDevOpsWorkItem,
+    AzureDevOpsWorkItemRelationshipState,
 )
 from azure_devops_backlog_generator.documentation.models import WorkItemType
 from azure_devops_backlog_generator.generator.candidates import WorkItemCandidate
@@ -312,6 +313,74 @@ class AzureDevOpsRestClient:
         )
         return _work_item_evidence_from_response(response)
 
+    def retrieve_work_item_relationship_state(
+        self,
+        child_work_item_id: int,
+        *,
+        personal_access_token: str,
+    ) -> AzureDevOpsWorkItemRelationshipState:
+        """Retrieve validated relationship-state evidence for one reused child."""
+        if type(child_work_item_id) is not int:
+            raise ValueError("A numeric child Work Item ID is required.")
+
+        response = self.send_json_request(
+            method="GET",
+            path_segments=("_apis", "wit", "workitems", str(child_work_item_id)),
+            personal_access_token=personal_access_token,
+            query={"$expand": "relations"},
+        )
+        if not isinstance(response, Mapping):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps Work Item relationship-state response must be a JSON object."
+            )
+
+        response_id = _required_work_item_integer(response, "id")
+        if response_id != child_work_item_id:
+            raise AzureDevOpsResponseError(
+                "Azure DevOps Work Item relationship-state response ID does not match "
+                "the requested child Work Item ID."
+            )
+        revision = _required_work_item_integer(response, "rev")
+        relations = response.get("relations", [])
+        if not isinstance(relations, list):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps Work Item relationship-state response requires a relations array."
+            )
+
+        reverse_parent_ids: list[int] = []
+        for relation in relations:
+            if not isinstance(relation, Mapping):
+                raise AzureDevOpsResponseError(
+                    "Azure DevOps Work Item relationship-state relations entries must be "
+                    "JSON objects."
+                )
+            relation_type = relation.get("rel")
+            if not isinstance(relation_type, str) or not relation_type:
+                raise AzureDevOpsResponseError(
+                    "Azure DevOps Work Item relationship-state relations entries require "
+                    "a non-empty string rel."
+                )
+            relation_url = relation.get("url")
+            if not isinstance(relation_url, str) or not relation_url:
+                raise AzureDevOpsResponseError(
+                    "Azure DevOps Work Item relationship-state relations entries require "
+                    "a non-empty string url."
+                )
+            if relation_type == _PARENT_CHILD_RELATION_TYPE:
+                reverse_parent_ids.append(
+                    _reverse_parent_target_id_from_url(relation_url, self._organization)
+                )
+            elif relation_type.casefold() == _PARENT_CHILD_RELATION_TYPE.casefold():
+                raise AzureDevOpsResponseError(
+                    "Azure DevOps Work Item relationship-state response contains a "
+                    "case-altered reverse hierarchy relation."
+                )
+
+        return AzureDevOpsWorkItemRelationshipState(
+            revision=revision,
+            reverse_parent_ids=tuple(reverse_parent_ids),
+        )
+
     def retrieve_work_item_type(
         self,
         work_item_type: WorkItemType,
@@ -518,6 +587,42 @@ def _required_work_item_field(fields: Mapping[str, Any], name: str) -> str:
             f"Azure DevOps Work Item response requires string field {name!r}."
         )
     return value
+
+
+def _reverse_parent_target_id_from_url(url: str, organization: str) -> int:
+    try:
+        parsed = urlsplit(url)
+    except ValueError as error:
+        raise AzureDevOpsResponseError(
+            "Azure DevOps Work Item relationship-state response contains an invalid "
+            "reverse hierarchy relation URL."
+        ) from error
+
+    if (
+        parsed.scheme.casefold() != "https"
+        or parsed.netloc.casefold() != "dev.azure.com"
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise AzureDevOpsResponseError(
+            "Azure DevOps Work Item relationship-state response contains an invalid "
+            "reverse hierarchy relation URL."
+        )
+
+    path_components = parsed.path.split("/")
+    if (
+        len(path_components) != 6
+        or path_components[0] != ""
+        or unquote(path_components[1]) != organization
+        or path_components[2:5] != ["_apis", "wit", "workItems"]
+        or not re.fullmatch(r"[0-9]+", path_components[5])
+        or int(path_components[5]) <= 0
+    ):
+        raise AzureDevOpsResponseError(
+            "Azure DevOps Work Item relationship-state response contains an invalid "
+            "reverse hierarchy relation URL."
+        )
+    return int(path_components[5])
 
 
 def _consume_response(response: Any) -> tuple[int, bytes]:

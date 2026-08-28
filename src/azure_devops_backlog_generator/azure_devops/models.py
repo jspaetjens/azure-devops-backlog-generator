@@ -20,3 +20,11 @@ class AzureDevOpsWorkItem:
     project_name: str
     work_item_type: str
     source_identity: str
+
+
+@dataclass(frozen=True, slots=True)
+class AzureDevOpsWorkItemRelationshipState:
+    """Validated relationship-state evidence for one reused Work Item."""
+
+    revision: int
+    reverse_parent_ids: tuple[int, ...]
