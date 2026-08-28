@@ -6,7 +6,7 @@
 
 **Version:** 2.10
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -43,7 +43,7 @@
 | 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the Version 1.0 Scrum compatibility evidence, validation-only coverage and execution contract. |
 | 2.8 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 | 2.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented. |
-| 2.10 | 2026-08-28 | Draft | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
+| 2.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
 
 ---
 

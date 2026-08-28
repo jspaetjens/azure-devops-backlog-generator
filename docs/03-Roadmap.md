@@ -6,7 +6,7 @@
 
 **Version:** 1.5
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -28,7 +28,7 @@
 | 1.2 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded merged WIQL identity lookup and Work Item GET evidence retrieval in the current implementation baseline. |
 | 1.3 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded merged existing/new Work Item resolution in the current implementation baseline. |
 | 1.4 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged Persistent Work Item Create transport in the current implementation baseline. |
-| 1.5 | 2026-08-28 | Draft | Jack Spaetjens | Recorded merged Parent-Child Relationship JSON Patch construction in the current implementation baseline. |
+| 1.5 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged Parent-Child Relationship JSON Patch construction in the current implementation baseline. |
 
 ---
 
