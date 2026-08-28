@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.4
+**Version:** 1.5
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -28,6 +28,7 @@
 | 1.2 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded merged WIQL identity lookup and Work Item GET evidence retrieval in the current implementation baseline. |
 | 1.3 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Recorded merged existing/new Work Item resolution in the current implementation baseline. |
 | 1.4 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged Persistent Work Item Create transport in the current implementation baseline. |
+| 1.5 | 2026-08-28 | Draft | Jack Spaetjens | Recorded merged Parent-Child Relationship JSON Patch construction in the current implementation baseline. |
 
 ---
 
@@ -111,11 +112,13 @@ discovery, parsing and preparation; source identity and collision validation; th
 REST Client Foundation; project and compatibility metadata retrieval; structural Scrum
 compatibility evaluation; Work Item Candidate construction; Work Item Create JSON Patch
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
-GET evidence retrieval; existing/new Work Item resolution; and Persistent Work Item Create REST transport.
+GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; and Parent-Child Relationship JSON Patch construction.
 
 Version 1.0 remains in development. Generator/application Persistent Create coordination and
-lifecycle sequencing, relationships, relationship recovery, application orchestration, the
-CLI/logging/process-exit lifecycle, and
+lifecycle sequencing; Parent-Child Relationship PATCH transport and its successful response
+evidence and validation contract; reused-child relationship-state retrieval, interpretation and
+missing-parent recovery; relationship orchestration and descendant gating; the
+CLI/logging/process-exit lifecycle; and
 end-to-end/integration release validation remain to be implemented or completed.
 
 ---

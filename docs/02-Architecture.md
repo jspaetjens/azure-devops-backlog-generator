@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.8
+**Version:** 2.9
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -42,6 +42,7 @@
 | 2.6 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified the PAT runtime-secret input boundary. |
 | 2.7 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Synchronised WIQL identity lookup and Work Item GET evidence retrieval implementation status. |
 | 2.8 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Persistent Work Item Create transport as implemented in the current architecture baseline. |
+| 2.9 | 2026-08-28 | Draft | Jack Spaetjens | Recorded Parent-Child Relationship JSON Patch construction as implemented. |
 
 ---
 
@@ -246,7 +247,7 @@ Azure DevOps Server instance, port, collection and Server-specific base-address 
 
 The REST Client Foundation shall provide a small internal, purpose-specific transport interface. It shall use `urllib` from the Python standard library and shall not introduce a third-party HTTP dependency. It shall own Azure DevOps Services URL construction, HTTP request construction and transmission, Basic authentication-header construction, required common headers, JSON transport mechanics, the fixed timeout, expected-status validation, redirect rejection, no-retry behaviour, controlled transport, network and response failures, and secret-safe diagnostics. It shall not be a general-purpose public HTTP abstraction.
 
-Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET and Persistent Work Item Create REST transport. Persistent Create reuses the approved JSON Patch builder and returns structurally validated `AzureDevOpsWorkItem` evidence; the REST Client remains transport-only. Generator/application persistence coordination, including `WorkItemResolution` decision logic and lifecycle sequencing, and relationship operations remain deferred to later capability slices.
+Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET and Persistent Work Item Create REST transport. Persistent Create reuses the approved JSON Patch builder and returns structurally validated `AzureDevOpsWorkItem` evidence; the REST Client remains transport-only. Parent-Child Relationship JSON Patch construction is implemented with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Relationship PATCH transport, its successful response evidence and validation, reused-child inspection and recovery, relationship decision-making, lifecycle orchestration and descendant gating remain deferred to later capability slices.
 
 The foundation shall explicitly disable `urllib` proxy handling and shall not inherit ambient or system proxy state. Proxy configuration, proxy authentication, proxy credentials, PAC support, system-proxy integration and environment-proxy support are outside Version 1.0 and remain deferred to a future approved capability.
 
