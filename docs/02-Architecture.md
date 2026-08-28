@@ -6,7 +6,7 @@
 
 **Version:** 2.13
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -46,7 +46,7 @@
 | 2.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined successful Parent-Child Relationship PATCH response-validation and no-evidence return semantics. |
 | 2.11 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship HTTP PATCH transport as implemented. |
 | 2.12 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded reused-child Parent-Child Relationship state GET transport and structural evidence parsing as implemented. |
-| 2.13 | 2026-08-28 | Draft | Jack Spaetjens | Recorded generator-level reused-child relationship-state classification as implemented. |
+| 2.13 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level reused-child relationship-state classification as implemented. |
 
 ---
 
