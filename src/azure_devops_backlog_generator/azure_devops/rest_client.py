@@ -32,6 +32,7 @@ _WORK_ITEM_EVIDENCE_FIELDS = (
     "System.WorkItemType",
     "Custom.BacklogGeneratorSourceIdentity",
 )
+_PARENT_CHILD_RELATION_TYPE = "System.LinkTypes.Hierarchy-Reverse"
 _COMPATIBILITY_FIELD_REFERENCES = frozenset(
     {
         "System.Title",
@@ -76,6 +77,31 @@ def build_work_item_create_json_patch(candidate: WorkItemCandidate) -> list[dict
         }
     )
     return operations
+
+
+def build_parent_child_relationship_json_patch(
+    organization: str,
+    parent_work_item_id: int,
+    child_revision: int,
+) -> list[dict[str, object]]:
+    """Return the approved JSON Patch body for one Parent relationship."""
+    if type(parent_work_item_id) is not int:
+        raise ValueError("A numeric parent Work Item ID is required.")
+    if type(child_revision) is not int:
+        raise ValueError("A numeric child revision is required.")
+
+    parent_url = (
+        f"https://dev.azure.com/{quote(organization, safe='')}/_apis/wit/workItems/"
+        f"{parent_work_item_id}"
+    )
+    return [
+        {"op": "test", "path": "/rev", "value": child_revision},
+        {
+            "op": "add",
+            "path": "/relations/-",
+            "value": {"rel": _PARENT_CHILD_RELATION_TYPE, "url": parent_url},
+        },
+    ]
 
 
 class AzureDevOpsRestClient:
