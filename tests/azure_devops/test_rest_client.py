@@ -21,6 +21,7 @@ from azure_devops_backlog_generator.azure_devops.rest_client import (
     API_VERSION,
     REQUEST_TIMEOUT_SECONDS,
     AzureDevOpsRestClient,
+    build_parent_child_relationship_json_patch,
     build_work_item_create_json_patch,
 )
 from azure_devops_backlog_generator.documentation.models import WorkItemType
@@ -675,6 +676,65 @@ def test_json_patch_construction_does_not_transmit_a_request(opener: _Opener) ->
     build_work_item_create_json_patch(_candidate())
 
     assert opener.calls == []
+
+
+def test_builds_the_exact_parent_child_relationship_json_patch() -> None:
+    patch = build_parent_child_relationship_json_patch("example organization", 11, 7)
+
+    assert patch == [
+        {"op": "test", "path": "/rev", "value": 7},
+        {
+            "op": "add",
+            "path": "/relations/-",
+            "value": {
+                "rel": "System.LinkTypes.Hierarchy-Reverse",
+                "url": "https://dev.azure.com/example%20organization/_apis/wit/workItems/11",
+            },
+        },
+    ]
+
+
+def test_parent_child_relationship_json_patch_target_has_no_project_or_query() -> None:
+    patch = build_parent_child_relationship_json_patch("example", 11, 7)
+    target_url = patch[1]["value"]
+
+    assert isinstance(target_url, dict)
+    assert target_url["url"] == "https://dev.azure.com/example/_apis/wit/workItems/11"
+    assert "Example%20Project" not in target_url["url"]
+    assert "api-version" not in target_url["url"]
+    assert "?" not in target_url["url"]
+    assert "#" not in target_url["url"]
+
+
+def test_parent_child_relationship_json_patch_is_deterministic() -> None:
+    first = build_parent_child_relationship_json_patch("example", 0, -1)
+    second = build_parent_child_relationship_json_patch("example", 0, -1)
+
+    assert first == second
+    assert first[0]["value"] == -1
+    relation = first[1]["value"]
+    assert isinstance(relation, dict)
+    assert relation["url"].endswith("/0")
+
+
+@pytest.mark.parametrize("parent_work_item_id", [True, False, "11", 11.0, None, object()])
+def test_rejects_non_integer_parent_work_item_id_for_relationship_patch(
+    parent_work_item_id: object,
+) -> None:
+    with pytest.raises(ValueError, match="parent Work Item ID"):
+        build_parent_child_relationship_json_patch(
+            "example", parent_work_item_id, 7  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.parametrize("child_revision", [True, False, "7", 7.0, None, object()])
+def test_rejects_non_integer_child_revision_for_relationship_patch(
+    child_revision: object,
+) -> None:
+    with pytest.raises(ValueError, match="child revision"):
+        build_parent_child_relationship_json_patch(
+            "example", 11, child_revision  # type: ignore[arg-type]
+        )
 
 
 @pytest.mark.parametrize(
