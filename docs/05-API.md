@@ -4,9 +4,9 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.14
+**Version:** 2.15
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -48,6 +48,7 @@
 | 2.12 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship HTTP PATCH transport as implemented. |
 | 2.13 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded reused-child relationship-state GET transport and structural evidence parsing as implemented. |
 | 2.14 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level reused-child MISSING/CORRECT/CONFLICTING relationship-state classification as implemented. |
+| 2.15 | 2026-08-28 | Draft | Jack Spaetjens | Clarified Backlog Generator ownership of missing-parent recovery initiation and REST Client PATCH-only responsibility. |
 
 ---
 
@@ -591,7 +592,7 @@ The Backlog Generator shall classify the validated parent state as follows:
 
 Malformed overall response structure shall fail immediately rather than becoming a normal classification.
 
-For MISSING, the REST Client shall automatically add the intended parent using the Parent-Child Relationship PATCH in Section 8.2 unchanged. The relationship-specific `/rev` `test` value shall be the fresh numeric revision returned by the relationship-state GET. That revision shall supersede the earlier Existing Item Lookup revision only for this recovery request. Successful recovery permits descendant processing.
+For MISSING, the Backlog Generator shall initiate missing-parent recovery by invoking the approved Parent-Child Relationship PATCH in Section 8.2 through the REST Client. The relationship-specific `/rev` `test` value shall use the fresh numeric revision returned by the relationship-state GET. That revision shall supersede the earlier Existing Item Lookup revision only for this recovery request. The REST Client shall perform only the requested PATCH transport and approved response validation. Successful recovery permits descendant processing according to lifecycle orchestration.
 
 For CORRECT, no relationship PATCH or `/rev` test shall occur, and descendant processing may continue. A difference between the fresh relationship-state revision and the earlier Existing Item Lookup revision shall not itself be a failure.
 
