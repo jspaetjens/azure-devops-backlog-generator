@@ -752,6 +752,94 @@ def test_validation_only_create_reuses_transport_failure_without_retry(
     assert len(opener.calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("work_item_type", "encoded_type"),
+    [
+        (WorkItemType.EPIC, "Epic"),
+        (WorkItemType.FEATURE, "Feature"),
+        (WorkItemType.PRODUCT_BACKLOG_ITEM, "Product%20Backlog%20Item"),
+        (WorkItemType.TASK, "Task"),
+    ],
+)
+def test_creates_work_item_with_the_exact_persistent_endpoint_contract(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    work_item_type: WorkItemType,
+    encoded_type: str,
+) -> None:
+    candidate = _candidate(work_item_type, tags_value="platform; generator")
+    opener.response = _Response(body=json.dumps(_work_item_response()).encode())
+
+    result = client.create_work_item(candidate, personal_access_token="secret-pat")
+
+    assert result == AzureDevOpsWorkItem(
+        id=17,
+        revision=3,
+        project_name="Canonical Project",
+        work_item_type="Epic",
+        source_identity="adbg:source-id:v1:sha256:" + "a" * 64,
+    )
+    request, _ = opener.calls[0]
+    assert request.get_method() == "POST"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/Example%20Project/"
+        f"_apis/wit/workitems/{encoded_type}?api-version=7.1"
+    )
+    assert request.get_header("Content-type") == "application/json-patch+json"
+    assert request.get_header("Accept") == "application/json"
+    assert request.get_header("Authorization") == "Basic OnNlY3JldC1wYXQ="
+    assert json.loads(request.data.decode("utf-8")) == build_work_item_create_json_patch(candidate)
+    assert "validateOnly" not in request.full_url
+    assert "bypassRules" not in request.full_url
+    assert "suppressNotifications" not in request.full_url
+    assert "%24expand" not in request.full_url
+
+
+def test_persistent_create_ignores_unknown_response_properties_and_fields(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    response = _work_item_response(unexpected="ignored")
+    fields = response["fields"]
+    assert isinstance(fields, dict)
+    fields["System.Title"] = "Ignored title"
+    opener.response = _Response(body=json.dumps(response).encode())
+
+    assert client.create_work_item(_candidate(), personal_access_token="secret-pat").id == 17
+
+
+@pytest.mark.parametrize("body", [b"[]", b"", b"not json", b"\xff"])
+def test_persistent_create_reuses_work_item_response_validation(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    opener.response = _Response(body=body)
+
+    with pytest.raises(AzureDevOpsResponseError):
+        client.create_work_item(_candidate(), personal_access_token="secret-pat")
+
+
+def test_persistent_create_preserves_http_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(status=409)
+
+    with pytest.raises(AzureDevOpsHttpError) as error:
+        client.create_work_item(_candidate(), personal_access_token="secret-pat")
+
+    assert error.value.status == 409
+    assert len(opener.calls) == 1
+
+
+def test_persistent_create_preserves_transport_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = URLError("offline")
+
+    with pytest.raises(AzureDevOpsTransportError):
+        client.create_work_item(_candidate(), personal_access_token="secret-pat")
+
+    assert len(opener.calls) == 1
+
+
 @pytest.mark.parametrize("work_item_type", tuple(WorkItemType))
 def test_looks_up_work_item_ids_with_the_exact_wiql_endpoint_contract(
     client: AzureDevOpsRestClient,

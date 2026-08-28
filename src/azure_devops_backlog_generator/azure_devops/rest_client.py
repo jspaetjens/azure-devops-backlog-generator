@@ -204,6 +204,22 @@ class AzureDevOpsRestClient:
             content_type="application/json-patch+json",
         )
 
+    def create_work_item(
+        self,
+        candidate: WorkItemCandidate,
+        *,
+        personal_access_token: str,
+    ) -> AzureDevOpsWorkItem:
+        """Create one work item and return its validated persisted evidence."""
+        response = self.send_json_request(
+            method="POST",
+            path_segments=("_apis", "wit", "workitems", candidate.work_item_type.value),
+            personal_access_token=personal_access_token,
+            json_body=build_work_item_create_json_patch(candidate),
+            content_type="application/json-patch+json",
+        )
+        return _work_item_evidence_from_response(response)
+
     def lookup_work_item_ids(
         self,
         candidate: WorkItemCandidate,
