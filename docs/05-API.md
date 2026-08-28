@@ -4,9 +4,9 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.15
+**Version:** 2.16
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -49,6 +49,7 @@
 | 2.13 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded reused-child relationship-state GET transport and structural evidence parsing as implemented. |
 | 2.14 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level reused-child MISSING/CORRECT/CONFLICTING relationship-state classification as implemented. |
 | 2.15 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Clarified Backlog Generator ownership of missing-parent recovery initiation and REST Client PATCH-only responsibility. |
+| 2.16 | 2026-08-28 | Draft | Jack Spaetjens | Defined the Version 1.0 Azure DevOps authorization and least-privilege contract. |
 
 ---
 
@@ -65,6 +66,7 @@
 - [5. Authentication](#5-authentication)
 - [6. Communication Standards](#6-communication-standards)
   - [6.1 REST Transport and Operational Failure Contract](#61-rest-transport-and-operational-failure-contract)
+  - [6.2 Authorization and Least-Privilege Contract](#62-authorization-and-least-privilege-contract)
 - [7. API Endpoints](#7-api-endpoints)
   - [7.1 Scrum Compatibility Evidence](#71-scrum-compatibility-evidence)
 - [8. Request Model](#8-request-model)
@@ -209,6 +211,31 @@ The minimum generic HTTP status interpretation shall be:
 On HTTP failure, the implementation shall preserve the HTTP status. It may extract a bounded safe Azure DevOps error message or code when present. Non-JSON error responses shall be handled safely. Error-body parsing is an optional diagnostic enhancement and is not required for correctness. The application shall not log an entire response body by default, expose the Authorization header or PAT, or assume every error response has the same JSON schema.
 
 Successful controlled execution shall exit with status `0`. A controlled application failure shall exit with status `1`. Version 1.0 shall not define a differentiated numeric exit-code taxonomy. The implementation may use internal typed exception categories, including configuration, validation, compatibility, transport or API, response-shape, identity-resolution and relationship-state categories, provided that public behaviour remains consistent. Version 1.0 dry-run remains unsupported.
+
+---
+
+## 6.2 Authorization and Least-Privilege Contract
+
+Authentication and authorization are separate Version 1.0 concerns. The REST Client presents the supplied PAT using the approved authentication mechanism. Azure DevOps determines whether that credential has both the required PAT scope and the required permissions for the PAT-owning identity in the configured project. Possession of an appropriately scoped PAT shall not be treated as bypassing project or object permissions.
+
+The minimum Version 1.0 PAT access shall be `Project and Team: Read` and `Work Items: Read & write`. `Project and Team: Read` supports configured project retrieval. `Work Items: Read & write` supports Work Item metadata retrieval, WIQL, Work Item GET, validation-only Create, persistent Create, Parent-Child Relationship PATCH and relationship-state GET; its write capability includes the required Work Item read capability for these operations. No broader PAT scope shall be required.
+
+The identity owning the PAT shall have sufficient permissions in the configured target project: `View project-level information`; `View work items in this node` and `Edit work items in this node` for applicable Area Paths; and `Create tag definition` when Version 1.0 submits a previously undefined `System.Tags` value.
+
+| Actor / Credential | Resource / Capability | Required Access | Purpose | Explicitly Not Required |
+|--------------------|-----------------------|-----------------|---------|-------------------------|
+| `AZDO_PAT` | Project retrieval | Project and Team: Read | Resolve configured project evidence. | Project write/manage. |
+| `AZDO_PAT` | Work-item metadata, WIQL, Work Item GET and relationship-state GET | Work Items: Read & write | Read compatibility and existing-item evidence and execute WIQL. | Work Items full; Process or Work Item Types administration. |
+| `AZDO_PAT` | Validation-only Create, persistent Create and approved Parent-Child Relationship PATCH | Work Items: Read & write | Create approved Work Items and add the approved parent relationship. | Delete, force update, bypass rules or suppress notifications. |
+| PAT-owning Azure DevOps identity | Configured project | View project-level information | Access configured project evidence. | Project Administrator or Project Collection Administrator. |
+| PAT-owning Azure DevOps identity | Applicable Area Paths | View and Edit work items in this node | Read, create and relationship-update Work Items. | Area or iteration administration. |
+| PAT-owning Azure DevOps identity | Project tags when a previously undefined source tag is submitted | Create tag definition | Permit approved optional Tags mapping. | General project administration. |
+
+Version 1.0 does not require Project Administrator, Project Collection Administrator, process administration, field administration, security administration, repository administration or repository write access, pipeline administration, service-connection administration, extension administration, project creation, project deletion, project rename, project visibility changes, Work Item deletion or permanent deletion, bypass-rule permissions, suppress-notifications privileges, force-update privileges, Process or Work Item Types management scope, or Work Items full scope.
+
+The Backlog Generator selects which approved Azure DevOps operation shall be requested. The REST Client sends that authenticated request and validates its response; it shall not select an alternate credential or attempt privilege escalation. Existing Configuration Specification, Development Standards, Architecture security rules and Section 6.1 remain authoritative for `AZDO_PAT` as the sole credential input, non-persistence of credentials, secret-safe diagnostics and the prohibition on credentials in logs, exception text, URLs, query strings, request bodies, generated backlog content or source control.
+
+`401` remains authentication rejection. `403` means the authenticated identity lacks required authorization for the requested operation. On `403`, the application shall fail the affected operation immediately, preserve the HTTP status and secret-safe diagnostics, and shall not retry, downgrade behaviour, use another credential, attempt privilege escalation or mutate unrelated state. The generic HTTP failure handling in Section 6.1 remains authoritative.
 
 ---
 

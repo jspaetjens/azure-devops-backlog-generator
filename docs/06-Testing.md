@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.6
+**Version:** 2.7
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-28
 
@@ -40,6 +40,7 @@
 | 2.4 | 2026-08-25 | Approved Baseline | Jack Spaetjens | Defined test coverage for the REST Client Foundation proxy contract. |
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified test coverage for Scrum compatibility evidence and mandatory validation-only candidate checks. |
 | 2.6 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined test coverage for successful Parent-Child Relationship PATCH response validation. |
+| 2.7 | 2026-08-28 | Draft | Jack Spaetjens | Defined authorization-failure and least-privilege test coverage for Version 1.0. |
 
 ---
 
@@ -287,6 +288,13 @@ REST Client Foundation validation shall additionally cover:
 - exact endpoint-specific `200 OK` success validation and rejection of an unexpected success-range status;
 - safe handling of non-JSON error bodies and bounded optional diagnostics without full response-body logging by default; and
 - independent request/response lifecycles with response closure, no retained response object, persistent session, cookie state, redirect state, connection pool or other persistent mutable request state.
+
+Authorization and least-privilege validation shall additionally cover:
+
+- preservation of `403` as a controlled authorization failure, distinct from `401` authentication rejection;
+- no automatic retry, alternate credential or privilege-escalation attempt after `403`;
+- continued exclusion of PATs and Authorization headers from authorization-failure diagnostics; and
+- future generator/application orchestration coverage confirming that no later mutation occurs after an authorization failure.
 
 Scrum Compatibility validation shall additionally cover:
 
