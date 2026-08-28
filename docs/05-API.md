@@ -6,7 +6,7 @@
 
 **Version:** 2.15
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -48,7 +48,7 @@
 | 2.12 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded Parent-Child Relationship HTTP PATCH transport as implemented. |
 | 2.13 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded reused-child relationship-state GET transport and structural evidence parsing as implemented. |
 | 2.14 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level reused-child MISSING/CORRECT/CONFLICTING relationship-state classification as implemented. |
-| 2.15 | 2026-08-28 | Draft | Jack Spaetjens | Clarified Backlog Generator ownership of missing-parent recovery initiation and REST Client PATCH-only responsibility. |
+| 2.15 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Clarified Backlog Generator ownership of missing-parent recovery initiation and REST Client PATCH-only responsibility. |
 
 ---
 

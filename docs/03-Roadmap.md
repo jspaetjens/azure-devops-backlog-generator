@@ -6,7 +6,7 @@
 
 **Version:** 1.9
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-28
 
@@ -32,7 +32,7 @@
 | 1.6 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged Parent-Child Relationship HTTP PATCH transport in the current implementation baseline. |
 | 1.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child relationship-state GET and structural evidence parsing in the current implementation baseline. |
 | 1.8 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child relationship-state classification in the current implementation baseline. |
-| 1.9 | 2026-08-28 | Draft | Jack Spaetjens | Recorded completion of the missing-parent recovery ownership governance correction. |
+| 1.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded completion of the missing-parent recovery ownership governance correction. |
 
 ---
 
