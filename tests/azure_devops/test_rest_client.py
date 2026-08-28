@@ -737,6 +737,141 @@ def test_rejects_non_integer_child_revision_for_relationship_patch(
         )
 
 
+@pytest.mark.parametrize("child_work_item_id", [17, 0, -1])
+def test_patches_parent_child_relationship_with_the_exact_endpoint_contract(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    child_work_item_id: int,
+) -> None:
+    response = _Response(body=b"{}")
+    opener.response = response
+
+    assert (
+        client.patch_parent_child_relationship(
+            11,
+            child_work_item_id,
+            7,
+            personal_access_token="secret-pat",
+        )
+        is None
+    )
+
+    request, timeout = opener.calls[0]
+    assert request.get_method() == "PATCH"
+    assert request.full_url == (
+        "https://dev.azure.com/example%20organization/Example%20Project/"
+        f"_apis/wit/workitems/{child_work_item_id}?api-version=7.1"
+    )
+    assert request.get_header("Content-type") == "application/json-patch+json"
+    assert request.get_header("Accept") == "application/json"
+    assert request.get_header("Authorization") == "Basic OnNlY3JldC1wYXQ="
+    assert timeout == REQUEST_TIMEOUT_SECONDS
+    assert json.loads(request.data.decode("utf-8")) == build_parent_child_relationship_json_patch(
+        "example organization", 11, 7
+    )
+    assert "validateOnly" not in request.full_url
+    assert "bypassRules" not in request.full_url
+    assert "suppressNotifications" not in request.full_url
+    assert "%24expand" not in request.full_url
+    assert "fields" not in request.full_url
+    assert len(opener.calls) == 1
+    assert response.read_called
+    assert response.closed
+
+
+def test_parent_child_relationship_patch_ignores_unknown_response_properties(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(
+        body=b'{"id":17,"rev":8,"fields":{},"relations":[],"unexpected":"ignored"}'
+    )
+
+    assert (
+        client.patch_parent_child_relationship(
+            11, 17, 7, personal_access_token="secret-pat"
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("child_work_item_id", [True, False, "17", 17.0, None, object()])
+def test_rejects_non_integer_child_work_item_id_for_relationship_patch_before_transport(
+    client: AzureDevOpsRestClient,
+    opener: _Opener,
+    child_work_item_id: object,
+) -> None:
+    with pytest.raises(ValueError, match=r"A numeric child Work Item ID is required\."):
+        client.patch_parent_child_relationship(
+            11,
+            child_work_item_id,  # type: ignore[arg-type]
+            7,
+            personal_access_token="secret-pat",
+        )
+
+    assert opener.calls == []
+
+
+@pytest.mark.parametrize(
+    "body",
+    [b"[]", b'"value"', b"17", b"1.5", b"true", b"false", b"null"],
+)
+def test_rejects_non_object_parent_child_relationship_patch_response(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    response = _Response(body=body)
+    opener.response = response
+
+    with pytest.raises(
+        AzureDevOpsResponseError,
+        match=r"Azure DevOps Parent-Child Relationship PATCH response must be a JSON object\.",
+    ):
+        client.patch_parent_child_relationship(11, 17, 7, personal_access_token="secret-pat")
+
+    assert len(opener.calls) == 1
+    assert response.read_called
+    assert response.closed
+
+
+@pytest.mark.parametrize("body", [b"", b"\xff", b"not json"])
+def test_parent_child_relationship_patch_reuses_malformed_response_validation(
+    client: AzureDevOpsRestClient, opener: _Opener, body: bytes
+) -> None:
+    response = _Response(body=body)
+    opener.response = response
+
+    with pytest.raises(AzureDevOpsResponseError):
+        client.patch_parent_child_relationship(11, 17, 7, personal_access_token="secret-pat")
+
+    assert response.read_called
+    assert response.closed
+
+
+def test_parent_child_relationship_patch_preserves_http_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    response = _Response(status=409)
+    opener.response = response
+
+    with pytest.raises(AzureDevOpsHttpError) as error:
+        client.patch_parent_child_relationship(11, 17, 7, personal_access_token="secret-pat")
+
+    assert error.value.status == 409
+    assert len(opener.calls) == 1
+    assert response.read_called
+    assert response.closed
+
+
+def test_parent_child_relationship_patch_preserves_transport_failure_without_retry(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = URLError("offline")
+
+    with pytest.raises(AzureDevOpsTransportError):
+        client.patch_parent_child_relationship(11, 17, 7, personal_access_token="secret-pat")
+
+    assert len(opener.calls) == 1
+
+
 @pytest.mark.parametrize(
     ("work_item_type", "encoded_type"),
     [

@@ -246,6 +246,35 @@ class AzureDevOpsRestClient:
         )
         return _work_item_evidence_from_response(response)
 
+    def patch_parent_child_relationship(
+        self,
+        parent_work_item_id: int,
+        child_work_item_id: int,
+        child_revision: int,
+        *,
+        personal_access_token: str,
+    ) -> None:
+        """Add one approved Parent-Child Relationship to a child Work Item."""
+        if type(child_work_item_id) is not int:
+            raise ValueError("A numeric child Work Item ID is required.")
+
+        response = self.send_json_request(
+            method="PATCH",
+            path_segments=("_apis", "wit", "workitems", str(child_work_item_id)),
+            personal_access_token=personal_access_token,
+            json_body=build_parent_child_relationship_json_patch(
+                self._organization,
+                parent_work_item_id,
+                child_revision,
+            ),
+            content_type="application/json-patch+json",
+        )
+        if not isinstance(response, Mapping):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps Parent-Child Relationship PATCH response must be a JSON object."
+            )
+        return None
+
     def lookup_work_item_ids(
         self,
         candidate: WorkItemCandidate,
