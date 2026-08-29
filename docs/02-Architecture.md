@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.18
+**Version:** 2.19
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -52,6 +52,7 @@
 | 2.16 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized merged complete non-root Parent-Child Relationship lifecycle coordination status. |
 | 2.17 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 | 2.18 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
+| 2.19 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented full preflight coordinator status through the mutation barrier. |
 
 ---
 
@@ -248,7 +249,8 @@ Responsibilities include:
 - Providing complete non-root Parent-Child Relationship lifecycle coordination for an already-resolved candidate. Identity resolution remains upstream. For NEW resolution, the lifecycle coordinator performs persistent Create exactly once, uses the returned Work Item ID and Create revision for one immediate Parent-Child Relationship PATCH, and returns successfully only after that PATCH succeeds. The NEW branch performs no relationship-state GET, classification, reused-child gate call or post-PATCH reread. For REUSED resolution, the coordinator retrieves fresh relationship state exactly once, classifies it exactly once and invokes the existing reused-child descendant gate. CORRECT continues without relationship mutation, MISSING delegates to existing recovery using the fresh relationship-state revision, and CONFLICTING raises `ConflictingReusedChildRelationshipError`. Successful REUSED return occurs only after the gate succeeds. The coordinator returns only the eligible child Work Item ID because a revision may be stale after relationship PATCH; later descendant processing requires the eligible ID only. The non-root coordinator performs neither WIQL nor identity resolution, descendant processing, callbacks or recursive traversal. It introduces no retry, reread, rollback, deletion compensation or alternate credentials. If NEW Create succeeds and relationship PATCH fails, the invocation fails; a later source-identity resolution can discover the created Work Item as reused, then fresh relationship evidence and existing reused-child logic repair, continue or block as MISSING, CORRECT or CONFLICTING requires. This rerun safety arises from identity resolution plus fresh relationship evidence, not coordinator-level retry. Complete generator/run orchestration remains deferred.
 - Providing implemented root existing/new Work Item lifecycle coordination. The root-only coordinator invokes existing/new resolution once; for NEW it passes the exact supplied candidate and PAT to persistent Create once and returns the Create response ID, while for REUSED it returns the validated existing ID without Create. It returns no revision and performs no relationship-state GET, classification, gate, Parent-Child Relationship PATCH, descendant processing, validation-only Create or compatibility orchestration. Resolution and Create failures propagate without retry, fallback, reread, rollback, deletion compensation or other compensation. Hierarchy traversal and application/run orchestration remain deferred.
 - Preventing duplicate work item creation.
-- Initiating deterministic hierarchy processing only after all preflight operations succeed. The full preflight coordinator and complete hierarchy traversal are not implemented yet; the implemented root and non-root lifecycle coordinators remain lower-level capabilities invoked by the future complete orchestration.
+- Providing implemented full preflight coordination through the mutation barrier. `coordinate_full_preflight` first validates run-wide source identities, then constructs every candidate in deterministic source order, retrieves and retains canonical project evidence, retrieves required work-item-type and field metadata, evaluates structural Scrum compatibility, and submits every exact candidate through validation-only Create in that order. It returns immutable, slotted `PreflightState` evidence containing the original `DocumentationHierarchy`, the canonical `AzureDevOpsProject` and the exact candidate tuple. Source-identity failure occurs before REST activity; later preflight failures propagate unchanged, stop subsequent preflight operations and introduce no retry, fallback, rollback, compensation, credential switching or continuation. The final successful validation-only Create reaches the mutation barrier; no WIQL lookup, Work Item GET, persistent Create, relationship-state GET, relationship PATCH, lifecycle invocation or persistent hierarchy traversal occurs in this coordinator.
+- Deferring deterministic hierarchy traversal and composition of `PreflightState` with existing/new resolution and the existing root and non-root lifecycle coordinators. Complete global fail-fast across hierarchy traversal remains future Generator Orchestration work.
 
 ---
 
