@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.14
+**Version:** 2.15
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-28
+**Last Updated:** 2026-08-29
 
 **Target Release:** v1.0.0
 
@@ -48,6 +48,7 @@
 | 2.12 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded reused-child Parent-Child Relationship state GET transport and structural evidence parsing as implemented. |
 | 2.13 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level reused-child relationship-state classification as implemented. |
 | 2.14 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level MISSING missing-parent recovery coordination as implemented. |
+| 2.15 | 2026-08-29 | Draft | Jack Spaetjens | Recorded merged reused-child descendant-gating implementation status. |
 
 ---
 
@@ -236,7 +237,7 @@ Responsibilities include:
 - Coordinating relationship-state inspection for every reused non-root child after successful identity resolution.
 - Comparing parsed reverse-hierarchy target IDs with the intended numeric parent ID and classifying the reused-child state as MISSING, CORRECT or CONFLICTING. This pure classification is implemented.
 - Coordinating MISSING missing-parent recovery by invoking the approved Parent-Child Relationship PATCH with the fresh relationship-state revision. This purpose-specific coordination is implemented.
-- Handling CORRECT continuation or CONFLICTING lifecycle failure, gating descendant persistence until the intended parent relationship is known to be correct, and complete relationship lifecycle orchestration remain deferred.
+- Providing a reused-child descendant-gating boundary that consumes already-validated relationship evidence and an already-computed classification. CORRECT returns successfully without relationship mutation, recovery or additional REST activity, signalling eligibility for later lifecycle processing. MISSING delegates to the existing recovery coordinator, permits continuation only after its single approved recovery PATCH succeeds, and propagates recovery failure without reread. CONFLICTING raises `ConflictingReusedChildRelationshipError`, a controlled generator-domain relationship conflict, without relationship mutation or recovery, blocking later lifecycle continuation. Classification remains caller-owned, the gate does not reclassify or process descendants itself, and MISSING recovery ownership remains unchanged. Complete relationship lifecycle coordination, including new-child lifecycle coordination, remains deferred.
 - Preventing duplicate work item creation.
 - Initiating persistent backlog generation only after Scrum compatibility validation succeeds.
 - Coordinating mandatory validation-only candidate checks for every occurring work-item type after structural compatibility succeeds and before existing-item resolution or persistent generation.
