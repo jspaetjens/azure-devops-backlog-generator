@@ -6,7 +6,7 @@
 
 **Version:** 1.12
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -35,7 +35,7 @@
 | 1.9 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Existing Relationship State and Recovery contract. |
 | 1.10 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision failure behaviour. |
 | 1.11 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Aligned mandatory validation-only candidate acceptance with the Scrum compatibility contract. |
-| 1.12 | 2026-08-29 | Draft | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
+| 1.12 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
 
 ---
 
