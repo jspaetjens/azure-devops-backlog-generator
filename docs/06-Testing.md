@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.8
+**Version:** 2.9
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -42,6 +42,7 @@
 | 2.6 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined test coverage for successful Parent-Child Relationship PATCH response validation. |
 | 2.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined authorization-failure and least-privilege test coverage for Version 1.0. |
 | 2.8 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle composition coverage. |
+| 2.9 | 2026-08-29 | Draft | Jack Spaetjens | Approved future Generator Orchestration test obligations for preflight, global fail-fast and composition ownership. |
 
 ---
 
@@ -304,11 +305,13 @@ Scrum Compatibility validation shall additionally cover:
 - structural validation of required standard fields and the fixed `Custom.BacklogGeneratorSourceIdentity` reference name, display name, String type, non-read-only state, applicability, no-default state and `alwaysRequired=false` optional process-level state, using only properties returned by the approved endpoints;
 - failure before persistent generation for absent, malformed, wrongly typed, read-only, inapplicable, defaulted, process-required or otherwise incompatible required-field evidence;
 - additional `alwaysRequired` fields not causing compatibility failure solely from that property;
-- mandatory non-persisting validation-only Create checks after structural compatibility and before existing-item resolution or persistent generation for every work-item type occurring in processed input;
+- mandatory non-persisting validation-only Create checks after structural compatibility and before existing-item resolution or persistent generation for every constructed candidate in deterministic source order, including candidates that later resolve REUSED;
 - use of the exact candidate JSON Patch contract, including the identity marker and all fields emitted for the candidate, with `validateOnly=true` as the only approved request difference from persistent Create;
-- validation-only rejection caused by an additional required field or other process rule stopping processing before persistent generation;
+- validation-only rejection caused by an additional required field or other process rule stopping the complete invocation before any later operation;
 - no automatic retry, no persistent work-item creation and secret-safe diagnostics throughout compatibility validation; and
-- explicit handling of materially different optional-field candidate shapes within one work-item type when representative coverage is defined by a later approved decision.
+- Tags presence and absence, Acceptance Criteria presence and absence, Task's mandatory Acceptance Criteria omission, and equal-shaped candidates with differing values, each receiving separate validation-only evidence.
+
+Future full Generator Orchestration coverage shall prove the preflight/persistence barrier: no WIQL, Work Item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH occurs until every validation-only Create succeeds; a validation-only failure proves zero later operations. It shall also prove global fail-fast across later descendants, siblings, roots and documents for representative validation-only, WIQL, existing-evidence, persistent Create, relationship-state GET, CONFLICTING, relationship PATCH, transport, malformed-response, HTTP `401` and HTTP `403` failures. Future ownership tests shall prove that the Backlog Generator owns preflight sequencing and that the application does not duplicate compatibility or persistence decisions. These full-orchestration tests do not yet exist.
 
 Work Item Create Payload validation shall additionally cover:
 
