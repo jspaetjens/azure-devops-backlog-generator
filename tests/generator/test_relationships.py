@@ -14,8 +14,10 @@ from azure_devops_backlog_generator.azure_devops.models import (
     AzureDevOpsWorkItemRelationshipState,
 )
 from azure_devops_backlog_generator.generator.relationships import (
+    ConflictingReusedChildRelationshipError,
     ReusedChildRelationshipClassification,
     classify_reused_child_relationship_state,
+    gate_reused_child_descendant_processing,
     recover_missing_parent_relationship,
 )
 
@@ -236,3 +238,186 @@ def test_propagates_missing_parent_recovery_response_failure_without_retry() -> 
 
     assert raised.value is error
     assert rest_client.patch_calls == [(11, 17, 7, "secret-pat")]
+
+
+def test_gates_correct_reused_child_for_descendant_processing_without_rest_operation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_recovery(*args: object, **kwargs: object) -> NoReturn:
+        raise AssertionError("CORRECT reused-child evidence must not recover a relationship.")
+
+    def fail_classification(*args: object, **kwargs: object) -> NoReturn:
+        raise AssertionError("The gate must consume the supplied classification.")
+
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.relationships."
+        "recover_missing_parent_relationship",
+        fail_recovery,
+    )
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.relationships."
+        "classify_reused_child_relationship_state",
+        fail_classification,
+    )
+    relationship_state = AzureDevOpsWorkItemRelationshipState(
+        revision=7,
+        reverse_parent_ids=(11,),
+    )
+    rest_client = _RestClient()
+
+    assert (
+        gate_reused_child_descendant_processing(
+            11,
+            17,
+            relationship_state,
+            ReusedChildRelationshipClassification.CORRECT,
+            rest_client,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+        is None
+    )
+
+    assert rest_client.patch_calls == []
+    assert relationship_state == AzureDevOpsWorkItemRelationshipState(
+        revision=7,
+        reverse_parent_ids=(11,),
+    )
+
+
+def test_gates_missing_reused_child_by_delegating_recovery_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    recovery_calls: list[tuple[int, int, AzureDevOpsWorkItemRelationshipState, object, str]] = []
+
+    def recover(
+        intended_parent_work_item_id: int,
+        child_work_item_id: int,
+        relationship_state: AzureDevOpsWorkItemRelationshipState,
+        rest_client: object,
+        *,
+        personal_access_token: str,
+    ) -> None:
+        recovery_calls.append(
+            (
+                intended_parent_work_item_id,
+                child_work_item_id,
+                relationship_state,
+                rest_client,
+                personal_access_token,
+            )
+        )
+
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.relationships."
+        "recover_missing_parent_relationship",
+        recover,
+    )
+    relationship_state = AzureDevOpsWorkItemRelationshipState(revision=7, reverse_parent_ids=())
+    rest_client = _RestClient()
+
+    assert (
+        gate_reused_child_descendant_processing(
+            11,
+            17,
+            relationship_state,
+            ReusedChildRelationshipClassification.MISSING,
+            rest_client,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+        is None
+    )
+
+    assert recovery_calls == [(11, 17, relationship_state, rest_client, "secret-pat")]
+    assert recovery_calls[0][2] is relationship_state
+    assert recovery_calls[0][3] is rest_client
+    assert rest_client.patch_calls == []
+    assert relationship_state == AzureDevOpsWorkItemRelationshipState(
+        revision=7,
+        reverse_parent_ids=(),
+    )
+
+
+def test_propagates_missing_reused_child_recovery_failure_without_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    error = AzureDevOpsTransportError("transport failed")
+    recovery_calls = 0
+
+    def fail_recovery(*args: object, **kwargs: object) -> NoReturn:
+        nonlocal recovery_calls
+        recovery_calls += 1
+        raise error
+
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.relationships."
+        "recover_missing_parent_relationship",
+        fail_recovery,
+    )
+    rest_client = _RestClient()
+
+    with pytest.raises(AzureDevOpsTransportError) as raised:
+        gate_reused_child_descendant_processing(
+            11,
+            17,
+            AzureDevOpsWorkItemRelationshipState(revision=7, reverse_parent_ids=()),
+            ReusedChildRelationshipClassification.MISSING,
+            rest_client,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    assert raised.value is error
+    assert recovery_calls == 1
+    assert rest_client.patch_calls == []
+
+
+def test_blocks_conflicting_reused_child_descendant_processing_without_rest_operation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_recovery(*args: object, **kwargs: object) -> NoReturn:
+        raise AssertionError("CONFLICTING reused-child evidence must not recover a relationship.")
+
+    def fail_classification(*args: object, **kwargs: object) -> NoReturn:
+        raise AssertionError("The gate must consume the supplied classification.")
+
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.relationships."
+        "recover_missing_parent_relationship",
+        fail_recovery,
+    )
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.relationships."
+        "classify_reused_child_relationship_state",
+        fail_classification,
+    )
+    relationship_state = AzureDevOpsWorkItemRelationshipState(
+        revision=7,
+        reverse_parent_ids=(11, 13),
+    )
+    rest_client = _RestClient()
+
+    with pytest.raises(ConflictingReusedChildRelationshipError) as raised:
+        gate_reused_child_descendant_processing(
+            11,
+            17,
+            relationship_state,
+            ReusedChildRelationshipClassification.CONFLICTING,
+            rest_client,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    error = raised.value
+    assert error.child_work_item_id == 17
+    assert error.intended_parent_work_item_id == 11
+    assert error.classification is ReusedChildRelationshipClassification.CONFLICTING
+    assert error.relationship_state is relationship_state
+    assert len(error.relationship_state.reverse_parent_ids) == 2
+    assert str(error) == (
+        "Reused-child relationship conflict: child Work Item ID 17; "
+        "intended parent Work Item ID 11; classification CONFLICTING; "
+        "reverse-parent count 2."
+    )
+    assert rest_client.patch_calls == []
+    assert relationship_state == AzureDevOpsWorkItemRelationshipState(
+        revision=7,
+        reverse_parent_ids=(11, 13),
+    )
