@@ -6,7 +6,7 @@
 
 **Version:** 1.12
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -35,7 +35,7 @@
 | 1.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded completion of the missing-parent recovery ownership governance correction. |
 | 1.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged MISSING missing-parent recovery coordination in the current implementation baseline. |
 | 1.11 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child descendant gating, including CORRECT continuation and CONFLICTING blocking decisions. |
-| 1.12 | 2026-08-29 | Draft | Jack Spaetjens | Recorded merged complete non-root Parent-Child Relationship lifecycle coordination and Full Repository Review Gate 1 as next. |
+| 1.12 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged complete non-root Parent-Child Relationship lifecycle coordination and Full Repository Review Gate 1 as next. |
 
 ---
 
