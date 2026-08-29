@@ -6,7 +6,7 @@
 
 **Version:** 2.18
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -51,7 +51,7 @@
 | 2.15 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Clarified Backlog Generator ownership of missing-parent recovery initiation and REST Client PATCH-only responsibility. |
 | 2.16 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Azure DevOps authorization and least-privilege contract. |
 | 2.17 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level MISSING missing-parent recovery coordination as implemented. |
-| 2.18 | 2026-08-29 | Draft | Jack Spaetjens | Synchronised implemented relationship lifecycle status after Review Gate 1 Finding 1. |
+| 2.18 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronised implemented relationship lifecycle status after Review Gate 1 Finding 1. |
 
 ---
 
