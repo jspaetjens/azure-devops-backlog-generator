@@ -6,7 +6,7 @@
 
 **Version:** 2.15
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -48,7 +48,7 @@
 | 2.12 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded reused-child Parent-Child Relationship state GET transport and structural evidence parsing as implemented. |
 | 2.13 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level reused-child relationship-state classification as implemented. |
 | 2.14 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level MISSING missing-parent recovery coordination as implemented. |
-| 2.15 | 2026-08-29 | Draft | Jack Spaetjens | Recorded merged reused-child descendant-gating implementation status. |
+| 2.15 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child descendant-gating implementation status. |
 
 ---
 
