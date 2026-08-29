@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.10
+**Version:** 1.11
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -34,6 +34,7 @@
 | 1.8 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated current pre-release status after the missing-parent recovery ownership governance correction. |
 | 1.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through MISSING missing-parent recovery coordination. |
 | 1.10 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through reused-child descendant gating. |
+| 1.11 | 2026-08-29 | Draft | Jack Spaetjens | Updated current pre-release implementation status through complete non-root Parent-Child Relationship lifecycle coordination. |
 
 ---
 
@@ -108,22 +109,19 @@ Release management shall follow the following principles:
 
 # 5. Current Release Status
 
-Version 1.0 has not been approved or published. The project is in implementation: its
-configuration, documentation-processing, source-identity, REST foundation, compatibility,
-candidate, JSON Patch, validation-only Create, WIQL identity lookup, Work Item GET evidence
-retrieval, existing/new Work Item resolution, Persistent Work Item Create REST transport,
-Parent-Child Relationship JSON Patch construction, Parent-Child Relationship HTTP PATCH
-transport, reused-child relationship-state GET with structural relationship evidence validation
-and reverse-parent target-ID extraction, generator-level intended-parent comparison with MISSING,
-CORRECT and CONFLICTING classification, MISSING missing-parent recovery coordination using the
-existing Parent-Child Relationship PATCH with the fresh relationship-state revision, and reused-child
-descendant gating are complete. The merged gate permits CORRECT reused-child eligibility without
-mutation, delegates MISSING recovery and permits continuation only after recovery succeeds, and
-raises a controlled generator failure for CONFLICTING without mutation; it preserves no-retry and
-no-reread behaviour. Version 1.0 remains unreleased and pre-release. Complete relationship lifecycle
-coordination, the new-child generator flow, broader generator orchestration, the application/CLI
-lifecycle, integration/end-to-end validation and final release-readiness validation remain incomplete.
-The release criteria in this document remain unchanged.
+Version 1.0 has not been approved or published and remains pre-release. The project is in
+implementation: its configuration, documentation-processing, source-identity, REST foundation,
+compatibility, candidate, JSON Patch, validation-only Create, WIQL identity lookup, Work Item GET
+evidence retrieval, existing/new Work Item resolution, Persistent Work Item Create REST transport
+and complete non-root Parent-Child Relationship lifecycle coordination are complete. For NEW
+resolution, the merged lifecycle performs Create once, immediately PATCHes the parent relationship
+using the Create revision, and makes the child eligible only after PATCH success. For REUSED
+resolution, it performs fresh relationship-state GET, one classification and the existing gate's
+CORRECT, MISSING and CONFLICTING handling; eligibility occurs only after successful gate completion.
+Failures propagate fail-fast, without retry, reread, rollback or deletion compensation. Rerun safety
+relies on source identity and fresh reused-child relationship inspection. Broader generator hierarchy
+orchestration, application/CLI lifecycle, integration/end-to-end validation and final release-readiness
+work remain incomplete. The release criteria in this document remain unchanged.
 
 ---
 

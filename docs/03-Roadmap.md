@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.11
+**Version:** 1.12
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -35,6 +35,7 @@
 | 1.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded completion of the missing-parent recovery ownership governance correction. |
 | 1.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged MISSING missing-parent recovery coordination in the current implementation baseline. |
 | 1.11 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child descendant gating, including CORRECT continuation and CONFLICTING blocking decisions. |
+| 1.12 | 2026-08-29 | Draft | Jack Spaetjens | Recorded merged complete non-root Parent-Child Relationship lifecycle coordination and Full Repository Review Gate 1 as next. |
 
 ---
 
@@ -118,15 +119,15 @@ discovery, parsing and preparation; source identity and collision validation; th
 REST Client Foundation; project and compatibility metadata retrieval; structural Scrum
 compatibility evaluation; Work Item Candidate construction; Work Item Create JSON Patch
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
-GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child relationship-state GET transport with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level intended-parent comparison with MISSING, CORRECT and CONFLICTING classification; MISSING missing-parent recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; and reused-child descendant gating, including CORRECT successful continuation and CONFLICTING controlled blocking decisions.
+GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; and successful eligibility return only after the relationship state is safe.
 
-Version 1.0 remains in development. Complete relationship lifecycle coordination, including
-generator-level new-child Create and relationship sequencing, is the next relationship capability.
-Generator/application Persistent Create coordination and lifecycle sequencing; descendant
-processing/orchestration; run/application orchestration; the CLI/logging/process-exit lifecycle;
-end-to-end/integration release validation; and release-readiness work remain to be implemented or
-completed. Full Repository Review Gate 1 remains after complete relationship lifecycle coordination
-is implemented and baselined.
+The planned Relationship Lifecycle implementation cluster is complete. The next activity is FULL
+REPOSITORY REVIEW GATE 1; no new major generator functionality shall begin before that review.
+After the review, Version 1.0 work remains in broader areas including complete generator/document
+hierarchy orchestration, broader Persistent Create coordination across the hierarchy where applicable,
+actual descendant traversal and processing, application/run orchestration, the CLI/logging/process-exit
+lifecycle, integration/end-to-end validation, operational/recovery readiness work and final
+release-readiness validation.
 
 ---
 
