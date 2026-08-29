@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.12
+**Version:** 1.13
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -36,6 +36,7 @@
 | 1.10 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded merged MISSING missing-parent recovery coordination in the current implementation baseline. |
 | 1.11 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child descendant gating, including CORRECT continuation and CONFLICTING blocking decisions. |
 | 1.12 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged complete non-root Parent-Child Relationship lifecycle coordination and Full Repository Review Gate 1 as next. |
+| 1.13 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 
 ---
 
@@ -119,15 +120,9 @@ discovery, parsing and preparation; source identity and collision validation; th
 REST Client Foundation; project and compatibility metadata retrieval; structural Scrum
 compatibility evaluation; Work Item Candidate construction; Work Item Create JSON Patch
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
-GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; and successful eligibility return only after the relationship state is safe.
+GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; successful eligibility return only after the relationship state is safe; and root existing/new Work Item lifecycle coordination, in which NEW creates once and REUSED returns the validated existing ID without relationship work.
 
-The planned Relationship Lifecycle implementation cluster is complete. The next activity is FULL
-REPOSITORY REVIEW GATE 1; no new major generator functionality shall begin before that review.
-After the review, Version 1.0 work remains in broader areas including complete generator/document
-hierarchy orchestration, broader Persistent Create coordination across the hierarchy where applicable,
-actual descendant traversal and processing, application/run orchestration, the CLI/logging/process-exit
-lifecycle, integration/end-to-end validation, operational/recovery readiness work and final
-release-readiness validation.
+The planned Relationship Lifecycle implementation cluster is complete, and Generator Orchestration has begun with implemented root existing/new Work Item lifecycle coordination. Generator Orchestration remains incomplete: validation-only representative selection, full-run versus subtree or independent-item failure scope, and the compatibility-to-persistence composition boundary remain owner decisions; validation-only orchestration, deterministic hierarchy traversal, and complete-hierarchy composition coverage across multiple roots and documents remain pending. Review Gate 2 remains later, after full Generator Orchestration is complete. Version 1.0 work also remains in application/run orchestration, the CLI/logging/process-exit lifecycle, integration/end-to-end validation, operational/recovery readiness work and final release-readiness validation.
 
 ---
 
