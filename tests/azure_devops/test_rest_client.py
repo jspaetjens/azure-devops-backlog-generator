@@ -73,11 +73,11 @@ def opener(monkeypatch: pytest.MonkeyPatch) -> Iterator[_Opener]:
     yield fake
 
 
-def _request(client: AzureDevOpsRestClient) -> object:
+def _request(client: AzureDevOpsRestClient, personal_access_token: str = "secret-pat") -> object:
     return client.send_json_request(
         method="POST",
         path_segments=("_apis", "test", "Product Backlog Item"),
-        personal_access_token="secret-pat",
+        personal_access_token=personal_access_token,
         query={"$top": "2"},
         json_body={"title": "Café"},
         content_type="application/json",
@@ -190,6 +190,31 @@ def test_http_error_is_controlled_and_discards_the_error_body(
 
     assert error.value.status == 401
     assert "secret-pat" not in str(error.value)
+    assert error_response.read_called
+    assert error_response.closed
+
+
+def test_http_403_is_controlled_without_retry_or_credential_disclosure(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    personal_access_token = "review-gate-403-pat"
+    authorization = f"Basic {base64.b64encode(f':{personal_access_token}'.encode()).decode()}"
+    error_response = _Response(status=403, body=b'{"message":"Forbidden"}')
+    opener.response = HTTPError("https://dev.azure.com", 403, "Forbidden", None, error_response)
+
+    with pytest.raises(AzureDevOpsHttpError) as error:
+        _request(client, personal_access_token)
+
+    assert error.value.status == 403
+    assert len(opener.calls) == 1
+    request, _ = opener.calls[0]
+    assert request.get_header("Authorization") == authorization
+    assert personal_access_token not in str(error.value)
+    assert personal_access_token not in repr(error.value)
+    assert authorization not in str(error.value)
+    assert authorization not in repr(error.value)
+    assert personal_access_token not in error.value.__dict__.values()
+    assert authorization not in error.value.__dict__.values()
     assert error_response.read_called
     assert error_response.closed
 
