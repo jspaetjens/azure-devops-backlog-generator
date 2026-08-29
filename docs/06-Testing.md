@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.9
+**Version:** 2.10
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -43,6 +43,7 @@
 | 2.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined authorization-failure and least-privilege test coverage for Version 1.0. |
 | 2.8 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle composition coverage. |
 | 2.9 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Approved future Generator Orchestration test obligations for preflight, global fail-fast and composition ownership. |
+| 2.10 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented full preflight coordinator coverage and latest validation metrics. |
 
 ---
 
@@ -311,7 +312,9 @@ Scrum Compatibility validation shall additionally cover:
 - no automatic retry, no persistent work-item creation and secret-safe diagnostics throughout compatibility validation; and
 - Tags presence and absence, Acceptance Criteria presence and absence, Task's mandatory Acceptance Criteria omission, and equal-shaped candidates with differing values, each receiving separate validation-only evidence.
 
-Future full Generator Orchestration coverage shall prove the preflight/persistence barrier: no WIQL, Work Item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH occurs until every validation-only Create succeeds; a validation-only failure proves zero later operations. It shall also prove global fail-fast across later descendants, siblings, roots and documents for representative validation-only, WIQL, existing-evidence, persistent Create, relationship-state GET, CONFLICTING, relationship PATCH, transport, malformed-response, HTTP `401` and HTTP `403` failures. Future ownership tests shall prove that the Backlog Generator owns preflight sequencing and that the application does not duplicate compatibility or persistence decisions. These full-orchestration tests do not yet exist.
+Implemented full-preflight coordinator coverage proves complete preflight sequencing; immutable returned `PreflightState`; deterministic candidate order across multiple roots and documents; separate validation of same-type candidates and optional-value differences; source-identity failure before REST; project, metadata and compatibility failure propagation; mid-sequence validation-only failure without retry; and zero WIQL, existing-item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH operations before or after the barrier within this slice. The focused suite recorded 11 passed. The full suite recorded 657 passed, 0 failed, 0 skipped, 0 warnings, 0 xfail, 0 xpass, 95% coverage, 1,254 statements and 64 missed statements; Ruff was green.
+
+Future full Generator Orchestration coverage shall prove global fail-fast across hierarchy traversal for later descendants, siblings, roots and documents, including representative WIQL, existing-evidence, persistent Create, relationship-state GET, CONFLICTING, relationship PATCH, transport, malformed-response, HTTP `401` and HTTP `403` failures. It shall also prove deterministic traversal and composition of preflight evidence with existing/new resolution and root/non-root lifecycle coordination. These full-orchestration tests do not yet exist.
 
 Work Item Create Payload validation shall additionally cover:
 
@@ -412,7 +415,7 @@ Existing Relationship State and Recovery validation shall additionally cover:
 - absence of remove, replace, move, relation-index, ordinary field-update and identity-update operations and absence of WIQL changes; and
 - secret-safe diagnostics containing no PAT, Authorization header, unnecessary full response body or relation URL when the numeric target ID suffices.
 
-Focused root existing/new Work Item lifecycle composition coverage is implemented. It verifies that NEW uses the real resolution path, performs one persistent Create and returns only its ID without relationship work; REUSED uses the real lookup and existing-evidence path, performs no Create and returns the existing ID without relationship work; resolution failure propagates unchanged without Create or relationship work; and Create failure propagates unchanged after one attempt without retry or relationship work. Full hierarchy traversal, multiple-root/document, parent-before-child, descendant-blocking, run-failure, validation-only sequencing and full-hierarchy rerun composition coverage remain future Generator Orchestration obligations.
+Focused root existing/new Work Item lifecycle composition coverage is implemented. It verifies that NEW uses the real resolution path, performs one persistent Create and returns only its ID without relationship work; REUSED uses the real lookup and existing-evidence path, performs no Create and returns the existing ID without relationship work; resolution failure propagates unchanged without Create or relationship work; and Create failure propagates unchanged after one attempt without retry or relationship work. Full hierarchy traversal, parent-before-child, descendant-blocking, run-failure and full-hierarchy rerun composition coverage remain future Generator Orchestration obligations.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
 
