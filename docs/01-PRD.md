@@ -4,11 +4,11 @@
 
 > *This document defines the functional and non-functional requirements for the Azure DevOps Backlog Generator.*
 
-**Version:** 1.11
+**Version:** 1.12
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-27
+**Last Updated:** 2026-08-29
 
 **Target Release:** v1.0.0
 
@@ -35,6 +35,7 @@
 | 1.9 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 Existing Relationship State and Recovery contract. |
 | 1.10 | 2026-08-25 | Draft | Jack Spaetjens | Defined run-level duplicate logical identity and persisted-marker collision failure behaviour. |
 | 1.11 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Aligned mandatory validation-only candidate acceptance with the Scrum compatibility contract. |
+| 1.12 | 2026-08-29 | Draft | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
 
 ---
 
@@ -279,6 +280,8 @@ No descendants of a non-root item shall be persistently processed until its inte
 
 Relationship-state recovery shall not change logical source identity, persisted identity markers, WIQL lookup, Work Item Create payloads, ordinary update semantics, relationship removal or replacement, retry or rollback behaviour.
 
+The Backlog Generator shall own the complete compatibility-to-persistence domain operation. It shall validate run-wide source identities, construct every WorkItemCandidate in deterministic source order, retrieve and retain canonical project evidence, retrieve required work-item-type and field metadata, evaluate structural Scrum compatibility, and validate every constructed candidate. Only after those preflight operations succeed shall it begin deterministic hierarchy processing, existing/new resolution and the approved root and non-root lifecycle coordination. The application/run layer shall own configuration loading and validation, runtime PAT acquisition, REST-client construction, documentation discovery and processing, generator invocation, logging/reporting and process-exit mapping; it shall not independently coordinate compatibility, validation-only sequencing, hierarchy lifecycle or persistence decisions. The REST Client shall remain responsible only for requested transport, authentication, serialization and response validation.
+
 ## FR-008 Configuration Management
 
 The application shall support external configuration files to enable reuse across multiple software projects.
@@ -291,13 +294,15 @@ The application shall provide logging sufficient to monitor execution and diagno
 
 The application shall detect, report and handle execution errors without causing unexpected application termination where recovery is possible.
 
-Before persistent backlog generation, the application shall validate that the configured Azure DevOps Services project is compatible with the Version 1.0 Scrum work-item model. Structural metadata validation shall confirm that the configured project and the required work-item types Epic, Feature, Product Backlog Item and Task exist; that required standard fields are available and compatible where applicable; and that `Custom.BacklogGeneratorSourceIdentity` has the exact approved reference name, display name and String/single-line-text contract, applies to all four supported types, is writable during Create, has no configured default and is not process-required. Structural metadata validation alone shall not be treated as final proof that an actual candidate Create request will be accepted by the configured project/process.
+Before persistent backlog generation, the Backlog Generator shall validate the configured Azure DevOps Services project compatibility with the Version 1.0 Scrum work-item model as part of its preflight. Structural metadata validation shall confirm that the configured project and the required work-item types Epic, Feature, Product Backlog Item and Task exist; that required standard fields are available and compatible where applicable; and that `Custom.BacklogGeneratorSourceIdentity` has the exact approved reference name, display name and String/single-line-text contract, applies to all four supported types, is writable during Create, has no configured default and is not process-required. Structural metadata validation alone shall not be treated as final proof that an actual candidate Create request will be accepted by the configured project/process.
 
-After structural compatibility succeeds, the generator shall construct the applicable candidate contract and submit every candidate required by the approved compatibility contract through non-persisting Work Item Create with `validateOnly=true`. The validation-only request shall use the same candidate contract intended for persistent Create, including the mandatory identity marker. Successful validation-only candidate checks shall be mandatory before any persistent work-item generation. If required compatibility metadata cannot be retrieved, structural compatibility cannot be established or Azure DevOps rejects a validation-only candidate, the application shall stop before persistent backlog generation, report the incompatibility clearly and shall not fall back to another process, provision fields, invent type or field mappings, retry automatically or persist the validation-only request.
+After structural compatibility succeeds, the generator shall submit every constructed WorkItemCandidate, for every semantic source item, through non-persisting Work Item Create with `validateOnly=true` in deterministic source order. Each validation-only request shall use that candidate's actual approved JSON Patch contract intended for persistent Create, including the mandatory identity marker. One candidate shall not serve as validation evidence for another because the work-item type, optional-field presence or JSON Patch shape matches. All validation-only requests shall succeed before any WIQL lookup, Work Item GET, persistent Work Item Create, relationship-state GET or Parent-Child Relationship PATCH. The final successful validation-only Create is the final preflight operation and establishes the preflight/persistence mutation barrier; only after that barrier may deterministic hierarchy processing begin. If required compatibility metadata cannot be retrieved, structural compatibility cannot be established or Azure DevOps rejects a validation-only candidate, the Backlog Generator shall terminate the generator invocation before later processing and shall not fall back to another process, provision fields, invent type or field mappings, retry automatically or persist the validation-only request. The application shall report the propagated failure and map it to process-exit behaviour.
 
 An additional field marked `alwaysRequired` shall not alone establish incompatibility. The application shall not reproduce every Azure DevOps process rule locally or invent a value for an unsupported custom field. If such a field or another process rule rejects the applicable validation-only candidate, compatibility validation shall fail before persistent generation.
 
 Before persistent backlog generation, the application shall validate that approved backlog-input Markdown documents from the configured dedicated source directory conform to `09-Documentation-Input.md`. Invalid source input shall prevent persistent backlog generation.
+
+Generator Orchestration shall be globally fail-fast. The first controlled or uncontrolled preflight or hierarchy-processing failure shall terminate the entire generator invocation. After that failure, no later document, root, sibling, descendant or candidate processing, WIQL lookup, Work Item GET, persistent Create, relationship-state GET, Parent-Child Relationship PATCH or other Azure DevOps generator operation shall begin. This includes source-identity collision, compatibility or validation-only failure, resolution or evidence failure, persistent Create failure, relationship-state GET failure, malformed Azure DevOps response, CONFLICTING relationship classification, relationship PATCH failure, transport failure and HTTP `401` or `403`. The generator shall not retry, roll back, delete previously created Work Items, compensate, switch credentials, downgrade behaviour or continue another subtree, root or document. Remote state accepted before failure remains legitimate partial persistent state and may be recovered only by a later normal invocation through the approved identity, resolution and relationship-state lifecycle behaviour.
 
 ---
 

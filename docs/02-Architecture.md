@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.17
+**Version:** 2.18
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -51,6 +51,7 @@
 | 2.15 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child descendant-gating implementation status. |
 | 2.16 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized merged complete non-root Parent-Child Relationship lifecycle coordination status. |
 | 2.17 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
+| 2.18 | 2026-08-29 | Draft | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
 
 ---
 
@@ -176,8 +177,8 @@ Its responsibilities include:
 
 - Starting the application.
 - Reading command-line parameters.
-- Initiating application execution.
-- Returning execution status.
+- Loading and validating configuration, acquiring the runtime PAT, constructing the REST Client, discovering and processing documentation, invoking the Backlog Generator, logging/reporting and mapping the result to a process exit status.
+- Not independently coordinating structural compatibility, validation-only sequencing, hierarchy lifecycle sequencing or persistence decisions.
 
 ---
 
@@ -231,7 +232,12 @@ Responsibilities include:
 - Maintaining the resolved candidate parent-child hierarchy and resolving created or reused source items to Azure DevOps numeric work-item IDs.
 - Serialising each approved logical source identity using the Version 1.0 binary framing, computing its SHA-256 digest and formatting the persisted identity marker.
 - Validating run-wide logical identity uniqueness and detecting persisted-marker collisions across every semantic item from all parsed documents. The Backlog Generator shall fail deterministically before compatibility validation or REST activity when two or more items have the same logical identity, or when distinct logical identities produce the same complete marker.
-- Coordinating resolve-or-create processing in deterministic source order and interpreting zero, one and multiple lookup outcomes.
+- Owning the complete compatibility-to-persistence domain operation: following successful run-wide source-identity validation, constructing every WorkItemCandidate in deterministic source order; retrieving and retaining canonical project evidence; retrieving required work-item-type and global/type-specific field metadata; evaluating structural Scrum compatibility; and submitting every candidate through validation-only Create in deterministic source order.
+- Treating validation-only Create as candidate-specific evidence: every actual WorkItemCandidate shall be validated with the same approved JSON Patch contract intended for persistent Create. Equivalent work-item type, optional-field presence or JSON Patch shape shall not allow one candidate to represent another.
+- Establishing the explicit preflight/persistence mutation barrier only after every validation-only Create succeeds. No WIQL lookup, Work Item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH may begin before that barrier.
+- Coordinating deterministic hierarchy processing only after the barrier, using retained canonical project evidence for existing/new resolution, invoking the root lifecycle coordinator for roots and the non-root lifecycle coordinator for non-root items, and beginning descendant processing only after parent or root eligibility is established.
+- Applying global fail-fast across preflight and hierarchy processing. The first controlled or uncontrolled failure terminates the complete invocation and prevents later document, root, sibling, descendant, candidate or Azure DevOps generator operation. No retry, rollback, deletion, compensation, alternate credential, downgrade or continuation is introduced; accepted remote state remains legitimate partial state for recovery through a later normal invocation.
+- Coordinating resolve-or-create processing only after the preflight/persistence mutation barrier and interpreting zero, one and multiple lookup outcomes.
 - Associating source items with created or reused Azure DevOps numeric IDs and retaining the current numeric revision returned for reused items.
 - Preventing Create after successful existing-item resolution and not inferring permission to compare or update ordinary fields.
 - Coordinating parent resolution-or-creation before child persistent creation and the immediate child-to-parent relationship request after successful child creation.
@@ -242,8 +248,7 @@ Responsibilities include:
 - Providing complete non-root Parent-Child Relationship lifecycle coordination for an already-resolved candidate. Identity resolution remains upstream. For NEW resolution, the lifecycle coordinator performs persistent Create exactly once, uses the returned Work Item ID and Create revision for one immediate Parent-Child Relationship PATCH, and returns successfully only after that PATCH succeeds. The NEW branch performs no relationship-state GET, classification, reused-child gate call or post-PATCH reread. For REUSED resolution, the coordinator retrieves fresh relationship state exactly once, classifies it exactly once and invokes the existing reused-child descendant gate. CORRECT continues without relationship mutation, MISSING delegates to existing recovery using the fresh relationship-state revision, and CONFLICTING raises `ConflictingReusedChildRelationshipError`. Successful REUSED return occurs only after the gate succeeds. The coordinator returns only the eligible child Work Item ID because a revision may be stale after relationship PATCH; later descendant processing requires the eligible ID only. The non-root coordinator performs neither WIQL nor identity resolution, descendant processing, callbacks or recursive traversal. It introduces no retry, reread, rollback, deletion compensation or alternate credentials. If NEW Create succeeds and relationship PATCH fails, the invocation fails; a later source-identity resolution can discover the created Work Item as reused, then fresh relationship evidence and existing reused-child logic repair, continue or block as MISSING, CORRECT or CONFLICTING requires. This rerun safety arises from identity resolution plus fresh relationship evidence, not coordinator-level retry. Complete generator/run orchestration remains deferred.
 - Providing implemented root existing/new Work Item lifecycle coordination. The root-only coordinator invokes existing/new resolution once; for NEW it passes the exact supplied candidate and PAT to persistent Create once and returns the Create response ID, while for REUSED it returns the validated existing ID without Create. It returns no revision and performs no relationship-state GET, classification, gate, Parent-Child Relationship PATCH, descendant processing, validation-only Create or compatibility orchestration. Resolution and Create failures propagate without retry, fallback, reread, rollback, deletion compensation or other compensation. Hierarchy traversal and application/run orchestration remain deferred.
 - Preventing duplicate work item creation.
-- Initiating persistent backlog generation only after Scrum compatibility validation succeeds.
-- Coordinating mandatory validation-only candidate checks for every occurring work-item type after structural compatibility succeeds and before existing-item resolution or persistent generation.
+- Initiating deterministic hierarchy processing only after all preflight operations succeed. The full preflight coordinator and complete hierarchy traversal are not implemented yet; the implemented root and non-root lifecycle coordinators remain lower-level capabilities invoked by the future complete orchestration.
 
 ---
 
@@ -257,7 +262,7 @@ Azure DevOps Server instance, port, collection and Server-specific base-address 
 
 The REST Client Foundation shall provide a small internal, purpose-specific transport interface. It shall use `urllib` from the Python standard library and shall not introduce a third-party HTTP dependency. It shall own Azure DevOps Services URL construction, HTTP request construction and transmission, Basic authentication-header construction, required common headers, JSON transport mechanics, the fixed timeout, expected-status validation, redirect rejection, no-retry behaviour, controlled transport, network and response failures, and secret-safe diagnostics. It shall not be a general-purpose public HTTP abstraction.
 
-Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET, Persistent Work Item Create, Parent-Child Relationship PATCH and reused-child relationship-state GET REST transport. Persistent Create reuses the approved JSON Patch builder and returns structurally validated `AzureDevOpsWorkItem` evidence; the REST Client remains transport-only. Parent-Child Relationship JSON Patch construction and HTTP PATCH transport are implemented. The transport reuses the approved JSON Patch builder and this REST Client foundation with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Its exact `200 OK` response has a non-empty valid UTF-8 JSON object body; no response property is required, unknown properties are ignored and the REST Client returns `None` after validation. The reused-child relationship-state GET requests `$expand=relations`, validates the child ID, fresh revision and relation structure, validates and parses exact reverse-hierarchy target URIs, and returns ordered duplicate-preserving reverse-parent IDs. Generator-level intended-parent comparison and relationship-state classification are implemented. The Backlog Generator coordinates complete non-root relationship lifecycle sequencing by composing the existing Create, relationship-state GET, classification, recovery and gate capabilities; the REST Client remains responsible only for requested transport and response validation. Complete generator/run orchestration remains deferred to later capability slices.
+Each request shall use the `urllib` request/response lifecycle independently. The response body shall be consumed and the response closed during request processing. The foundation shall not retain response objects, a persistent session, cookie state, redirect state, a connection pool or other persistent mutable request state. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET, Persistent Work Item Create, Parent-Child Relationship PATCH and reused-child relationship-state GET REST transport. Persistent Create reuses the approved JSON Patch builder and returns structurally validated `AzureDevOpsWorkItem` evidence; the REST Client remains transport-only. Parent-Child Relationship JSON Patch construction and HTTP PATCH transport are implemented. The transport reuses the approved JSON Patch builder and this REST Client foundation with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation and absolute organisation-scoped parent target URI. Its exact `200 OK` response has a non-empty valid UTF-8 JSON object body; no response property is required, unknown properties are ignored and the REST Client returns `None` after validation. The reused-child relationship-state GET requests `$expand=relations`, validates the child ID, fresh revision and relation structure, validates and parses exact reverse-hierarchy target URIs, and returns ordered duplicate-preserving reverse-parent IDs. Generator-level intended-parent comparison and relationship-state classification are implemented. The Backlog Generator, not the REST Client, owns sequencing and lifecycle policy; the REST Client only executes requested authenticated transport, serialization and response validation. Complete preflight orchestration and hierarchy traversal remain deferred to later capability slices.
 
 The foundation shall explicitly disable `urllib` proxy handling and shall not inherit ambient or system proxy state. Proxy configuration, proxy authentication, proxy credentials, PAC support, system-proxy integration and environment-proxy support are outside Version 1.0 and remain deferred to a future approved capability.
 
@@ -320,21 +325,22 @@ The application follows the logical execution sequence below.
 2. Configuration is loaded.
 3. Configuration is validated.
 4. Approved backlog-input Markdown documents are discovered, parsed, validated, partitioned and rendered for mandatory Description values, optional applicable Acceptance Criteria values and optional Tags values according to `09-Documentation-Input.md` before persistent Azure DevOps operations.
-5. Parsed backlog structures are generated.
-6. Candidate Azure DevOps work items, including prepared Description values, applicable Acceptance Criteria values and applicable Tags values, are prepared.
-7. The Backlog Generator computes every persisted identity marker and performs deterministic run-wide identity validation across all parsed documents. A duplicate logical identity or persisted-marker collision stops processing before compatibility validation, WIQL, Work Item GET, Create, relationship processing or any external mutation.
-8. The configured project is resolved through Project retrieval and its canonical Azure DevOps project name and ID are retained for later candidate validation.
-9. Required work-item type existence is validated, followed by type-specific and global field metadata retrieval and structural Scrum compatibility evaluation.
-10. Candidate JSON Patch documents are constructed from prepared values and generator-produced identity markers. At least one representative candidate for every work-item type occurring in the processed input is validated non-persistently using the approved validation-only Create contract. No persistent Azure DevOps mutation may occur until all required validation-only checks succeed.
-11. For every source item in deterministic source order, the Backlog Generator requests an existing-item lookup scoped to the configured project, exact supported type and exact marker.
+5. Parsed `DocumentationHierarchy` structures are generated and supplied with the REST Client and runtime PAT to the Backlog Generator.
+6. The Backlog Generator performs deterministic run-wide source-identity collision validation across all parsed documents.
+7. The Backlog Generator constructs every WorkItemCandidate in deterministic source order.
+8. The Backlog Generator retrieves the configured project and retains canonical project evidence, retrieves required work-item-type and global/type-specific field metadata, and evaluates structural Scrum compatibility.
+9. The Backlog Generator submits every candidate through validation-only Create in deterministic source order, using that candidate's approved persistent-Create JSON Patch contract.
+10. The final successful validation-only Create establishes the explicit preflight/persistence mutation barrier. Before it, no WIQL, Work Item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH may occur.
+11. Only after the barrier, deterministic document, root and sibling hierarchy processing begins. For every source item in deterministic source order, the Backlog Generator requests an existing-item lookup scoped to the canonical configured project, exact supported type and exact marker.
 12. Zero candidates cause Work Item Create using the approved five-field contract. Exactly one candidate causes Work Item GET, validation of its canonical project name, exact type and ordinal marker, and reuse of its numeric ID and revision without Create. Multiple, malformed or conflicting candidates stop processing before Create.
 13. For a newly created non-root child, the parent shall be created or resolved before the child, and the child-to-parent relationship PATCH shall occur immediately after successful child creation using the child ID and revision returned by Create.
 14. For a reused non-root child, the REST Client retrieves its fresh relationship state, validates the response and reverse-hierarchy target URI structure, and returns the fresh revision and parsed target IDs. The Backlog Generator compares those IDs with the intended parent ID and classifies the state as MISSING, CORRECT or CONFLICTING.
 15. MISSING causes the approved Parent-Child Relationship PATCH using the fresh relationship-state revision; CORRECT causes no PATCH; and CONFLICTING stops processing without remote mutation.
 16. Descendants become eligible for persistent processing only after a newly created child's relationship PATCH succeeds, a reused child is observed as CORRECT or a reused child's MISSING relationship is successfully repaired.
 17. Root Epic items require neither relationship-state retrieval nor a parent relationship PATCH.
-18. Results are logged.
-19. Execution summary is presented.
+18. Any controlled or uncontrolled failure causes a global stop: no later document, root, sibling, descendant, candidate or Azure DevOps generator operation begins. No retry, rollback, deletion, compensation or alternate credential is attempted.
+19. Results are logged.
+20. Execution summary is presented.
 
 This flow permits deterministic recovery when an earlier execution created a child but its immediate relationship PATCH failed: the later execution resolves the parent and child, observes MISSING using a fresh relationship-state GET, repairs the relationship using the fresh revision and continues only after success.
 

@@ -4,9 +4,9 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.19
+**Version:** 2.20
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -53,6 +53,7 @@
 | 2.17 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level MISSING missing-parent recovery coordination as implemented. |
 | 2.18 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronised implemented relationship lifecycle status after Review Gate 1 Finding 1. |
 | 2.19 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
+| 2.20 | 2026-08-29 | Draft | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
 
 ---
 
@@ -202,7 +203,7 @@ Every authenticated request shall include `Authorization: Basic <base64-credenti
 
 Version 1.0 shall use endpoint-specific documented success status codes and shall not accept arbitrary `2xx` responses. For all currently approved REST operations, including Project retrieval, compatibility metadata GET calls where the Microsoft endpoint contract documents success, validation-only Work Item Create, persistent Work Item Create, WIQL POST, Work Item GET, relationship-state GET and Work Item relationship PATCH or update, the expected successful status is `200 OK`. A future endpoint with another explicitly documented success status shall define that status separately. An unexpected success-range status shall not be silently accepted.
 
-The application shall fail immediately without automatic retry on connection failure, DNS failure, TLS failure, timeout, unexpected HTTP status, malformed success response, malformed JSON when JSON is required, or an empty body where an endpoint contract requires a body. Where an endpoint contract requires JSON, the response body shall exist, be valid JSON, have the required top-level shape, and contain required properties with expected types. Unexpected or malformed responses shall fail and shall not be reinterpreted as success. Endpoint-specific response validation defined elsewhere in this API Specification remains authoritative.
+The application shall fail immediately without automatic retry on connection failure, DNS failure, TLS failure, timeout, unexpected HTTP status, malformed success response, malformed JSON when JSON is required, or an empty body where an endpoint contract requires a body. Where an endpoint contract requires JSON, the response body shall exist, be valid JSON, have the required top-level shape, and contain required properties with expected types. Unexpected or malformed responses shall fail and shall not be reinterpreted as success. Endpoint-specific response validation defined elsewhere in this API Specification remains authoritative. When invoked by Generator Orchestration, a transport or response failure, including HTTP `401` or `403`, is a global generator failure: no later document, hierarchy item or Azure DevOps generator operation shall begin.
 
 The minimum generic HTTP status interpretation shall be:
 
@@ -347,7 +348,9 @@ Persistent Create requests shall not include `validateOnly`, `bypassRules`, `sup
 
 Validation-only and persistent creation shall use the exact same logical candidate JSON Patch document, including the work-item type, operation count, operation order, operation types, field paths, prepared values, optional-field omissions and Content-Type. The presence of `validateOnly=true` is the only approved Create-payload contract difference. A separate validation payload shall not be defined.
 
-The Documentation Processor shall prepare and validate the normalised Title, normative Description HTML, normative Acceptance Criteria HTML and normalised plain-text `System.Tags` content under the approved source contracts. The Backlog Generator shall supply the exact prepared identity marker. The REST Client shall exclusively construct the JSON Patch request representation from those prepared values. It may select approved paths, construct the canonical operation array, omit absent optional business fields, JSON-serialize the request, apply JSON-required escaping and transmit the request. It shall not compute or alter the identity marker, trim or normalise prepared values, re-render Markdown, transform or HTML-escape prepared HTML before JSON serialization, split, reorder or renormalise Tags, reinterpret Acceptance Criteria, invent missing values or add unapproved fields. JSON serialization escaping shall be transport encoding only and shall preserve each prepared semantic value after decoding.
+The Backlog Generator shall submit every constructed WorkItemCandidate through validation-only Create, including candidates that later resolve as REUSED. Validation-only Create shall use each candidate's actual approved JSON Patch document and shall occur in deterministic source order; candidates with equal work-item type or JSON Patch shape remain separately validated because their actual values may be accepted differently by project rules. All validation-only calls shall complete successfully before the generator requests WIQL, Work Item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH. The final successful validation-only Create is the preflight/persistence mutation barrier. A validation-only failure terminates the complete generator invocation, with no retry, fallback or later generator operation.
+
+The Documentation Processor shall prepare and validate the normalised Title, normative Description HTML, normative Acceptance Criteria HTML and normalised plain-text `System.Tags` content under the approved source contracts. The Backlog Generator shall supply the exact prepared identity marker and own compatibility-to-persistence sequencing, including the decision to request validation-only or persistent Create. The REST Client shall exclusively construct the JSON Patch request representation from those prepared values and execute the requested endpoint transport and response validation. It may select approved paths, construct the canonical operation array, omit absent optional business fields, JSON-serialize the request, apply JSON-required escaping and transmit the request. It shall not compute or alter the identity marker, trim or normalise prepared values, re-render Markdown, transform or HTML-escape prepared HTML before JSON serialization, split, reorder or renormalise Tags, reinterpret Acceptance Criteria, invent missing values, add unapproved fields or decide lifecycle sequencing. JSON serialization escaping shall be transport encoding only and shall preserve each prepared semantic value after decoding.
 
 The following representative payload is illustrative of the normative contract for Epic, Feature or Product Backlog Item when all optional values are prepared:
 
@@ -668,6 +671,8 @@ Response processing shall extract all information required for subsequent applic
 # 10. Error Handling
 
 Version 1.0 shall implement a consistent API error handling strategy.
+
+The Backlog Generator owns global failure policy across preflight and hierarchy processing. A controlled or uncontrolled API, transport, validation, response-shape, resolution or relationship failure shall terminate the complete generator invocation. The REST Client reports the requested operation's validated success or failure; it shall not retry, fall back, change credentials or continue another operation. The application/run layer reports the failure and maps process exit, without independently coordinating compatibility or persistence decisions.
 
 The application shall:
 
