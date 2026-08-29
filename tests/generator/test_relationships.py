@@ -11,6 +11,7 @@ from azure_devops_backlog_generator.azure_devops.exceptions import (
     AzureDevOpsTransportError,
 )
 from azure_devops_backlog_generator.azure_devops.models import (
+    AzureDevOpsProject,
     AzureDevOpsWorkItem,
     AzureDevOpsWorkItemRelationshipState,
 )
@@ -24,7 +25,10 @@ from azure_devops_backlog_generator.generator.relationships import (
     gate_reused_child_descendant_processing,
     recover_missing_parent_relationship,
 )
-from azure_devops_backlog_generator.generator.resolution import WorkItemResolution
+from azure_devops_backlog_generator.generator.resolution import (
+    WorkItemResolution,
+    resolve_work_item_candidate,
+)
 
 
 class _RestClient:
@@ -107,6 +111,76 @@ class _LifecycleRestClient:
             raise self.relationship_state_error
         assert self.relationship_state is not None
         return self.relationship_state
+
+
+class _TwoRunRecoveryRestClient:
+    """Small stateful fake for the documented partial-run recovery lifecycle."""
+
+    def __init__(self, first_patch_error: AzureDevOpsTransportError) -> None:
+        self.first_patch_error = first_patch_error
+        self.created_work_item: AzureDevOpsWorkItem | None = None
+        self.lookup_calls: list[tuple[WorkItemCandidate, str]] = []
+        self.retrieve_calls: list[tuple[int, str]] = []
+        self.create_calls: list[tuple[WorkItemCandidate, str]] = []
+        self.patch_calls: list[tuple[int, int, int, str]] = []
+        self.relationship_state_calls: list[tuple[int, str]] = []
+
+    def lookup_work_item_ids(
+        self, candidate: WorkItemCandidate, *, personal_access_token: str
+    ) -> tuple[int, ...]:
+        self.lookup_calls.append((candidate, personal_access_token))
+        if self.created_work_item is None:
+            return ()
+        return (self.created_work_item.id,)
+
+    def retrieve_work_item(
+        self, work_item_id: int, *, personal_access_token: str
+    ) -> AzureDevOpsWorkItem:
+        self.retrieve_calls.append((work_item_id, personal_access_token))
+        assert self.created_work_item is not None
+        assert work_item_id == self.created_work_item.id
+        return self.created_work_item
+
+    def create_work_item(
+        self, candidate: WorkItemCandidate, *, personal_access_token: str
+    ) -> AzureDevOpsWorkItem:
+        self.create_calls.append((candidate, personal_access_token))
+        assert self.created_work_item is None
+        self.created_work_item = AzureDevOpsWorkItem(
+            id=17,
+            revision=3,
+            project_name="Canonical Project",
+            work_item_type=candidate.work_item_type.value,
+            source_identity=candidate.source_identity,
+        )
+        return self.created_work_item
+
+    def patch_parent_child_relationship(
+        self,
+        parent_work_item_id: int,
+        child_work_item_id: int,
+        child_revision: int,
+        *,
+        personal_access_token: str,
+    ) -> None:
+        self.patch_calls.append(
+            (
+                parent_work_item_id,
+                child_work_item_id,
+                child_revision,
+                personal_access_token,
+            )
+        )
+        if len(self.patch_calls) == 1:
+            raise self.first_patch_error
+
+    def retrieve_work_item_relationship_state(
+        self, child_work_item_id: int, *, personal_access_token: str
+    ) -> AzureDevOpsWorkItemRelationshipState:
+        self.relationship_state_calls.append((child_work_item_id, personal_access_token))
+        assert self.created_work_item is not None
+        assert child_work_item_id == self.created_work_item.id
+        return AzureDevOpsWorkItemRelationshipState(revision=8, reverse_parent_ids=())
 
 
 def _lifecycle_candidate() -> WorkItemCandidate:
@@ -608,7 +682,11 @@ def test_coordinates_reused_child_relationship_lifecycle(
 ) -> None:
     relationship_state = AzureDevOpsWorkItemRelationshipState(
         revision=7,
-        reverse_parent_ids=(11,),
+        reverse_parent_ids=(
+            ()
+            if classification is ReusedChildRelationshipClassification.MISSING
+            else (11,)
+        ),
     )
     classification_calls: list[tuple[AzureDevOpsWorkItemRelationshipState, int]] = []
     gate_calls: list[
@@ -676,6 +754,64 @@ def test_coordinates_reused_child_relationship_lifecycle(
     assert rest_client.relationship_state_calls == [(17, "secret-pat")]
     assert classification_calls == [(relationship_state, 11)]
     assert gate_calls == [(11, 17, relationship_state, classification, rest_client, "secret-pat")]
+
+
+def test_recovers_a_created_child_on_a_second_run_after_initial_relationship_failure() -> None:
+    candidate = _lifecycle_candidate()
+    project = AzureDevOpsProject(id="project-id", name="Canonical Project")
+    first_patch_error = AzureDevOpsTransportError("relationship PATCH failed")
+    rest_client = _TwoRunRecoveryRestClient(first_patch_error)
+
+    # Run 1: no existing identity evidence means NEW; Create succeeds but PATCH fails.
+    first_resolution = resolve_work_item_candidate(
+        candidate,
+        project,
+        rest_client,  # type: ignore[arg-type]
+        personal_access_token="secret-pat",
+    )
+
+    assert first_resolution == WorkItemResolution(work_item_id=None, revision=None)
+    with pytest.raises(AzureDevOpsTransportError) as raised:
+        coordinate_non_root_relationship_lifecycle(
+            11,
+            candidate,
+            first_resolution,
+            rest_client,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    assert raised.value is first_patch_error
+    assert rest_client.created_work_item is not None
+    assert rest_client.relationship_state_calls == []
+
+    # Run 2: the persisted source identity resolves the same child as REUSED.
+    second_resolution = resolve_work_item_candidate(
+        candidate,
+        project,
+        rest_client,  # type: ignore[arg-type]
+        personal_access_token="secret-pat",
+    )
+
+    assert second_resolution == WorkItemResolution(work_item_id=17, revision=3)
+    assert (
+        coordinate_non_root_relationship_lifecycle(
+            11,
+            candidate,
+            second_resolution,
+            rest_client,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+        == 17
+    )
+
+    assert rest_client.create_calls == [(candidate, "secret-pat")]
+    assert rest_client.lookup_calls == [(candidate, "secret-pat"), (candidate, "secret-pat")]
+    assert rest_client.retrieve_calls == [(17, "secret-pat")]
+    assert rest_client.relationship_state_calls == [(17, "secret-pat")]
+    assert rest_client.patch_calls == [
+        (11, 17, 3, "secret-pat"),
+        (11, 17, 8, "secret-pat"),
+    ]
 
 
 def test_propagates_reused_child_gate_conflict_unchanged(
