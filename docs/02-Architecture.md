@@ -6,7 +6,7 @@
 
 **Version:** 2.17
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -50,7 +50,7 @@
 | 2.14 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Recorded generator-level MISSING missing-parent recovery coordination as implemented. |
 | 2.15 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged reused-child descendant-gating implementation status. |
 | 2.16 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized merged complete non-root Parent-Child Relationship lifecycle coordination status. |
-| 2.17 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
+| 2.17 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 
 ---
 
