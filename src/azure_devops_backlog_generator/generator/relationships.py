@@ -6,6 +6,8 @@ from azure_devops_backlog_generator.azure_devops.models import (
     AzureDevOpsWorkItemRelationshipState,
 )
 from azure_devops_backlog_generator.azure_devops.rest_client import AzureDevOpsRestClient
+from azure_devops_backlog_generator.generator.candidates import WorkItemCandidate
+from azure_devops_backlog_generator.generator.resolution import WorkItemResolution
 
 
 class ReusedChildRelationshipClassification(StrEnum):
@@ -55,6 +57,45 @@ def classify_reused_child_relationship_state(
     ):
         return ReusedChildRelationshipClassification.CORRECT
     return ReusedChildRelationshipClassification.CONFLICTING
+
+
+def coordinate_non_root_relationship_lifecycle(
+    intended_parent_work_item_id: int,
+    candidate: WorkItemCandidate,
+    resolution: WorkItemResolution,
+    rest_client: AzureDevOpsRestClient,
+    *,
+    personal_access_token: str,
+) -> int:
+    """Establish a non-root child's parent relationship before it is eligible."""
+    if resolution.work_item_id is None:
+        created_work_item = rest_client.create_work_item(
+            candidate, personal_access_token=personal_access_token
+        )
+        rest_client.patch_parent_child_relationship(
+            intended_parent_work_item_id,
+            created_work_item.id,
+            created_work_item.revision,
+            personal_access_token=personal_access_token,
+        )
+        return created_work_item.id
+
+    child_work_item_id = resolution.work_item_id
+    relationship_state = rest_client.retrieve_work_item_relationship_state(
+        child_work_item_id, personal_access_token=personal_access_token
+    )
+    classification = classify_reused_child_relationship_state(
+        relationship_state, intended_parent_work_item_id
+    )
+    gate_reused_child_descendant_processing(
+        intended_parent_work_item_id,
+        child_work_item_id,
+        relationship_state,
+        classification,
+        rest_client,
+        personal_access_token=personal_access_token,
+    )
+    return child_work_item_id
 
 
 def recover_missing_parent_relationship(
