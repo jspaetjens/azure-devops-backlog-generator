@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.7
+**Version:** 2.8
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-28
+**Last Updated:** 2026-08-29
 
 **Target Release:** v1.0.0
 
@@ -41,6 +41,7 @@
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified test coverage for Scrum compatibility evidence and mandatory validation-only candidate checks. |
 | 2.6 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined test coverage for successful Parent-Child Relationship PATCH response validation. |
 | 2.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined authorization-failure and least-privilege test coverage for Version 1.0. |
+| 2.8 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle composition coverage. |
 
 ---
 
@@ -407,6 +408,8 @@ Existing Relationship State and Recovery validation shall additionally cover:
 - the complete two-run lifecycle in which child creation succeeds, the initial relationship PATCH fails, the rerun resolves both items, observes MISSING, repairs with the fresh revision and then continues descendants;
 - absence of remove, replace, move, relation-index, ordinary field-update and identity-update operations and absence of WIQL changes; and
 - secret-safe diagnostics containing no PAT, Authorization header, unnecessary full response body or relation URL when the numeric target ID suffices.
+
+Focused root existing/new Work Item lifecycle composition coverage is implemented. It verifies that NEW uses the real resolution path, performs one persistent Create and returns only its ID without relationship work; REUSED uses the real lookup and existing-evidence path, performs no Create and returns the existing ID without relationship work; resolution failure propagates unchanged without Create or relationship work; and Create failure propagates unchanged after one attempt without retry or relationship work. Full hierarchy traversal, multiple-root/document, parent-before-child, descendant-blocking, run-failure, validation-only sequencing and full-hierarchy rerun composition coverage remain future Generator Orchestration obligations.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
 

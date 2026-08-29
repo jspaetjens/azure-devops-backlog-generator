@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.11
+**Version:** 1.12
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-29
 
@@ -35,6 +35,7 @@
 | 1.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through MISSING missing-parent recovery coordination. |
 | 1.10 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through reused-child descendant gating. |
 | 1.11 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through complete non-root Parent-Child Relationship lifecycle coordination. |
+| 1.12 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 
 ---
 
@@ -112,16 +113,19 @@ Release management shall follow the following principles:
 Version 1.0 has not been approved or published and remains pre-release. The project is in
 implementation: its configuration, documentation-processing, source-identity, REST foundation,
 compatibility, candidate, JSON Patch, validation-only Create, WIQL identity lookup, Work Item GET
-evidence retrieval, existing/new Work Item resolution, Persistent Work Item Create REST transport
-and complete non-root Parent-Child Relationship lifecycle coordination are complete. For NEW
+evidence retrieval, existing/new Work Item resolution, Persistent Work Item Create REST transport,
+complete non-root Parent-Child Relationship lifecycle coordination and root existing/new Work Item
+lifecycle coordination are complete. The root coordinator resolves once, creates only when NEW and
+returns the eligible root ID; it performs no relationship work or revision retention. For non-root NEW
 resolution, the merged lifecycle performs Create once, immediately PATCHes the parent relationship
 using the Create revision, and makes the child eligible only after PATCH success. For REUSED
 resolution, it performs fresh relationship-state GET, one classification and the existing gate's
 CORRECT, MISSING and CONFLICTING handling; eligibility occurs only after successful gate completion.
 Failures propagate fail-fast, without retry, reread, rollback or deletion compensation. Rerun safety
-relies on source identity and fresh reused-child relationship inspection. Broader generator hierarchy
-orchestration, application/CLI lifecycle, integration/end-to-end validation and final release-readiness
-work remain incomplete. The release criteria in this document remain unchanged.
+relies on source identity and fresh reused-child relationship inspection. Complete hierarchy traversal,
+validation-only orchestration, compatibility/run orchestration, application/CLI lifecycle,
+integration/end-to-end validation and final release-readiness work remain incomplete. The release
+criteria in this document remain unchanged.
 
 ---
 
