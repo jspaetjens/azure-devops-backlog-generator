@@ -6,7 +6,7 @@
 
 **Version:** 2.8
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -41,7 +41,7 @@
 | 2.5 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Clarified test coverage for Scrum compatibility evidence and mandatory validation-only candidate checks. |
 | 2.6 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined test coverage for successful Parent-Child Relationship PATCH response validation. |
 | 2.7 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Defined authorization-failure and least-privilege test coverage for Version 1.0. |
-| 2.8 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle composition coverage. |
+| 2.8 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle composition coverage. |
 
 ---
 

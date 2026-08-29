@@ -6,7 +6,7 @@
 
 **Version:** 1.12
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -35,7 +35,7 @@
 | 1.9 | 2026-08-28 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through MISSING missing-parent recovery coordination. |
 | 1.10 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through reused-child descendant gating. |
 | 1.11 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through complete non-root Parent-Child Relationship lifecycle coordination. |
-| 1.12 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
+| 1.12 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 
 ---
 
