@@ -4,11 +4,11 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.15
+**Version:** 1.16
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-29
+**Last Updated:** 2026-08-30
 
 **Target Release:** v1.0.0
 
@@ -39,6 +39,7 @@
 | 1.13 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 | 1.14 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded approval of the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
 | 1.15 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented full preflight coordinator status and the deferred traversal/composition slice. |
+| 1.16 | 2026-08-30 | Draft | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal while retaining final Generator entry composition before Review Gate 2. |
 
 ---
 
@@ -124,7 +125,7 @@ compatibility evaluation; Work Item Candidate construction; Work Item Create JSO
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
 GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; successful eligibility return only after the relationship state is safe; and root existing/new Work Item lifecycle coordination, in which NEW creates once and REUSED returns the validated existing ID without relationship work.
 
-The planned Relationship Lifecycle implementation cluster is complete, and Generator Orchestration has begun with implemented root and non-root lifecycle coordination plus full preflight coordination through the mutation barrier. The preflight coordinator validates source identities before REST activity, constructs every candidate in deterministic source order, retains canonical project evidence, retrieves required metadata, evaluates structural compatibility and validates every exact candidate without persistence; it returns immutable `PreflightState` evidence. No WIQL, existing/new resolution, persistent Create, relationship operation or hierarchy traversal follows in that capability. The next implementation slice is deterministic hierarchy traversal / Generator composition: preflight state, deterministic hierarchy traversal, existing/new resolution, root lifecycle for roots, non-root lifecycle for children and descendants only after eligibility. Complete-hierarchy composition coverage across multiple roots and documents, full-run global fail-fast across traversal, and Review Gate 2 remain later work. Generator Orchestration remains incomplete. Version 1.0 work also remains in application/run orchestration, the CLI/logging/process-exit lifecycle, integration/end-to-end validation, operational/recovery readiness work and final release-readiness validation.
+The planned Relationship Lifecycle implementation cluster is complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. Deterministic hierarchy traversal now validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. It composes current traversal-level global fail-fast and later-run recovery without retry or continuation across multiple roots and documents. Generator Orchestration retains one final thin Generator-owned entry/composition slice and representative malformed-response, HTTP `401` and HTTP `403` full-orchestration failure coverage. Review Gate 2 follows after that slice is implemented and validated; application/run integration shall follow only after that gate passes or required findings are remediated. Version 1.0 work also remains in the CLI/logging/process-exit lifecycle, integration/end-to-end validation, operational/recovery readiness work and final release-readiness validation.
 
 ---
 

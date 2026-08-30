@@ -4,11 +4,11 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.21
+**Version:** 2.22
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-29
+**Last Updated:** 2026-08-30
 
 **Target Release:** v1.0.0
 
@@ -55,6 +55,7 @@
 | 2.19 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 | 2.20 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
 | 2.21 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented every-candidate preflight validation-only coordination status. |
+| 2.22 | 2026-08-30 | Draft | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition status. |
 
 ---
 
@@ -263,7 +264,7 @@ Version 1.0 shall use the following Azure DevOps REST API endpoints required to 
 | Existing-item retrieval | `GET` | `/{project}/_apis/wit/workitems/{id}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{id}?fields=System.TeamProject,System.WorkItemType,Custom.BacklogGeneratorSourceIdentity&api-version=7.1` | `{organization}`, `{project}` and numeric `{id}`; exact `fields`; `api-version=7.1` | None |
 | Reused-child relationship-state retrieval | `GET` | `/{project}/_apis/wit/workitems/{childId}` | `https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{childId}?$expand=relations&api-version=7.1` | `{organization}`, `{project}` and numeric `{childId}`; `$expand=relations`; `api-version=7.1`; no `fields` parameter | None |
 
-Implementation status: the full preflight coordinator now retrieves project and required metadata evidence, evaluates structural compatibility and submits every exact candidate through validation-only Create in deterministic source order. It reaches the mutation barrier without WIQL, existing-item retrieval or persistent work-item and relationship operations. No REST endpoint contract changes; the REST Client remains transport-only.
+Implementation status: the full preflight coordinator retrieves project and required metadata evidence, evaluates structural compatibility and submits every exact candidate through validation-only Create in deterministic source order. Deterministic hierarchy traversal now consumes the successful `PreflightState` without repeating preflight: roots retain resolution inside the root lifecycle coordinator, while each non-root performs one upstream resolution before the existing non-root lifecycle coordinator receives its eligible parent ID. The traversal reuses the exact validated candidates and existing REST operations. A final Generator-owned preflight-to-traversal entry coordinator remains pending and introduces no REST endpoint, URL, request, response or transport contract changes.
 
 Work-item creation shall use the approved Version 1.0 work-item type values `Epic`, `Feature`, `Product Backlog Item` and `Task`. Work-item type values are URI path-segment values. Values containing spaces shall be correctly URI encoded when constructing the request.
 
