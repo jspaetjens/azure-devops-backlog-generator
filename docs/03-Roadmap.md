@@ -6,7 +6,7 @@
 
 **Version:** 1.15
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -38,7 +38,7 @@
 | 1.12 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded merged complete non-root Parent-Child Relationship lifecycle coordination and Full Repository Review Gate 1 as next. |
 | 1.13 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 | 1.14 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded approval of the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
-| 1.15 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented full preflight coordinator status and the deferred traversal/composition slice. |
+| 1.15 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented full preflight coordinator status and the deferred traversal/composition slice. |
 
 ---
 

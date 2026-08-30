@@ -6,7 +6,7 @@
 
 **Version:** 2.21
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-29
 
@@ -54,7 +54,7 @@
 | 2.18 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronised implemented relationship lifecycle status after Review Gate 1 Finding 1. |
 | 2.19 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 | 2.20 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
-| 2.21 | 2026-08-29 | Draft | Jack Spaetjens | Synchronized implemented every-candidate preflight validation-only coordination status. |
+| 2.21 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented every-candidate preflight validation-only coordination status. |
 
 ---
 
