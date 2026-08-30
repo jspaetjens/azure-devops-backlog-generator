@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 from azure_devops_backlog_generator.azure_devops.compatibility import (
@@ -11,14 +12,22 @@ from azure_devops_backlog_generator.azure_devops.compatibility import (
 )
 from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsProject
 from azure_devops_backlog_generator.azure_devops.rest_client import AzureDevOpsRestClient
-from azure_devops_backlog_generator.documentation.models import DocumentationHierarchy, WorkItemType
+from azure_devops_backlog_generator.documentation.models import (
+    DocumentationHierarchy,
+    SemanticWorkItem,
+    WorkItemType,
+)
 from azure_devops_backlog_generator.generator.candidates import (
     WorkItemCandidate,
     build_work_item_candidate,
 )
 from azure_devops_backlog_generator.generator.identity import (
     _iter_source_order_items,
+    build_source_identity_marker,
     validate_source_identity_collisions,
+)
+from azure_devops_backlog_generator.generator.relationships import (
+    coordinate_non_root_relationship_lifecycle,
 )
 from azure_devops_backlog_generator.generator.resolution import resolve_work_item_candidate
 
@@ -115,3 +124,85 @@ def coordinate_root_work_item_lifecycle(
     return rest_client.create_work_item(
         candidate, personal_access_token=personal_access_token
     ).id
+
+
+def coordinate_deterministic_hierarchy_traversal(
+    preflight_state: PreflightState,
+    rest_client: AzureDevOpsRestClient,
+    *,
+    personal_access_token: str,
+) -> None:
+    """Persist the validated hierarchy in deterministic parent-before-child order."""
+    _validate_preflight_state_association(preflight_state)
+    candidates = iter(preflight_state.candidates)
+
+    for document in preflight_state.hierarchy.documents:
+        for root in sorted(document.root_items, key=lambda item: item.source_order):
+            _coordinate_semantic_subtree(
+                root,
+                candidates,
+                preflight_state.project,
+                rest_client,
+                personal_access_token=personal_access_token,
+                parent_work_item_id=None,
+            )
+
+
+def _validate_preflight_state_association(preflight_state: PreflightState) -> None:
+    """Reject malformed preflight state before any persistent operation begins."""
+    items = tuple(_iter_source_order_items(preflight_state.hierarchy))
+    if len(items) != len(preflight_state.candidates):
+        raise ValueError("Preflight state candidates do not match the semantic item count.")
+
+    for item, candidate in zip(items, preflight_state.candidates, strict=True):
+        expected_source_identity = build_source_identity_marker(
+            item.canonical_relative_path, item.heading_hierarchy
+        )
+        if candidate.source_identity != expected_source_identity:
+            raise ValueError(
+                "Preflight state candidate does not match its semantic source identity."
+            )
+
+
+def _coordinate_semantic_subtree(
+    item: SemanticWorkItem,
+    candidates: Iterator[WorkItemCandidate],
+    project: AzureDevOpsProject,
+    rest_client: AzureDevOpsRestClient,
+    *,
+    personal_access_token: str,
+    parent_work_item_id: int | None,
+) -> None:
+    """Persist one semantic item, then its descendants after eligibility."""
+    candidate = next(candidates)
+    if parent_work_item_id is None:
+        work_item_id = coordinate_root_work_item_lifecycle(
+            candidate,
+            project,
+            rest_client,
+            personal_access_token=personal_access_token,
+        )
+    else:
+        resolution = resolve_work_item_candidate(
+            candidate,
+            project,
+            rest_client,
+            personal_access_token=personal_access_token,
+        )
+        work_item_id = coordinate_non_root_relationship_lifecycle(
+            parent_work_item_id,
+            candidate,
+            resolution,
+            rest_client,
+            personal_access_token=personal_access_token,
+        )
+
+    for child in sorted(item.children, key=lambda child: child.source_order):
+        _coordinate_semantic_subtree(
+            child,
+            candidates,
+            project,
+            rest_client,
+            personal_access_token=personal_access_token,
+            parent_work_item_id=work_item_id,
+        )
