@@ -6,7 +6,7 @@
 
 **Version:** 1.18
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-30
 
@@ -41,7 +41,7 @@
 | 1.15 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented full preflight coordinator status and the deferred traversal/composition slice. |
 | 1.16 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal while retaining final Generator entry composition before Review Gate 2. |
 | 1.17 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized complete Generator Orchestration implementation status before Review Gate 2. |
-| 1.18 | 2026-08-30 | Draft | Jack Spaetjens | Recorded Generator Orchestration Review Gate 2 PASS with no required remediation. |
+| 1.18 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Generator Orchestration Review Gate 2 PASS with no required remediation. |
 
 ---
 

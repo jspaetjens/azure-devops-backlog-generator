@@ -6,7 +6,7 @@
 
 **Version:** 2.23
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-30
 
@@ -56,7 +56,7 @@
 | 2.20 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Corrected stale Full Preflight Coordinator implementation-status wording while preserving deferred hierarchy traversal. |
 | 2.21 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal status while retaining final Generator entry composition before Review Gate 2. |
 | 2.22 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented final Generator-owned preflight-to-traversal orchestration status. |
-| 2.23 | 2026-08-30 | Draft | Jack Spaetjens | Recorded Review Gate 2 PASS with zero findings and no required remediation. |
+| 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 2 PASS with zero findings and no required remediation. |
 
 ---
 
