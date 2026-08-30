@@ -6,7 +6,7 @@
 
 **Version:** 1.17
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-30
 
@@ -40,7 +40,7 @@
 | 1.14 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Recorded approval of the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
 | 1.15 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented full preflight coordinator status and the deferred traversal/composition slice. |
 | 1.16 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal while retaining final Generator entry composition before Review Gate 2. |
-| 1.17 | 2026-08-30 | Draft | Jack Spaetjens | Synchronized complete Generator Orchestration implementation status before Review Gate 2. |
+| 1.17 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized complete Generator Orchestration implementation status before Review Gate 2. |
 
 ---
 
