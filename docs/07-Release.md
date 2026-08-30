@@ -4,11 +4,11 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.13
+**Version:** 1.14
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-29
+**Last Updated:** 2026-08-30
 
 **Target Release:** v1.0.0
 
@@ -37,6 +37,7 @@
 | 1.11 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Updated current pre-release implementation status through complete non-root Parent-Child Relationship lifecycle coordination. |
 | 1.12 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 | 1.13 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented full preflight coordination status while retaining incomplete release readiness. |
+| 1.14 | 2026-08-30 | Draft | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal while retaining final Generator entry composition before Review Gate 2. |
 
 ---
 
@@ -115,19 +116,17 @@ Version 1.0 has not been approved or published and remains pre-release. The proj
 implementation: its configuration, documentation-processing, source-identity, REST foundation,
 compatibility, candidate, JSON Patch, validation-only Create, WIQL identity lookup, Work Item GET
 evidence retrieval, existing/new Work Item resolution, Persistent Work Item Create REST transport,
-complete non-root Parent-Child Relationship lifecycle coordination and root existing/new Work Item
-lifecycle coordination are complete. The root coordinator resolves once, creates only when NEW and
-returns the eligible root ID; it performs no relationship work or revision retention. For non-root NEW
-resolution, the merged lifecycle performs Create once, immediately PATCHes the parent relationship
-using the Create revision, and makes the child eligible only after PATCH success. For REUSED
-resolution, it performs fresh relationship-state GET, one classification and the existing gate's
-CORRECT, MISSING and CONFLICTING handling; eligibility occurs only after successful gate completion.
-Failures propagate fail-fast, without retry, reread, rollback or deletion compensation. Rerun safety
-relies on source identity and fresh reused-child relationship inspection. Full preflight coordination is
-implemented: it validates source identities, constructs every candidate, retrieves project and metadata
-evidence, evaluates compatibility and validates every exact candidate without persistence, then returns
-at the mutation barrier. Complete hierarchy traversal, Generator Orchestration composition,
-application/CLI/logging/process-exit lifecycle, integration/end-to-end validation and final release-readiness work remain incomplete. The release
+complete non-root Parent-Child Relationship lifecycle coordination, root existing/new Work Item
+lifecycle coordination and deterministic hierarchy traversal are complete. Full preflight validates
+every exact candidate and returns at the mutation barrier; traversal then reuses the retained candidates,
+processes documents and hierarchy items in deterministic parent-before-child order, and composes root
+and non-root lifecycle operations with global fail-fast across roots and documents. Rerun safety relies
+on source identity and fresh reused-child relationship inspection, including MISSING recovery and
+CORRECT or CONFLICTING handling. Deterministic hierarchy traversal is complete, but final
+Generator-owned preflight-to-traversal entry composition and malformed-response, HTTP `401` and HTTP
+`403` full-orchestration evidence remain pending. Review Gate 2 has not yet been performed and is not
+yet ready. Application/CLI/logging/process-exit lifecycle, integration/end-to-end validation,
+operational readiness and final release-readiness work remain incomplete. The release
 criteria in this document remain unchanged.
 
 ---
