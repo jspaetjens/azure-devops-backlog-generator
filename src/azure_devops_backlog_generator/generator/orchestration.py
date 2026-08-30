@@ -93,6 +93,25 @@ def coordinate_full_preflight(
     )
 
 
+def coordinate_generator_orchestration(
+    hierarchy: DocumentationHierarchy,
+    rest_client: AzureDevOpsRestClient,
+    *,
+    personal_access_token: str,
+) -> None:
+    """Run complete Generator preflight before deterministic persistence traversal."""
+    preflight_state = coordinate_full_preflight(
+        hierarchy,
+        rest_client,
+        personal_access_token=personal_access_token,
+    )
+    coordinate_deterministic_hierarchy_traversal(
+        preflight_state,
+        rest_client,
+        personal_access_token=personal_access_token,
+    )
+
+
 def _required_global_field_references() -> tuple[str, ...]:
     """Return the compatibility evaluator's unique field references in fixed order."""
     return tuple(

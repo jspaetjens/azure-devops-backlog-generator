@@ -7,6 +7,7 @@ import pytest
 from azure_devops_backlog_generator.azure_devops.exceptions import (
     AzureDevOpsCompatibilityError,
     AzureDevOpsHttpError,
+    AzureDevOpsResponseError,
     AzureDevOpsTransportError,
 )
 from azure_devops_backlog_generator.azure_devops.models import (
@@ -30,6 +31,7 @@ from azure_devops_backlog_generator.generator.orchestration import (
     PreflightState,
     coordinate_deterministic_hierarchy_traversal,
     coordinate_full_preflight,
+    coordinate_generator_orchestration,
     coordinate_root_work_item_lifecycle,
 )
 from azure_devops_backlog_generator.generator.relationships import (
@@ -528,26 +530,180 @@ def test_validation_failure_stops_after_the_failing_candidate_without_retry() ->
     assert rest_client.events[-2:] == ["validate:Epic", "validate:Feature"]
 
 
+def test_generator_entry_coordinator_sequences_exact_preflight_state_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    hierarchy = DocumentationHierarchy(documents=())
+    rest_client = object()
+    preflight_state = PreflightState(hierarchy, _project(), ())
+    calls: list[str] = []
+    preflight_calls: list[tuple[DocumentationHierarchy, object, str]] = []
+    traversal_calls: list[tuple[PreflightState, object, str]] = []
+
+    def coordinate_preflight(
+        received_hierarchy: DocumentationHierarchy,
+        received_rest_client: object,
+        *,
+        personal_access_token: str,
+    ) -> PreflightState:
+        calls.append("preflight")
+        preflight_calls.append(
+            (received_hierarchy, received_rest_client, personal_access_token)
+        )
+        return preflight_state
+
+    def coordinate_traversal(
+        received_state: PreflightState,
+        received_rest_client: object,
+        *,
+        personal_access_token: str,
+    ) -> None:
+        calls.append("traversal")
+        traversal_calls.append((received_state, received_rest_client, personal_access_token))
+
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.orchestration.coordinate_full_preflight",
+        coordinate_preflight,
+    )
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.orchestration.coordinate_deterministic_hierarchy_traversal",
+        coordinate_traversal,
+    )
+
+    assert (
+        coordinate_generator_orchestration(
+            hierarchy, rest_client, personal_access_token="secret-pat"  # type: ignore[arg-type]
+        )
+        is None
+    )
+
+    assert calls == ["preflight", "traversal"]
+    assert len(preflight_calls) == 1
+    assert len(traversal_calls) == 1
+    received_hierarchy, preflight_rest_client, preflight_pat = preflight_calls[0]
+    received_state, traversal_rest_client, traversal_pat = traversal_calls[0]
+    assert received_hierarchy is hierarchy
+    assert preflight_rest_client is rest_client
+    assert received_state is preflight_state
+    assert traversal_rest_client is rest_client
+    assert preflight_pat == "secret-pat"
+    assert traversal_pat == "secret-pat"
+
+
+def test_generator_entry_coordinator_propagates_preflight_failure_without_traversal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    failure = AzureDevOpsResponseError("Preflight failed")
+    calls: list[str] = []
+
+    def fail_preflight(*args: object, **kwargs: object) -> PreflightState:
+        calls.append("preflight")
+        raise failure
+
+    def fail_traversal(*args: object, **kwargs: object) -> None:
+        calls.append("traversal")
+        raise AssertionError("Traversal must not begin after preflight failure.")
+
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.orchestration.coordinate_full_preflight",
+        fail_preflight,
+    )
+    monkeypatch.setattr(
+        "azure_devops_backlog_generator.generator.orchestration.coordinate_deterministic_hierarchy_traversal",
+        fail_traversal,
+    )
+
+    with pytest.raises(AzureDevOpsResponseError) as raised:
+        coordinate_generator_orchestration(
+            DocumentationHierarchy(documents=()),
+            object(),  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    assert raised.value is failure
+    assert calls == ["preflight"]
+
+
+def test_real_generator_orchestration_crosses_mutation_barrier_before_traversal() -> None:
+    hierarchy = _complete_preflight_hierarchy()
+    rest_client = _TraversalRestClient(
+        preflight_enabled=True,
+        expected_validation_count=5,
+        expected_personal_access_token="secret-pat",
+    )
+
+    assert (
+        coordinate_generator_orchestration(
+            hierarchy, rest_client, personal_access_token="secret-pat"  # type: ignore[arg-type]
+        )
+        is None
+    )
+
+    assert [candidate.title for candidate in rest_client.validated_candidates] == [
+        "Epic",
+        "Feature",
+        "PBI",
+        "Task",
+        "Second Epic",
+    ]
+    event_after_final_validation = (
+        rest_client.events[rest_client.events.index("validate:Second Epic") + 1]
+    )
+    assert event_after_final_validation == "resolve:Epic"
+    assert rest_client.events[-2:] == ["resolve:Second Epic", "create:Second Epic"]
+    assert rest_client.credential_check_count == len(rest_client.events)
+
+
+def test_real_generator_orchestration_preflight_failure_preserves_mutation_barrier() -> None:
+    failure = AzureDevOpsTransportError("Validation failed")
+    rest_client = _PreflightRestClient(validation_error=failure)
+
+    with pytest.raises(AzureDevOpsTransportError) as raised:
+        coordinate_generator_orchestration(
+            _complete_preflight_hierarchy(),
+            rest_client,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    assert raised.value is failure
+    assert rest_client.events[-1] == "validate:Feature"
+    assert not any(
+        event.startswith(prefix)
+        for event in rest_client.events
+        for prefix in ("resolve:", "get:", "create:", "relationship-get:", "patch:")
+    )
+
+
 class _TraversalRestClient:
     """Observable REST boundary for deterministic traversal composition."""
 
     def __init__(
         self,
         *,
+        preflight_enabled: bool = False,
+        expected_validation_count: int | None = None,
+        expected_personal_access_token: str | None = None,
         existing_titles: set[str] | None = None,
         relationship_parent_ids: dict[str, tuple[int, ...]] | None = None,
         relationship_state_error_title: str | None = None,
         resolution_error_title: str | None = None,
+        resolution_error: Exception | None = None,
         create_error_title: str | None = None,
         patch_error_title: str | None = None,
     ) -> None:
+        self.preflight_enabled = preflight_enabled
+        self.expected_validation_count = expected_validation_count
+        self.expected_personal_access_token = expected_personal_access_token
+        self.credential_check_count = 0
         self.existing_titles = existing_titles or set()
         self.relationship_parent_ids = relationship_parent_ids or {}
         self.relationship_state_error_title = relationship_state_error_title
         self.resolution_error_title = resolution_error_title
+        self.resolution_error = resolution_error
         self.create_error_title = create_error_title
         self.patch_error_title = patch_error_title
         self.events: list[str] = []
+        self.validated_candidates: list[WorkItemCandidate] = []
         self.lookup_candidates: list[WorkItemCandidate] = []
         self.create_candidates: list[WorkItemCandidate] = []
         self._work_items: dict[int, AzureDevOpsWorkItem] = {}
@@ -558,9 +714,18 @@ class _TraversalRestClient:
     def lookup_work_item_ids(
         self, candidate: WorkItemCandidate, *, personal_access_token: str
     ) -> tuple[int, ...]:
+        self._assert_credential(personal_access_token)
+        if (
+            self.preflight_enabled
+            and self.expected_validation_count is not None
+            and len(self.validated_candidates) != self.expected_validation_count
+        ):
+            raise AssertionError("Persistence began before complete preflight validation.")
         self.events.append(f"resolve:{candidate.title}")
         self.lookup_candidates.append(candidate)
         if candidate.title == self.resolution_error_title:
+            if self.resolution_error is not None:
+                raise self.resolution_error
             raise AzureDevOpsTransportError("Resolution failed")
         if candidate.title not in self.existing_titles:
             return ()
@@ -569,12 +734,14 @@ class _TraversalRestClient:
     def retrieve_work_item(
         self, work_item_id: int, *, personal_access_token: str
     ) -> AzureDevOpsWorkItem:
+        self._assert_credential(personal_access_token)
         self.events.append(f"get:{work_item_id}")
         return self._work_items[work_item_id]
 
     def create_work_item(
         self, candidate: WorkItemCandidate, *, personal_access_token: str
     ) -> AzureDevOpsWorkItem:
+        self._assert_credential(personal_access_token)
         self.events.append(f"create:{candidate.title}")
         self.create_candidates.append(candidate)
         if candidate.title == self.create_error_title:
@@ -584,6 +751,7 @@ class _TraversalRestClient:
     def retrieve_work_item_relationship_state(
         self, child_work_item_id: int, *, personal_access_token: str
     ) -> AzureDevOpsWorkItemRelationshipState:
+        self._assert_credential(personal_access_token)
         work_item = self._work_items[child_work_item_id]
         self.events.append(f"relationship-get:{work_item.work_item_type}")
         if self._titles_by_id[child_work_item_id] == self.relationship_state_error_title:
@@ -601,25 +769,76 @@ class _TraversalRestClient:
         *,
         personal_access_token: str,
     ) -> None:
+        self._assert_credential(personal_access_token)
         child_title = self._titles_by_id[child_work_item_id]
         self.events.append(f"patch:{child_title}")
         if child_title == self.patch_error_title:
             raise AzureDevOpsTransportError("Relationship PATCH failed")
 
-    def retrieve_project(self, *args: object, **kwargs: object) -> None:
-        raise AssertionError("Traversal must not retrieve the project.")
+    def retrieve_project(self, *, personal_access_token: str) -> AzureDevOpsProject:
+        self._assert_credential(personal_access_token)
+        if not self.preflight_enabled:
+            raise AssertionError("Traversal must not retrieve the project.")
+        self.events.append("project")
+        return _project()
 
-    def retrieve_work_item_type(self, *args: object, **kwargs: object) -> None:
-        raise AssertionError("Traversal must not retrieve metadata.")
+    def retrieve_work_item_type(
+        self, work_item_type: WorkItemType, *, personal_access_token: str
+    ) -> dict[str, object]:
+        self._assert_credential(personal_access_token)
+        if not self.preflight_enabled:
+            raise AssertionError("Traversal must not retrieve metadata.")
+        self.events.append(f"type:{work_item_type.value}")
+        return {"evidence": True}
 
-    def retrieve_work_item_type_field(self, *args: object, **kwargs: object) -> None:
-        raise AssertionError("Traversal must not retrieve metadata.")
+    def retrieve_work_item_type_field(
+        self,
+        work_item_type: WorkItemType,
+        field_reference: str,
+        *,
+        personal_access_token: str,
+    ) -> dict[str, object]:
+        self._assert_credential(personal_access_token)
+        if not self.preflight_enabled:
+            raise AssertionError("Traversal must not retrieve metadata.")
+        self.events.append(f"type-field:{work_item_type.value}:{field_reference}")
+        evidence: dict[str, object] = {"referenceName": field_reference}
+        if field_reference == "Custom.BacklogGeneratorSourceIdentity":
+            evidence.update({"defaultValue": None, "alwaysRequired": False})
+        return evidence
 
-    def retrieve_field(self, *args: object, **kwargs: object) -> None:
-        raise AssertionError("Traversal must not retrieve metadata.")
+    def retrieve_field(
+        self, field_reference: str, *, personal_access_token: str
+    ) -> dict[str, object]:
+        self._assert_credential(personal_access_token)
+        if not self.preflight_enabled:
+            raise AssertionError("Traversal must not retrieve metadata.")
+        self.events.append(f"field:{field_reference}")
+        evidence: dict[str, object] = {"referenceName": field_reference}
+        if field_reference == "Custom.BacklogGeneratorSourceIdentity":
+            evidence.update(
+                {
+                    "name": "Backlog Generator Source Identity",
+                    "type": "String",
+                    "readOnly": False,
+                }
+            )
+        return evidence
 
-    def validate_work_item_create(self, *args: object, **kwargs: object) -> None:
-        raise AssertionError("Traversal must not validate Work Item Create.")
+    def validate_work_item_create(
+        self, candidate: WorkItemCandidate, *, personal_access_token: str
+    ) -> None:
+        self._assert_credential(personal_access_token)
+        if not self.preflight_enabled:
+            raise AssertionError("Traversal must not validate Work Item Create.")
+        self.events.append(f"validate:{candidate.title}")
+        self.validated_candidates.append(candidate)
+
+    def _assert_credential(self, personal_access_token: str) -> None:
+        if self.expected_personal_access_token is not None:
+            self.credential_check_count += 1
+            if personal_access_token != self.expected_personal_access_token:
+                raise AssertionError("Unexpected credential supplied.")
 
     def _ensure_work_item(self, candidate: WorkItemCandidate) -> AzureDevOpsWorkItem:
         work_item_id = self._ids_by_identity.get(candidate.source_identity)
@@ -656,6 +875,100 @@ def _source_order_subtree(item: SemanticWorkItem) -> tuple[SemanticWorkItem, ...
         for child in sorted(item.children, key=lambda child: child.source_order)
         for descendant in _source_order_subtree(child)
     )
+
+
+def _failure_stop_hierarchy() -> DocumentationHierarchy:
+    later_descendant = _preflight_item(
+        WorkItemType.PRODUCT_BACKLOG_ITEM,
+        "Later Descendant",
+        "first.md",
+        (
+            HeadingIdentity(1, "Root A"),
+            HeadingIdentity(2, "Failing Feature"),
+            HeadingIdentity(3, "Later Descendant"),
+        ),
+        2,
+    )
+    failing_feature = _preflight_item(
+        WorkItemType.FEATURE,
+        "Failing Feature",
+        "first.md",
+        (HeadingIdentity(1, "Root A"), HeadingIdentity(2, "Failing Feature")),
+        1,
+        children=(later_descendant,),
+    )
+    later_sibling = _preflight_item(
+        WorkItemType.FEATURE,
+        "Later Sibling",
+        "first.md",
+        (HeadingIdentity(1, "Root A"), HeadingIdentity(2, "Later Sibling")),
+        3,
+    )
+    root_a = _preflight_item(
+        WorkItemType.EPIC,
+        "Root A",
+        "first.md",
+        (HeadingIdentity(1, "Root A"),),
+        0,
+        children=(failing_feature, later_sibling),
+    )
+    root_b = _preflight_item(
+        WorkItemType.EPIC,
+        "Later Root",
+        "first.md",
+        (HeadingIdentity(1, "Later Root"),),
+        4,
+    )
+    root_c = _preflight_item(
+        WorkItemType.EPIC,
+        "Later Document Root",
+        "second.md",
+        (HeadingIdentity(1, "Later Document Root"),),
+        0,
+    )
+    return _preflight_hierarchy(
+        _document("first.md", root_a, root_b),
+        _document("second.md", root_c),
+    )
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected_type"),
+    [
+        (AzureDevOpsResponseError("Malformed response"), AzureDevOpsResponseError),
+        (AzureDevOpsHttpError(401), AzureDevOpsHttpError),
+        (AzureDevOpsHttpError(403), AzureDevOpsHttpError),
+    ],
+    ids=("malformed-response", "http-401", "http-403"),
+)
+def test_real_generator_orchestration_stops_all_later_work_after_persistence_failure(
+    failure: Exception,
+    expected_type: type[Exception],
+) -> None:
+    rest_client = _TraversalRestClient(
+        preflight_enabled=True,
+        expected_validation_count=6,
+        expected_personal_access_token="secret-pat",
+        resolution_error_title="Failing Feature",
+        resolution_error=failure,
+    )
+
+    with pytest.raises(expected_type) as raised:
+        coordinate_generator_orchestration(
+            _failure_stop_hierarchy(),
+            rest_client,  # type: ignore[arg-type]
+            personal_access_token="secret-pat",
+        )
+
+    assert raised.value is failure
+    assert rest_client.events[-1] == "resolve:Failing Feature"
+    assert rest_client.events.count("resolve:Failing Feature") == 1
+    assert rest_client.credential_check_count == len(rest_client.events)
+    assert "resolve:Later Descendant" not in rest_client.events
+    assert "resolve:Later Sibling" not in rest_client.events
+    assert "resolve:Later Root" not in rest_client.events
+    assert "resolve:Later Document Root" not in rest_client.events
+    assert "secret-pat" not in rest_client.events
 
 
 def test_rejects_malformed_preflight_state_before_persistent_operations() -> None:
