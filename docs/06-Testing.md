@@ -6,7 +6,7 @@
 
 **Version:** 2.11
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-30
 
@@ -44,7 +44,7 @@
 | 2.8 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle composition coverage. |
 | 2.9 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Approved future Generator Orchestration test obligations for preflight, global fail-fast and composition ownership. |
 | 2.10 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented full preflight coordinator coverage and latest validation metrics. |
-| 2.11 | 2026-08-30 | Draft | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition coverage and validation metrics. |
+| 2.11 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition coverage and validation metrics. |
 
 ---
 
