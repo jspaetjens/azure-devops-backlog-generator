@@ -6,7 +6,7 @@
 
 **Version:** 2.23
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-30
 
@@ -56,7 +56,7 @@
 | 2.20 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Approved the Version 1.0 Generator Orchestration preflight, global fail-fast and composition-ownership contract. |
 | 2.21 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented every-candidate preflight validation-only coordination status. |
 | 2.22 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition status. |
-| 2.23 | 2026-08-30 | Draft | Jack Spaetjens | Synchronized implemented Generator-owned orchestration status without REST contract changes. |
+| 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented Generator-owned orchestration status without REST contract changes. |
 
 ---
 

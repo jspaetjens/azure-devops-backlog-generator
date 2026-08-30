@@ -6,7 +6,7 @@
 
 **Version:** 1.15
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-30
 
@@ -38,7 +38,7 @@
 | 1.12 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented root existing/new Work Item lifecycle coordination status. |
 | 1.13 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented full preflight coordination status while retaining incomplete release readiness. |
 | 1.14 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal while retaining final Generator entry composition before Review Gate 2. |
-| 1.15 | 2026-08-30 | Draft | Jack Spaetjens | Synchronized complete Generator Orchestration implementation and coverage status. |
+| 1.15 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized complete Generator Orchestration implementation and coverage status. |
 
 ---
 
