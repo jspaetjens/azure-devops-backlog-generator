@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.11
+**Version:** 2.12
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-30
 
@@ -45,6 +45,7 @@
 | 2.9 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Approved future Generator Orchestration test obligations for preflight, global fail-fast and composition ownership. |
 | 2.10 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented full preflight coordinator coverage and latest validation metrics. |
 | 2.11 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition coverage and validation metrics. |
+| 2.12 | 2026-08-30 | Draft | Jack Spaetjens | Synchronized complete Generator Orchestration composition coverage and validation metrics. |
 
 ---
 
@@ -298,7 +299,7 @@ Authorization and least-privilege validation shall additionally cover:
 - preservation of `403` as a controlled authorization failure, distinct from `401` authentication rejection;
 - no automatic retry, alternate credential or privilege-escalation attempt after `403`;
 - continued exclusion of PATs and Authorization headers from authorization-failure diagnostics; and
-- future generator/application orchestration coverage confirming that no later mutation occurs after an authorization failure.
+- full Generator Orchestration coverage confirming that no later mutation occurs after an authorization failure; application/run integration coverage remains deferred.
 
 Scrum Compatibility validation shall additionally cover:
 
@@ -313,7 +314,7 @@ Scrum Compatibility validation shall additionally cover:
 - no automatic retry, no persistent work-item creation and secret-safe diagnostics throughout compatibility validation; and
 - Tags presence and absence, Acceptance Criteria presence and absence, Task's mandatory Acceptance Criteria omission, and equal-shaped candidates with differing values, each receiving separate validation-only evidence.
 
-Implemented full-preflight coordinator coverage proves complete preflight sequencing; immutable returned `PreflightState`; deterministic candidate order across multiple roots and documents; separate validation of same-type candidates and optional-value differences; source-identity failure before REST; project, metadata and compatibility failure propagation; mid-sequence validation-only failure without retry; and zero WIQL, existing-item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH operations before or after the barrier within that slice. Implemented traversal-composition coverage proves malformed candidate-count and source-identity association failure before persistence; exact candidate-object reuse without reconstruction; NEW and REUSED roots; deterministic Epic → Feature → Product Backlog Item → Task, multiple-root and multiple-document traversal; parent eligibility; REUSED CORRECT, MISSING recovery and CONFLICTING stop; deep, root, non-root-resolution, relationship-state GET and relationship PATCH failure stops; empty hierarchy and zero-root document handling; two-run recovery without duplicate child Create; and no repeated preflight operations. The focused orchestration suite recorded 27 passed. The full suite recorded 673 passed, 0 failed, 0 skipped, 0 warnings, 0 xfail, 0 xpass, 95% coverage, 1,278 statements and 64 missed statements; Ruff was green. Before Review Gate 2, Generator Orchestration coverage still requires a final Generator-owned entry coordinator proving `DocumentationHierarchy` → full preflight → successful mutation barrier → traversal, including preflight failure preventing traversal and successful preflight beginning traversal exactly once. It also requires representative full-orchestration/global-stop coverage for malformed Azure DevOps responses and HTTP `401` and `403`, distinct from existing lower-level REST tests. Review Gate 2 is not ready until these obligations are implemented and green.
+Implemented full-preflight coordinator coverage proves complete preflight sequencing; immutable returned `PreflightState`; deterministic candidate order across multiple roots and documents; separate validation of same-type candidates and optional-value differences; source-identity failure before REST; project, metadata and compatibility failure propagation; mid-sequence validation-only failure without retry; and zero WIQL, existing-item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH operations before or after the barrier within that slice. Implemented traversal-composition coverage proves malformed candidate-count and source-identity association failure before persistence; exact candidate-object reuse without reconstruction; NEW and REUSED roots; deterministic Epic → Feature → Product Backlog Item → Task, multiple-root and multiple-document traversal; parent eligibility; REUSED CORRECT, MISSING recovery and CONFLICTING stop; deep, root, non-root-resolution, relationship-state GET and relationship PATCH failure stops; empty hierarchy and zero-root document handling; two-run recovery without duplicate child Create; and no repeated preflight operations. Final Generator-entry wiring coverage proves the exact hierarchy, returned `PreflightState` and REST-client identities; preflight and traversal exactly once; their successful mutation-barrier ordering; exact PAT preservation; and `None` return. Full Generator composition proves preflight failure prevents persistence and that malformed Azure DevOps responses and HTTP `401` and `403` propagate exactly once without retry, alternate credentials or PAT event leakage, while genuinely stopping all later descendants, siblings, roots, documents and persistence operations. Lower-level REST tests remain responsible for response parsing; Generator tests prove full-composition propagation and global stop. The focused orchestration suite recorded 34 passed. The full suite recorded 680 passed, 0 failed, 0 skipped, 0 warnings, 0 xfail, 0 xpass, 95% coverage, 1,281 statements and 64 missed statements; Ruff was green. Generator Orchestration required pre-Review-Gate-2 coverage is complete. Review Gate 2 is next and has not been performed.
 
 Work Item Create Payload validation shall additionally cover:
 
@@ -414,7 +415,7 @@ Existing Relationship State and Recovery validation shall additionally cover:
 - absence of remove, replace, move, relation-index, ordinary field-update and identity-update operations and absence of WIQL changes; and
 - secret-safe diagnostics containing no PAT, Authorization header, unnecessary full response body or relation URL when the numeric target ID suffices.
 
-Focused root existing/new Work Item lifecycle composition coverage is implemented. It verifies that NEW uses the real resolution path, performs one persistent Create and returns only its ID without relationship work; REUSED uses the real lookup and existing-evidence path, performs no Create and returns the existing ID without relationship work; resolution failure propagates unchanged without Create or relationship work; and Create failure propagates unchanged after one attempt without retry or relationship work. Full hierarchy traversal, parent-before-child, descendant-blocking, run-failure and full-hierarchy rerun composition coverage are implemented through Generator Orchestration.
+Focused root existing/new Work Item lifecycle composition coverage is implemented. It verifies that NEW uses the real resolution path, performs one persistent Create and returns only its ID without relationship work; REUSED uses the real lookup and existing-evidence path, performs no Create and returns the existing ID without relationship work; resolution failure propagates unchanged without Create or relationship work; and Create failure propagates unchanged after one attempt without retry or relationship work. Complete Generator Orchestration coverage is implemented through its final entry coordinator, full preflight, deterministic hierarchy traversal, parent-before-child, descendant-blocking, run-failure and full-hierarchy rerun composition.
 
 Testing shall confirm that source processing order does not imply Azure DevOps rank, priority, state, iteration or business priority.
 
