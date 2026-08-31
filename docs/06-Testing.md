@@ -6,7 +6,7 @@
 
 **Version:** 2.14
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-31
 
@@ -47,7 +47,7 @@
 | 2.11 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition coverage and validation metrics. |
 | 2.12 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized complete Generator Orchestration composition coverage and validation metrics. |
 | 2.13 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 2 PASS validation evidence with zero findings and no required remediation. |
-| 2.14 | 2026-08-31 | Draft | Jack Spaetjens | Defined mandatory Application/Run Slice 1 composition coverage. |
+| 2.14 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 1 composition coverage. |
 
 ---
 
