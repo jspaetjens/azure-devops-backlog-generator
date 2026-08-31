@@ -6,7 +6,7 @@
 
 **Version:** 1.18
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-31
 
@@ -41,7 +41,7 @@
 | 1.15 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized complete Generator Orchestration implementation and coverage status. |
 | 1.16 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Generator Orchestration Review Gate 2 PASS with no required remediation. |
 | 1.17 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining incomplete release readiness. |
-| 1.18 | 2026-08-31 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete release readiness. |
+| 1.18 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete release readiness. |
 
 ---
 

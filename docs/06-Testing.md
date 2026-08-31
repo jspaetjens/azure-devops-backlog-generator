@@ -6,7 +6,7 @@
 
 **Version:** 2.17
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-31
 
@@ -50,7 +50,7 @@
 | 2.14 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 1 composition coverage. |
 | 2.15 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 composition coverage and validation evidence. |
 | 2.16 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 2 configuration-bootstrap composition coverage. |
-| 2.17 | 2026-08-31 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 composition coverage and validation evidence. |
+| 2.17 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 composition coverage and validation evidence. |
 
 ---
 

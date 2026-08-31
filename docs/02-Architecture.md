@@ -6,7 +6,7 @@
 
 **Version:** 2.27
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-31
 
@@ -60,7 +60,7 @@
 | 2.24 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 1 composition contract. |
 | 2.25 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining incomplete wider application/run responsibilities. |
 | 2.26 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 2 configuration-bootstrap contract. |
-| 2.27 | 2026-08-31 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete wider application/run responsibilities. |
+| 2.27 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete wider application/run responsibilities. |
 
 ---
 
