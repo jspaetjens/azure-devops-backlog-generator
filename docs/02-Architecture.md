@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.26
+**Version:** 2.27
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-31
 
@@ -60,6 +60,7 @@
 | 2.24 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 1 composition contract. |
 | 2.25 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining incomplete wider application/run responsibilities. |
 | 2.26 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 2 configuration-bootstrap contract. |
+| 2.27 | 2026-08-31 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete wider application/run responsibilities. |
 
 ---
 
@@ -233,14 +234,14 @@ layers; the callable `None` return does not replace the eventual process exit-st
 
 ### 7.1.2 Application/Run Slice 2
 
-Application/Run Slice 2 is the approved next callable configuration-bootstrap composition layer. It shall
-expose exactly, using `Sequence` from `collections.abc`:
+Application/Run Slice 2 is an implemented callable configuration-bootstrap composition layer. It exposes
+exactly, using `Sequence` from `collections.abc`:
 
 ```python
 coordinate_application_bootstrap(arguments: Sequence[str]) -> None
 ```
 
-It shall perform the following operations exactly once and in order:
+It performs the following operations exactly once and in order:
 
 1. Call `load_configuration_from_cli(arguments)` with the supplied `arguments` unchanged.
 2. Receive the exact returned validated `Configuration`.
@@ -250,21 +251,21 @@ It shall perform the following operations exactly once and in order:
 `load_configuration_from_cli` remains responsible for configuration-file selection, including the existing
 `--config-file PATH` and `--config-file=PATH` forms and default selection; argument validation; TOML loading;
 configuration validation; source-directory resolution; configured logging-directory validation or creation;
-runtime `AZDO_PAT` acquisition and validation; and `Configuration` construction. Slice 2 shall not parse CLI
+runtime `AZDO_PAT` acquisition and validation; and `Configuration` construction. Slice 2 does not parse CLI
 options, read the environment, call `validate_configuration` separately, or otherwise duplicate those
 responsibilities.
 
-The exact returned `Configuration` shall be passed unchanged into Slice 1. Slice 2 shall perform no direct
-PAT handling, including reading, normalising, copying, logging or reporting `AZDO_PAT`. It shall not construct
-or invoke the Documentation Processor, REST Client or Generator, and shall not directly coordinate Generator
+The exact returned `Configuration` is passed unchanged into Slice 1. Slice 2 performs no direct
+PAT handling, including reading, normalising, copying, logging or reporting `AZDO_PAT`. It does not construct
+or invoke the Documentation Processor, REST Client or Generator, and does not directly coordinate Generator
 preflight, the mutation barrier, traversal, resolution, lifecycle, persistence or relationship handling.
 
 Controlled and uncontrolled failures from configuration selection, loading, validation, PAT validation and
-Slice 1 shall propagate unchanged. A configuration failure shall prevent Slice-1 invocation. A Slice-1 failure
-shall cause no retry, fallback, second invocation or later work. Slice 2 shall not log, print, report, translate
+Slice 1 propagate unchanged. A configuration failure prevents Slice-1 invocation. A Slice-1 failure
+causes no retry, fallback, second invocation or later work. Slice 2 does not log, print, report, translate
 or map failures to process exit status.
 
-Slice 2 is configuration-file selection/bootstrap support, not the completed application CLI. It shall not
+Slice 2 is configuration-file selection/bootstrap support, not the completed application CLI. It does not
 implement `main()`, `__main__.py`, console-script registration, help, version output, new CLI options,
 logging/reporting, user-facing error formatting or process-exit mapping. A future process/CLI wrapper remains
 the separate executable application boundary. The callable `None` return does not replace the approved future

@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.21
+**Version:** 1.22
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-31
 
@@ -45,6 +45,7 @@
 | 1.19 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 1 implementation sequence. |
 | 1.20 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining subsequent application/run, readiness and review work. |
 | 1.21 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 2 configuration-bootstrap contract. |
+| 1.22 | 2026-08-31 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining subsequent application/run, readiness and review work. |
 
 ---
 
@@ -130,14 +131,15 @@ compatibility evaluation; Work Item Candidate construction; Work Item Create JSO
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
 GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; successful eligibility return only after the relationship state is safe; and root existing/new Work Item lifecycle coordination, in which NEW creates once and REUSED returns the validated existing ID without relationship work.
 
-The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/Run Slice 1 is implemented. Application/Run Slice 2 is approved for implementation; real process/CLI entrypoint, logging/reporting and process-exit work remain later. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
+The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/Run Slices 1 and 2 are implemented; real process/CLI entrypoint, logging/reporting and process-exit work remain later. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
 
-Application/Run Slice 1 is implemented: an already-validated `Configuration`
-is composed into documentation processing, one REST-client construction and one Generator invocation, with
-`None` returned on success and unchanged exception propagation on failure. It does not implement
+Following the successful implementation merge, Application/Run Slice 2 is implemented; the preceding
+implementation-plan status is superseded. Application/Run Slice 1 is implemented: an already-validated
+`Configuration` is composed into documentation processing, one REST-client construction and one Generator
+invocation, with `None` returned on success and unchanged exception propagation on failure. It does not implement
 configuration bootstrap, CLI integration, logging/reporting or process-exit mapping.
 
-Application/Run Slice 2 is approved for implementation, but is not implemented. It shall compose:
+Application/Run Slice 2 is implemented. It composes:
 
 ```text
 arguments
@@ -147,7 +149,7 @@ arguments
 -> None
 ```
 
-It shall use the existing configuration-file selection/bootstrap capability and pass the exact returned
+It uses the existing configuration-file selection/bootstrap capability and passes the exact returned
 validated `Configuration` into Slice 1. Real process/CLI entrypoint work, logging/reporting and the
 process-exit lifecycle remain later slices, followed by integration/end-to-end validation, Operational
 Readiness, Operational Recovery / DR, Review Gate 3 and final release-readiness work. The wider
