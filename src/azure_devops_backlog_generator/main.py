@@ -1,11 +1,20 @@
 """Application-level composition for a configured backlog-generation run."""
 
+from collections.abc import Sequence
+
 from azure_devops_backlog_generator.azure_devops.rest_client import AzureDevOpsRestClient
+from azure_devops_backlog_generator.config.loader import load_configuration_from_cli
 from azure_devops_backlog_generator.config.models import Configuration
 from azure_devops_backlog_generator.documentation.processor import DocumentationProcessor
 from azure_devops_backlog_generator.generator.orchestration import (
     coordinate_generator_orchestration,
 )
+
+
+def coordinate_application_bootstrap(arguments: Sequence[str]) -> None:
+    """Load configuration and coordinate the configured application run."""
+    configuration = load_configuration_from_cli(arguments)
+    coordinate_application_run(configuration)
 
 
 def coordinate_application_run(configuration: Configuration) -> None:

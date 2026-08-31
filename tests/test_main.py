@@ -1,4 +1,4 @@
-"""Tests for Application/Run Slice-1 composition."""
+"""Tests for Application/Run composition."""
 
 from pathlib import Path
 
@@ -26,6 +26,84 @@ def _configuration(source_directory: Path) -> Configuration:
         logging=LoggingConfig(level="INFO", log_directory=Path("logs")),
         personal_access_token=_SYNTHETIC_PAT,
     )
+
+
+def test_composes_application_bootstrap_with_the_exact_collaborator_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = ["--config-file", "config/config.toml"]
+    configuration = _configuration(Path("documentation-input"))
+    events: list[str] = []
+
+    def load_configuration(arguments_received: object) -> Configuration:
+        assert arguments_received is arguments
+        events.append("loader")
+        return configuration
+
+    def coordinate_run(configuration_received: Configuration) -> None:
+        assert configuration_received is configuration
+        events.append("slice-1")
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", load_configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", coordinate_run)
+
+    assert main_module.coordinate_application_bootstrap(arguments) is None
+    assert events == ["loader", "slice-1"]
+    assert all(_SYNTHETIC_PAT not in event for event in events)
+
+
+def test_propagates_configuration_failure_without_invoking_slice_1(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = ["--config-file", "config/config.toml"]
+    error = _SentinelError()
+    events: list[str] = []
+
+    def load_configuration(arguments_received: object) -> Configuration:
+        assert arguments_received is arguments
+        events.append("loader")
+        raise error
+
+    def unexpected_coordinate_run(*args: object) -> None:
+        events.append("slice-1")
+        raise AssertionError("Slice 1 must not be invoked")
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", load_configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", unexpected_coordinate_run)
+
+    with pytest.raises(_SentinelError) as raised:
+        main_module.coordinate_application_bootstrap(arguments)
+
+    assert raised.value is error
+    assert events == ["loader"]
+
+
+def test_propagates_slice_1_failure_without_retry_or_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = ["--config-file", "config/config.toml"]
+    configuration = _configuration(Path("documentation-input"))
+    error = _SentinelError()
+    events: list[str] = []
+
+    def load_configuration(arguments_received: object) -> Configuration:
+        assert arguments_received is arguments
+        events.append("loader")
+        return configuration
+
+    def coordinate_run(configuration_received: Configuration) -> None:
+        assert configuration_received is configuration
+        events.append("slice-1")
+        raise error
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", load_configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", coordinate_run)
+
+    with pytest.raises(_SentinelError) as raised:
+        main_module.coordinate_application_bootstrap(arguments)
+
+    assert raised.value is error
+    assert events == ["loader", "slice-1"]
 
 
 def test_composes_the_configured_application_run_once(
