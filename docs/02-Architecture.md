@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.25
+**Version:** 2.26
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-31
 
@@ -59,6 +59,7 @@
 | 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 2 PASS with zero findings and no required remediation. |
 | 2.24 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 1 composition contract. |
 | 2.25 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining incomplete wider application/run responsibilities. |
+| 2.26 | 2026-08-31 | Draft | Jack Spaetjens | Defined the approved Application/Run Slice 2 configuration-bootstrap contract. |
 
 ---
 
@@ -77,6 +78,7 @@
 - [7. Core Components](#7-core-components)
   - [7.1 Command-Line Interface](#71-command-line-interface)
     - [7.1.1 Application/Run Slice 1](#711-applicationrun-slice-1)
+    - [7.1.2 Application/Run Slice 2](#712-applicationrun-slice-2)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -226,6 +228,47 @@ Slice 1 does not implement CLI parsing, a `main()` process entry point, `__main_
 registration, logging/reporting, user-facing error formatting or process-exit mapping. Those remain required
 future Version 1.0 responsibilities of the configuration/bootstrap, CLI, logging/reporting and process
 layers; the callable `None` return does not replace the eventual process exit-status contract.
+
+---
+
+### 7.1.2 Application/Run Slice 2
+
+Application/Run Slice 2 is the approved next callable configuration-bootstrap composition layer. It shall
+expose exactly, using `Sequence` from `collections.abc`:
+
+```python
+coordinate_application_bootstrap(arguments: Sequence[str]) -> None
+```
+
+It shall perform the following operations exactly once and in order:
+
+1. Call `load_configuration_from_cli(arguments)` with the supplied `arguments` unchanged.
+2. Receive the exact returned validated `Configuration`.
+3. Call `coordinate_application_run(configuration)` once with that exact object.
+4. Return `None` after successful Slice-1 completion.
+
+`load_configuration_from_cli` remains responsible for configuration-file selection, including the existing
+`--config-file PATH` and `--config-file=PATH` forms and default selection; argument validation; TOML loading;
+configuration validation; source-directory resolution; configured logging-directory validation or creation;
+runtime `AZDO_PAT` acquisition and validation; and `Configuration` construction. Slice 2 shall not parse CLI
+options, read the environment, call `validate_configuration` separately, or otherwise duplicate those
+responsibilities.
+
+The exact returned `Configuration` shall be passed unchanged into Slice 1. Slice 2 shall perform no direct
+PAT handling, including reading, normalising, copying, logging or reporting `AZDO_PAT`. It shall not construct
+or invoke the Documentation Processor, REST Client or Generator, and shall not directly coordinate Generator
+preflight, the mutation barrier, traversal, resolution, lifecycle, persistence or relationship handling.
+
+Controlled and uncontrolled failures from configuration selection, loading, validation, PAT validation and
+Slice 1 shall propagate unchanged. A configuration failure shall prevent Slice-1 invocation. A Slice-1 failure
+shall cause no retry, fallback, second invocation or later work. Slice 2 shall not log, print, report, translate
+or map failures to process exit status.
+
+Slice 2 is configuration-file selection/bootstrap support, not the completed application CLI. It shall not
+implement `main()`, `__main__.py`, console-script registration, help, version output, new CLI options,
+logging/reporting, user-facing error formatting or process-exit mapping. A future process/CLI wrapper remains
+the separate executable application boundary. The callable `None` return does not replace the approved future
+process-level exit-status behaviour.
 
 ---
 

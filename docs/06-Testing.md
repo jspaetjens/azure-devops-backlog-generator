@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.15
+**Version:** 2.16
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-08-31
 
@@ -49,6 +49,7 @@
 | 2.13 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 2 PASS validation evidence with zero findings and no required remediation. |
 | 2.14 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 1 composition coverage. |
 | 2.15 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 composition coverage and validation evidence. |
+| 2.16 | 2026-08-31 | Draft | Jack Spaetjens | Defined mandatory Application/Run Slice 2 configuration-bootstrap composition coverage. |
 
 ---
 
@@ -335,6 +336,23 @@ The focused Slice-1 suite recorded 4 passed. The full suite and `pytest -W error
 with 0 failed, skipped, warnings, xfail or xpass. Ruff passed. Coverage was 95% across 1,289 statements
 with 64 missed statements; `main.py` was 100% covered, and all new Slice-1 production statements were
 covered.
+
+Application/Run Slice 2 composition coverage shall test
+`coordinate_application_bootstrap(arguments: Sequence[str]) -> None` at the configuration/bootstrap
+collaborator boundary. It shall prove that the exact `arguments` object or value is supplied to exactly one
+`load_configuration_from_cli` invocation; the exact returned validated `Configuration` object is passed
+unchanged to exactly one `coordinate_application_run` invocation; and successful completion returns `None`.
+When the loader raises a specific sentinel or controlled exception, the exact same exception shall propagate,
+Slice 1 shall not be invoked and no retry shall occur. When Slice 1 raises a specific sentinel exception, the
+exact returned `Configuration` shall already have been passed to it, the exact same exception shall propagate,
+and there shall be no retry, fallback or second invocation.
+
+The Slice-2 composition tests shall prove that the coordinator does not itself parse CLI options, validate
+configuration, read environment variables, perform document processing, construct a REST client, invoke the
+Generator directly, log or report, or map process exits. Composition-test events and diagnostics shall not
+contain a synthetic PAT value. These tests shall not duplicate configuration-loader parsing or validation tests,
+nor Slice-1 composition tests. Future process-entrypoint tests, including executable CLI, user-facing output
+and process-exit behaviour, remain outside Slice 2.
 
 Work Item Create Payload validation shall additionally cover:
 
