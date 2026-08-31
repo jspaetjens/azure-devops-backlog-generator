@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.13
+**Version:** 2.14
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-30
+**Last Updated:** 2026-08-31
 
 **Target Release:** v1.0.0
 
@@ -47,6 +47,7 @@
 | 2.11 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition coverage and validation metrics. |
 | 2.12 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized complete Generator Orchestration composition coverage and validation metrics. |
 | 2.13 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 2 PASS validation evidence with zero findings and no required remediation. |
+| 2.14 | 2026-08-31 | Draft | Jack Spaetjens | Defined mandatory Application/Run Slice 1 composition coverage. |
 
 ---
 
@@ -316,6 +317,19 @@ Scrum Compatibility validation shall additionally cover:
 - Tags presence and absence, Acceptance Criteria presence and absence, Task's mandatory Acceptance Criteria omission, and equal-shaped candidates with differing values, each receiving separate validation-only evidence.
 
 Implemented full-preflight coordinator coverage proves complete preflight sequencing; immutable returned `PreflightState`; deterministic candidate order across multiple roots and documents; separate validation of same-type candidates and optional-value differences; source-identity failure before REST; project, metadata and compatibility failure propagation; mid-sequence validation-only failure without retry; and zero WIQL, existing-item GET, persistent Create, relationship-state GET or Parent-Child Relationship PATCH operations before or after the barrier within that slice. Implemented traversal-composition coverage proves malformed candidate-count and source-identity association failure before persistence; exact candidate-object reuse without reconstruction; NEW and REUSED roots; deterministic Epic → Feature → Product Backlog Item → Task, multiple-root and multiple-document traversal; parent eligibility; REUSED CORRECT, MISSING recovery and CONFLICTING stop; deep, root, non-root-resolution, relationship-state GET and relationship PATCH failure stops; empty hierarchy and zero-root document handling; two-run recovery without duplicate child Create; and no repeated preflight operations. Final Generator-entry wiring coverage proves the exact hierarchy, returned `PreflightState` and REST-client identities; preflight and traversal exactly once; their successful mutation-barrier ordering; exact PAT preservation; and `None` return. Full Generator composition proves preflight failure prevents persistence and that malformed Azure DevOps responses and HTTP `401` and `403` propagate exactly once without retry, alternate credentials or PAT event leakage, while genuinely stopping all later descendants, siblings, roots, documents and persistence operations. Lower-level REST tests remain responsible for response parsing; Generator tests prove full-composition propagation and global stop. Review Gate 2 completed with PASS: 0 BLOCKER, 0 MAJOR, 0 MINOR and no required remediation. Ruff passed; the focused orchestration suite recorded 34 passed; `pytest -ra` and `pytest -W error` each recorded 680 passed, with 0 failed, skipped, warnings, xfail or xpass. Coverage was 95% across 1,281 statements with 64 missed statements; the missed-statements audit found no material uncovered current Generator-Orchestration branch. All Generator-Orchestration traceability requirements were PROVEN.
+
+Application/Run Slice 1 composition coverage shall use collaborator doubles and shall prove that
+`coordinate_application_run(configuration)` passes the exact configured `source_directory` unchanged to one
+`DocumentationProcessor.process` invocation; constructs exactly one `AzureDevOpsRestClient` with the exact
+configured organisation and project, without passing the PAT to its constructor; and passes the exact
+returned `DocumentationHierarchy`, REST-client instance and original PAT through the Generator keyword
+argument to exactly one `coordinate_generator_orchestration` invocation. It shall prove a `None` return on
+success; unchanged propagation of documentation-processing, REST-client-construction and Generator failures;
+documentation failure prevents REST-client construction and Generator invocation; REST-client-construction
+failure prevents Generator invocation; and Generator failure causes no retry, fallback or second invocation.
+It shall further prove no direct preflight, traversal, lifecycle or persistence call; no CLI parsing,
+logging/reporting or process-exit mapping; and no PAT leakage in test events or diagnostics. These are
+composition tests and shall not duplicate Documentation Processor, REST Client or Generator internal tests.
 
 Work Item Create Payload validation shall additionally cover:
 
