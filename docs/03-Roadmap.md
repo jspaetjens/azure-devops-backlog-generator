@@ -4,11 +4,11 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.18
+**Version:** 1.19
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-30
+**Last Updated:** 2026-08-31
 
 **Target Release:** v1.0.0
 
@@ -42,6 +42,7 @@
 | 1.16 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal while retaining final Generator entry composition before Review Gate 2. |
 | 1.17 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized complete Generator Orchestration implementation status before Review Gate 2. |
 | 1.18 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Generator Orchestration Review Gate 2 PASS with no required remediation. |
+| 1.19 | 2026-08-31 | Draft | Jack Spaetjens | Defined the approved Application/Run Slice 1 implementation sequence. |
 
 ---
 
@@ -128,6 +129,13 @@ construction; validation-only Work Item Create transport; WIQL identity lookup; 
 GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; successful eligibility return only after the relationship state is safe; and root existing/new Work Item lifecycle coordination, in which NEW creates once and REUSED returns the validated existing ID without relationship work.
 
 The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/run integration may now begin; later CLI, logging and process-exit work remains pending according to this roadmap. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
+
+The next approved implementation slice is Application/Run Slice 1: an already-validated `Configuration`
+is composed into documentation processing, one REST-client construction and one Generator invocation, with
+`None` returned on success and unchanged exception propagation on failure. It does not implement
+configuration bootstrap, CLI integration, logging/reporting or process-exit mapping. Those capabilities
+remain later slices, followed by integration/end-to-end validation and Operational Readiness before Review
+Gate 3. Slice 1 is approved for implementation but is not yet implemented.
 
 ---
 

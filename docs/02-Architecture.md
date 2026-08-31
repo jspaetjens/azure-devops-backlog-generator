@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.23
+**Version:** 2.24
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-30
+**Last Updated:** 2026-08-31
 
 **Target Release:** v1.0.0
 
@@ -57,6 +57,7 @@
 | 2.21 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal status while retaining final Generator entry composition before Review Gate 2. |
 | 2.22 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented final Generator-owned preflight-to-traversal orchestration status. |
 | 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 2 PASS with zero findings and no required remediation. |
+| 2.24 | 2026-08-31 | Draft | Jack Spaetjens | Defined the approved Application/Run Slice 1 composition contract. |
 
 ---
 
@@ -74,6 +75,7 @@
 - [6. High-Level Architecture](#6-high-level-architecture)
 - [7. Core Components](#7-core-components)
   - [7.1 Command-Line Interface](#71-command-line-interface)
+    - [7.1.1 Application/Run Slice 1](#711-applicationrun-slice-1)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -184,6 +186,45 @@ Its responsibilities include:
 - Reading command-line parameters.
 - Loading and validating configuration, acquiring the runtime PAT, constructing the REST Client, discovering and processing documentation, invoking the Backlog Generator, logging/reporting and mapping the result to a process exit status.
 - Not independently coordinating structural compatibility, validation-only sequencing, hierarchy lifecycle sequencing or persistence decisions.
+
+---
+
+### 7.1.1 Application/Run Slice 1
+
+Application/Run Slice 1 is a callable composition layer located in `main.py`. It shall expose exactly:
+
+```python
+coordinate_application_run(configuration: Configuration) -> None
+```
+
+It accepts an already-loaded and validated `Configuration`; configuration-file loading, TOML parsing,
+configuration validation, runtime PAT acquisition and CLI argument parsing remain outside this slice.
+The slice shall perform the following operations exactly once and in order:
+
+1. Call `DocumentationProcessor().process(configuration.documentation.source_directory)` with the
+   resolved `Path` unchanged.
+2. Construct `AzureDevOpsRestClient(configuration.azure_devops.organization,
+   configuration.azure_devops.project)`.
+3. Call `coordinate_generator_orchestration` once with the returned
+   `DocumentationHierarchy`, that REST client and
+   `personal_access_token=configuration.personal_access_token`.
+4. Return `None` after successful Generator completion.
+
+The PAT shall not be passed to the REST-client constructor, altered, logged or represented in a result
+object. The slice shall not perform documentation discovery, hierarchy or source-identity logic itself;
+it shall not own REST base-address, API-version, timeout, proxy, redirect, authentication-construction or
+retry policy; and it shall not invoke Generator preflight, traversal, lifecycle, resolution or persistence
+operations directly.
+
+Controlled and uncontrolled collaborator exceptions shall propagate unchanged. On documentation-processing
+failure, the REST client shall not be constructed and the Generator shall not be invoked. On REST-client
+construction failure, the Generator shall not be invoked. On Generator failure, the slice shall not retry,
+fall back, catch and continue, translate the exception or invoke the Generator again.
+
+Slice 1 shall not implement CLI parsing, a `main()` process entry point, `__main__.py`, console-script
+registration, logging/reporting, user-facing error formatting or process-exit mapping. Those remain required
+future Version 1.0 responsibilities of the configuration/bootstrap, CLI, logging/reporting and process
+layers; the callable `None` return does not replace the eventual process exit-status contract.
 
 ---
 
@@ -351,6 +392,10 @@ The application follows the logical execution sequence below.
 This flow permits deterministic recovery when an earlier execution created a child but its immediate relationship PATCH failed: the later execution resolves the parent and child, observes MISSING using a fresh relationship-state GET, repairs the relationship using the fresh revision and continues only after success.
 
 Each stage shall complete successfully before the next stage begins.
+
+Application/Run Slice 1 begins only after configuration loading, validation and PAT validation have
+completed. Its composition sequence is documentation processing, REST-client construction, Generator
+invocation and `None` return. Logging, reporting and process-exit behaviour remain outside this slice.
 
 ---
 
