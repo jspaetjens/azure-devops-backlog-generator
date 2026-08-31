@@ -6,7 +6,7 @@
 
 **Version:** 2.24
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-31
 
@@ -57,7 +57,7 @@
 | 2.21 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal status while retaining final Generator entry composition before Review Gate 2. |
 | 2.22 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented final Generator-owned preflight-to-traversal orchestration status. |
 | 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 2 PASS with zero findings and no required remediation. |
-| 2.24 | 2026-08-31 | Draft | Jack Spaetjens | Defined the approved Application/Run Slice 1 composition contract. |
+| 2.24 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 1 composition contract. |
 
 ---
 
