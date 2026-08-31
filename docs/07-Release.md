@@ -4,11 +4,11 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.16
+**Version:** 1.17
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-30
+**Last Updated:** 2026-08-31
 
 **Target Release:** v1.0.0
 
@@ -40,6 +40,7 @@
 | 1.14 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal while retaining final Generator entry composition before Review Gate 2. |
 | 1.15 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized complete Generator Orchestration implementation and coverage status. |
 | 1.16 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Generator Orchestration Review Gate 2 PASS with no required remediation. |
+| 1.17 | 2026-08-31 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining incomplete release readiness. |
 
 ---
 
@@ -128,10 +129,13 @@ CORRECT or CONFLICTING handling. The final Generator-owned coordinator is implem
 full preflight through the successful mutation barrier into deterministic hierarchy traversal. Generator
 Orchestration implementation and currently approved pre-Review-Gate-2 coverage are complete, including
 malformed-response and HTTP `401`/`403` full-orchestration global-stop evidence. Review Gate 2 completed
-with PASS, zero findings and no required remediation; application/run may now proceed but is not yet
-implemented. Version 1.0 remains pre-release: CLI, logging, process-exit lifecycle, integration/end-to-end
-validation, Operational Readiness, Operational Recovery / DR and final release-readiness work remain
-incomplete. The release criteria in this document remain unchanged.
+with PASS, zero findings and no required remediation. Application/Run Slice 1 is implemented: it composes
+an already-loaded and validated `Configuration` into documentation processing, one REST-client construction
+and one Generator invocation, then returns `None`; collaborator failures propagate unchanged without retry
+or fallback. The wider Application/Run phase is not yet complete. Version 1.0 remains pre-release:
+configuration/bootstrap integration, CLI, logging/reporting, process-exit lifecycle, integration/end-to-end
+validation, Operational Readiness, Operational Recovery / DR, Review Gate 3 and final release-readiness
+work remain incomplete. The release criteria in this document remain unchanged.
 
 ---
 
