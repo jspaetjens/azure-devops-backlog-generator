@@ -6,7 +6,7 @@
 
 **Version:** 1.22
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-08-31
 
@@ -45,7 +45,7 @@
 | 1.19 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 1 implementation sequence. |
 | 1.20 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining subsequent application/run, readiness and review work. |
 | 1.21 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 2 configuration-bootstrap contract. |
-| 1.22 | 2026-08-31 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining subsequent application/run, readiness and review work. |
+| 1.22 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining subsequent application/run, readiness and review work. |
 
 ---
 
