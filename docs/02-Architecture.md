@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.27
+**Version:** 2.28
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-01
 
 **Target Release:** v1.0.0
 
@@ -61,6 +61,7 @@
 | 2.25 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining incomplete wider application/run responsibilities. |
 | 2.26 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 2 configuration-bootstrap contract. |
 | 2.27 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete wider application/run responsibilities. |
+| 2.28 | 2026-09-01 | Draft | Jack Spaetjens | Defined the Application/Run Slice 3 Process Bootstrap Invocation contract. |
 
 ---
 
@@ -80,6 +81,7 @@
   - [7.1 Command-Line Interface](#71-command-line-interface)
     - [7.1.1 Application/Run Slice 1](#711-applicationrun-slice-1)
     - [7.1.2 Application/Run Slice 2](#712-applicationrun-slice-2)
+    - [7.1.3 Application/Run Slice 3 — Process Bootstrap Invocation](#713-applicationrun-slice-3--process-bootstrap-invocation)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -270,6 +272,51 @@ implement `main()`, `__main__.py`, console-script registration, help, version ou
 logging/reporting, user-facing error formatting or process-exit mapping. A future process/CLI wrapper remains
 the separate executable application boundary. The callable `None` return does not replace the approved future
 process-level exit-status behaviour.
+
+---
+
+### 7.1.3 Application/Run Slice 3 — Process Bootstrap Invocation
+
+Application/Run Slice 3 is approved for implementation but is not implemented. It shall introduce exactly the
+following process-facing callable in `main.py`:
+
+```python
+main() -> None
+```
+
+Slice 3 shall compose the existing callable chain exactly as follows:
+
+```text
+sys.argv
+→ sys.argv[1:]
+→ coordinate_application_bootstrap(arguments)
+→ existing Slice-2/Slice-1/Generator chain
+→ None
+```
+
+`main()` shall read the current process argument vector from `sys.argv`, exclude `sys.argv[0]`, and pass the
+resulting `sys.argv[1:]` sequence directly to exactly one `coordinate_application_bootstrap(...)` invocation.
+It shall perform no option parsing, normalisation, filtering, copying, validation or mutation of that sequence.
+`coordinate_application_bootstrap(arguments: Sequence[str]) -> None` remains the explicit-arguments
+configuration/bootstrap boundary, and `load_configuration_from_cli(...)` remains responsible for all CLI option
+parsing and validation.
+
+Slice 3 shall not load or validate configuration; access the environment or PAT; process documentation;
+construct a REST client; invoke a Generator API directly; retry; or fall back. It shall not inspect,
+normalise, copy, log, print or otherwise expose `AZDO_PAT` or `Configuration.personal_access_token`.
+Successful bootstrap completion shall cause `main()` to return `None`.
+
+Any controlled or uncontrolled exception raised by `coordinate_application_bootstrap(...)` shall propagate
+unchanged through `main()`. Slice 3 shall not catch, wrap, translate, retry, fall back, invoke bootstrap a
+second time, log, report, map a process exit, call `sys.exit` or deliberately raise `SystemExit`. No subsequent
+work shall occur after such a failure.
+
+Slice 3 shall not add a direct-execution guard, `__main__.py`, `[project.scripts]`, console-script registration,
+packaging invocation semantics, stdout or stderr output, help or version output, logging configuration or
+initialisation, execution reporting, traceback formatting, a controlled-exception catch set, or an
+unexpected-exception policy. The later process/error layer remains responsible for controlled exception
+classification, the approved `0`/`1` process-exit mapping, user-facing reporting, logging and executable
+adapter decisions. Wider Application/Run therefore remains incomplete.
 
 ---
 
