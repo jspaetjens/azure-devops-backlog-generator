@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.19
+**Version:** 1.20
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-02
 
@@ -43,6 +43,7 @@
 | 1.17 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining incomplete release readiness. |
 | 1.18 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete release readiness. |
 | 1.19 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete release readiness. |
+| 1.20 | 2026-09-02 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete release readiness. |
 
 ---
 
@@ -138,9 +139,14 @@ or fallback. Application/Run Slice 2 is implemented: the callable application ch
 through configuration selection, loading, validation and PAT acquisition into Slice 1 and the Generator.
 Application/Run Slice 3 is implemented: `main() -> None` composes process `sys.argv` through `sys.argv[1:]`
 to Slice 2, Slice 1 and the Generator, returning `None` on success and propagating bootstrap exceptions
-unchanged. The wider Application/Run phase is not yet complete. Version 1.0 remains pre-release: controlled
-process exception classification, process-exit mapping, user-facing reporting, stdout/stderr policy,
-logging/reporting, unexpected-exception handling, an executable process/CLI adapter, `__main__.py` and/or
+unchanged. Application/Run Slice 4 is implemented: `run_process() -> int` invokes `main()` exactly once,
+returns the exact integer `0` on successful completion, returns the exact integer `1` for the approved
+controlled failure set without re-raising it, and propagates an unexpected exception unchanged. It adds no
+retry, fallback, stdout/stderr output, reporting, logging, `SystemExit`, executable adapter, direct execution
+or packaging. The wider Application/Run phase is not yet complete. Version 1.0 remains pre-release:
+user-facing controlled-failure reporting, stdout/stderr policy, safe rendering and sanitisation, runtime
+logging initialisation and failure logging, execution reporting, unexpected-exception handling,
+traceback/diagnostic policy, an executable process/CLI adapter, `SystemExit` ownership, `__main__.py` and/or
 console-script packaging if later approved, integration/end-to-end validation, Operational Readiness,
 Operational Recovery / DR, Review Gate 3 and final release-readiness work remain incomplete. The release
 criteria in this document remain unchanged.

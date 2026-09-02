@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.30
+**Version:** 2.31
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-02
 
@@ -64,6 +64,7 @@
 | 2.28 | 2026-09-01 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 3 Process Bootstrap Invocation contract. |
 | 2.29 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete wider application/run responsibilities. |
 | 2.30 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping contract. |
+| 2.31 | 2026-09-02 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete wider application/run responsibilities. |
 
 ---
 
@@ -325,8 +326,8 @@ adapter decisions. Wider Application/Run therefore remains incomplete.
 
 ### 7.1.4 Application/Run Slice 4 — Controlled Application Outcome Mapping
 
-Application/Run Slice 4 is approved for implementation but is not implemented. It introduces exactly the
-following separate application/process wrapper in `main.py`:
+Application/Run Slice 4 is implemented. It introduces exactly the following separate application/process wrapper
+in `main.py`:
 
 ```python
 run_process() -> int
@@ -346,28 +347,28 @@ run_process()
 → existing Slice-3/Slice-2/Slice-1/Generator chain
 ```
 
-`run_process()` shall invoke `main()` exactly once. On successful `main()` completion it shall return the
-integer `0`. When `main()` raises a known controlled application exception, it shall catch that exception and
-return the integer `1`. It shall not return `None`.
+`run_process()` invokes `main()` exactly once. On successful `main()` completion it returns the exact integer
+`0`. When `main()` raises a known controlled application exception, it catches that exception and returns the
+exact integer `1`. It does not return `None` and does not re-raise a controlled failure.
 
 The known controlled application exception set consists exactly of the existing `ConfigurationError`,
 `DocumentationProcessingError` and `AzureDevOpsRestClientError` bases, and the existing explicit
 Generator/domain classes `SourceIdentityValidationError`, `ExistingWorkItemResolutionError` and
 `ConflictingReusedChildRelationshipError`. `AzureDevOpsHttpError`, including HTTP `401` and `403`, and
 `AzureDevOpsResponseError`, including malformed-response failures, are controlled through the existing
-`AzureDevOpsRestClientError` hierarchy. Slice 4 shall not introduce a shared exception base or change existing
+`AzureDevOpsRestClientError` hierarchy. Slice 4 introduces no shared exception base and changes no existing
 exception inheritance.
 
 An exception outside that explicit set, including arbitrary `ValueError`, `TypeError`, untranslated `OSError`
-or another arbitrary `Exception` subclass, shall propagate unchanged. Slice 4 shall not catch `Exception`
+or another arbitrary `Exception` subclass, propagates unchanged. Slice 4 does not catch `Exception`
 generically, translate an unexpected exception to `1`, retry, fall back or invoke `main()` a second time.
 
-Slice 4 maps callable outcomes only. It shall not produce stdout or stderr output, user-facing messages, error
-formatting, sanitisation or traceback policy; initialise or call logging; raise or call `SystemExit` or
-`sys.exit`; add a direct-execution guard, `__main__.py`, `[project.scripts]`, console-script registration or
-executable packaging; or implement an execution summary. Generic direct rendering of every current exception
-message is not yet approved as sufficiently secret-safe. Future reporting shall define an explicit safe
-rendering policy.
+Slice 4 maps callable outcomes only. It produces no stdout or stderr output, user-facing messages, error
+formatting, sanitisation or traceback policy; does not initialise or call logging; does not raise or call
+`SystemExit` or `sys.exit`; does not add a direct-execution guard, `__main__.py`, `[project.scripts]`,
+console-script registration or executable packaging; and does not implement an execution summary. Generic direct
+rendering of every current exception message is not yet approved as sufficiently secret-safe. Future reporting
+shall define an explicit safe rendering policy.
 
 `main()` remains responsible only for acquiring `sys.argv[1:]` and delegating to
 `coordinate_application_bootstrap(...)`; it does not map outcomes or terminate the process. CLI/process-specific
