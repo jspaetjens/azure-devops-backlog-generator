@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.18
+**Version:** 2.19
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-02
 
 **Target Release:** v1.0.0
 
@@ -52,6 +52,7 @@
 | 2.16 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 2 configuration-bootstrap composition coverage. |
 | 2.17 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 composition coverage and validation evidence. |
 | 2.18 | 2026-09-01 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 3 Process Bootstrap Invocation composition coverage. |
+| 2.19 | 2026-09-02 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation composition coverage and validation evidence. |
 
 ---
 
@@ -357,21 +358,23 @@ the full suite and `pytest -W error` each recorded 687 passed, with 0 failed, sk
 Ruff passed. Coverage was 95% across 1,294 statements with 64 missed statements; `main.py` had 13 statements
 with 0 missed, and all new Slice-2 production statements were covered.
 
-Application/Run Slice 3 — Process Bootstrap Invocation is approved for implementation but is not implemented.
-Its focused composition coverage shall be added to `tests/test_main.py` and shall test `main() -> None` at the
-process-to-bootstrap boundary. A successful-delegation test shall install a controlled `sys.argv`, prove that
-`sys.argv[0]` is excluded, verify that the value represented by `sys.argv[1:]` reaches
-`coordinate_application_bootstrap(...)` directly, and prove exactly one bootstrap invocation, `None` return,
-no additional Slice-3 argument parsing, and no Slice-3 output or logging. It shall not require identity with
-the original `sys.argv` object because slicing creates the delegated argument sequence.
+Implemented Application/Run Slice 3 — Process Bootstrap Invocation composition coverage tests `main() -> None`
+at the process-to-bootstrap boundary. A successful-delegation test installs a controlled `sys.argv`, proves that
+`sys.argv[0]` is excluded, verifies that the values represented by `sys.argv[1:]` reach
+`coordinate_application_bootstrap(...)` directly, and proves exactly one bootstrap invocation, `None` return,
+no stdout, no stderr and no logging. A bootstrap-failure test installs controlled process arguments, makes the
+bootstrap collaborator raise a specific sentinel exception object, and proves exactly one invocation and
+propagation of that exact object from `main()` with no retry, fallback, second invocation, stdout, stderr,
+logging, process-exit conversion or deliberate `SystemExit`.
 
-A bootstrap-failure test shall install controlled process arguments, make the bootstrap collaborator raise a
-specific sentinel exception object, and prove exactly one invocation and propagation of that exact object from
-`main()`. It shall prove no retry, fallback, second invocation, output, logging, process-exit conversion or
-deliberate `SystemExit`. Slice-3 tests shall not duplicate `--config-file` parsing, CLI usage validation, TOML
-loading, configuration validation, PAT acquisition, environment precedence, Slice-2 or Slice-1 composition,
-Documentation Processor, REST Client, Generator, REST-error, hierarchy or lifecycle coverage. They shall not
-require subprocess tests because Slice 3 deliberately defines no executable adapter.
+The two Slice-3 tests do not duplicate `--config-file` parsing, CLI usage validation, TOML loading,
+configuration validation, PAT acquisition, environment precedence, Slice-2 or Slice-1 composition,
+Documentation Processor, REST Client, Generator, REST-error, hierarchy or lifecycle coverage. They do not
+require subprocess tests because Slice 3 deliberately defines no executable adapter. The focused
+`tests/test_main.py` suite recorded 9 passed; the full suite and `pytest -W error` each recorded 689 passed,
+with 0 failed, skipped, warnings, xfail or xpass. Ruff passed. Coverage was 95% across 1,297 statements with
+64 missed statements; `main.py` had 16 statements with 0 missed, and all new Slice-3 production statements
+were covered.
 
 Work Item Create Payload validation shall additionally cover:
 

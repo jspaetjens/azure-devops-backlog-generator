@@ -4,11 +4,11 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.18
+**Version:** 1.19
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-02
 
 **Target Release:** v1.0.0
 
@@ -42,6 +42,7 @@
 | 1.16 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Recorded Generator Orchestration Review Gate 2 PASS with no required remediation. |
 | 1.17 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 1 status while retaining incomplete release readiness. |
 | 1.18 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete release readiness. |
+| 1.19 | 2026-09-02 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete release readiness. |
 
 ---
 
@@ -133,12 +134,16 @@ malformed-response and HTTP `401`/`403` full-orchestration global-stop evidence.
 with PASS, zero findings and no required remediation. Application/Run Slice 1 is implemented: it composes
 an already-loaded and validated `Configuration` into documentation processing, one REST-client construction
 and one Generator invocation, then returns `None`; collaborator failures propagate unchanged without retry
-or fallback. Application/Run Slice 2 is implemented: the callable application chain now supports arguments
-through configuration selection, loading, validation and PAT acquisition into Slice 1 and the Generator. The
-wider Application/Run phase is not yet complete. Version 1.0 remains pre-release: executable process/CLI
-entrypoint, logging/reporting, process-exit lifecycle, integration/end-to-end validation, Operational
-Readiness, Operational Recovery / DR, Review Gate 3 and final release-readiness work remain incomplete. The
-release criteria in this document remain unchanged.
+or fallback. Application/Run Slice 2 is implemented: the callable application chain supports arguments
+through configuration selection, loading, validation and PAT acquisition into Slice 1 and the Generator.
+Application/Run Slice 3 is implemented: `main() -> None` composes process `sys.argv` through `sys.argv[1:]`
+to Slice 2, Slice 1 and the Generator, returning `None` on success and propagating bootstrap exceptions
+unchanged. The wider Application/Run phase is not yet complete. Version 1.0 remains pre-release: controlled
+process exception classification, process-exit mapping, user-facing reporting, stdout/stderr policy,
+logging/reporting, unexpected-exception handling, an executable process/CLI adapter, `__main__.py` and/or
+console-script packaging if later approved, integration/end-to-end validation, Operational Readiness,
+Operational Recovery / DR, Review Gate 3 and final release-readiness work remain incomplete. The release
+criteria in this document remain unchanged.
 
 ---
 
