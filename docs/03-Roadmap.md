@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.25
+**Version:** 1.26
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-02
 
@@ -49,6 +49,7 @@
 | 1.23 | 2026-09-01 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 3 Process Bootstrap Invocation implementation slice. |
 | 1.24 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete wider application/run responsibilities. |
 | 1.25 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping implementation contract. |
+| 1.26 | 2026-09-02 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete wider application/run responsibilities. |
 
 ---
 
@@ -134,7 +135,7 @@ compatibility evaluation; Work Item Candidate construction; Work Item Create JSO
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
 GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; successful eligibility return only after the relationship state is safe; and root existing/new Work Item lifecycle coordination, in which NEW creates once and REUSED returns the validated existing ID without relationship work.
 
-The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/Run Slices 1, 2 and 3 are implemented. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
+The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/Run Slices 1, 2, 3 and 4 are implemented. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
 
 Following the successful implementation merge, Application/Run Slice 2 is implemented; the preceding
 implementation-plan status is superseded. Application/Run Slice 1 is implemented: an already-validated
@@ -174,8 +175,8 @@ unexpected-exception/traceback policy, actual executable adapter, direct executi
 Operational Recovery / DR, Review Gate 3 and final release readiness remain future. The wider Application/Run
 phase is not yet complete.
 
-Application/Run Slice 4 — Controlled Application Outcome Mapping is approved for implementation but is not
-implemented. It introduces the separate `run_process() -> int` wrapper above the implemented `main() -> None`:
+Application/Run Slice 4 — Controlled Application Outcome Mapping is implemented. It introduces the separate
+`run_process() -> int` wrapper above the implemented `main() -> None`:
 
 ```text
 run_process()
@@ -184,15 +185,16 @@ run_process()
 → 0 or 1 return
 ```
 
-Successful `main()` completion shall return `0`; an exception in the approved explicit known controlled set
-shall return `1`; and an exception outside that set shall propagate unchanged. Slice 4 retains one `main()`
-invocation and introduces no retry, fallback, output, logging, `SystemExit` or executable packaging. It
-preserves `main()` as the `sys.argv[1:]` acquisition and bootstrap-delegation callable, and keeps
+Successful `main()` completion returns the exact integer `0`; an exception in the approved explicit known
+controlled set returns the exact integer `1`; and an exception outside that set propagates unchanged. Slice 4
+retains one `main()` invocation and introduces no retry, fallback, output, logging, `SystemExit` or executable
+packaging. It preserves `main()` as the `sys.argv[1:]` acquisition and bootstrap-delegation callable, and keeps
 CLI/process-specific outcome, reporting and termination behaviour outside the shared Application Core. This
 preserves future alternate-interface compatibility without approving or implementing a GUI. User-facing
-reporting, stdout/stderr policy, safe rendering, logging, unexpected-exception handling, executable adaptation,
-integration/end-to-end validation, Operational Readiness, Operational Recovery / DR, Review Gate 3 and final
-release readiness remain future.
+reporting, stdout/stderr policy, safe rendering, logging, unexpected-exception handling, traceback policy,
+executable adaptation, `SystemExit` ownership, direct execution and/or package `__main__.py`, console-script
+packaging if approved, integration/end-to-end validation, Operational Readiness, Operational Recovery / DR,
+Review Gate 3 and final release readiness remain future.
 
 ---
 
