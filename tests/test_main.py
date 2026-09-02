@@ -5,18 +5,131 @@ from pathlib import Path
 import pytest
 
 import azure_devops_backlog_generator.main as main_module
+from azure_devops_backlog_generator.azure_devops.exceptions import AzureDevOpsTransportError
+from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsWorkItemRelationshipState
+from azure_devops_backlog_generator.config.exceptions import ConfigurationFileError
 from azure_devops_backlog_generator.config.models import (
     AzureDevOpsConfig,
     Configuration,
     DocumentationConfig,
     LoggingConfig,
 )
+from azure_devops_backlog_generator.documentation.exceptions import DocumentationReadError
+from azure_devops_backlog_generator.generator.identity import (
+    SourceIdentityValidationError,
+    SourceIdentityValidationState,
+)
+from azure_devops_backlog_generator.generator.relationships import (
+    ConflictingReusedChildRelationshipError,
+    ReusedChildRelationshipClassification,
+)
+from azure_devops_backlog_generator.generator.resolution import ExistingWorkItemResolutionError
 
 _SYNTHETIC_PAT = "slice-1-synthetic-pat"
 
 
 class _SentinelError(Exception):
     pass
+
+
+def test_run_process_returns_zero_after_one_successful_main_invocation(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    calls = 0
+
+    def successful_main() -> None:
+        nonlocal calls
+        calls += 1
+
+    monkeypatch.setattr(main_module, "main", successful_main)
+
+    result = main_module.run_process()
+
+    assert result == 0
+    assert type(result) is int
+    assert calls == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+    assert caplog.records == []
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        ConfigurationFileError(),
+        DocumentationReadError(),
+        AzureDevOpsTransportError(),
+        SourceIdentityValidationError(SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY),
+        ExistingWorkItemResolutionError(),
+        ConflictingReusedChildRelationshipError(
+            2,
+            1,
+            ReusedChildRelationshipClassification.CONFLICTING,
+            AzureDevOpsWorkItemRelationshipState(revision=1, reverse_parent_ids=(3,)),
+        ),
+    ],
+    ids=[
+        "configuration",
+        "documentation",
+        "azure-devops-rest-client",
+        "source-identity",
+        "existing-work-item-resolution",
+        "conflicting-reused-child-relationship",
+    ],
+)
+def test_run_process_maps_each_controlled_failure_to_one(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    calls = 0
+
+    def failing_main() -> None:
+        nonlocal calls
+        calls += 1
+        raise error
+
+    monkeypatch.setattr(main_module, "main", failing_main)
+
+    result = main_module.run_process()
+
+    assert result == 1
+    assert type(result) is int
+    assert calls == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+    assert caplog.records == []
+
+
+def test_run_process_propagates_the_exact_unexpected_exception(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    calls = 0
+    error = _SentinelError()
+
+    def failing_main() -> None:
+        nonlocal calls
+        calls += 1
+        raise error
+
+    monkeypatch.setattr(main_module, "main", failing_main)
+
+    with pytest.raises(_SentinelError) as raised:
+        main_module.run_process()
+
+    assert raised.value is error
+    assert calls == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+    assert caplog.records == []
 
 
 def _configuration(source_directory: Path) -> Configuration:

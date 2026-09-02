@@ -3,13 +3,37 @@
 import sys
 from collections.abc import Sequence
 
+from azure_devops_backlog_generator.azure_devops.exceptions import AzureDevOpsRestClientError
 from azure_devops_backlog_generator.azure_devops.rest_client import AzureDevOpsRestClient
+from azure_devops_backlog_generator.config.exceptions import ConfigurationError
 from azure_devops_backlog_generator.config.loader import load_configuration_from_cli
 from azure_devops_backlog_generator.config.models import Configuration
+from azure_devops_backlog_generator.documentation.exceptions import DocumentationProcessingError
 from azure_devops_backlog_generator.documentation.processor import DocumentationProcessor
+from azure_devops_backlog_generator.generator.identity import SourceIdentityValidationError
 from azure_devops_backlog_generator.generator.orchestration import (
     coordinate_generator_orchestration,
 )
+from azure_devops_backlog_generator.generator.relationships import (
+    ConflictingReusedChildRelationshipError,
+)
+from azure_devops_backlog_generator.generator.resolution import ExistingWorkItemResolutionError
+
+
+def run_process() -> int:
+    """Run the application and map controlled failures to a process outcome."""
+    try:
+        main()
+    except (
+        ConfigurationError,
+        DocumentationProcessingError,
+        AzureDevOpsRestClientError,
+        SourceIdentityValidationError,
+        ExistingWorkItemResolutionError,
+        ConflictingReusedChildRelationshipError,
+    ):
+        return 1
+    return 0
 
 
 def main() -> None:
