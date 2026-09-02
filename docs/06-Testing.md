@@ -6,7 +6,7 @@
 
 **Version:** 2.20
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-02
 
@@ -53,7 +53,7 @@
 | 2.17 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 composition coverage and validation evidence. |
 | 2.18 | 2026-09-01 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 3 Process Bootstrap Invocation composition coverage. |
 | 2.19 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation composition coverage and validation evidence. |
-| 2.20 | 2026-09-02 | Draft | Jack Spaetjens | Defined mandatory Application/Run Slice 4 Controlled Application Outcome Mapping coverage. |
+| 2.20 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 4 Controlled Application Outcome Mapping coverage. |
 
 ---
 
