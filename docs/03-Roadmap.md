@@ -6,7 +6,7 @@
 
 **Version:** 1.25
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-02
 
@@ -48,7 +48,7 @@
 | 1.22 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining subsequent application/run, readiness and review work. |
 | 1.23 | 2026-09-01 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 3 Process Bootstrap Invocation implementation slice. |
 | 1.24 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete wider application/run responsibilities. |
-| 1.25 | 2026-09-02 | Draft | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping implementation contract. |
+| 1.25 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping implementation contract. |
 
 ---
 
