@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.29
+**Version:** 2.30
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-02
 
@@ -63,6 +63,7 @@
 | 2.27 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete wider application/run responsibilities. |
 | 2.28 | 2026-09-01 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 3 Process Bootstrap Invocation contract. |
 | 2.29 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete wider application/run responsibilities. |
+| 2.30 | 2026-09-02 | Draft | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping contract. |
 
 ---
 
@@ -83,6 +84,7 @@
     - [7.1.1 Application/Run Slice 1](#711-applicationrun-slice-1)
     - [7.1.2 Application/Run Slice 2](#712-applicationrun-slice-2)
     - [7.1.3 Application/Run Slice 3 — Process Bootstrap Invocation](#713-applicationrun-slice-3--process-bootstrap-invocation)
+    - [7.1.4 Application/Run Slice 4 — Controlled Application Outcome Mapping](#714-applicationrun-slice-4--controlled-application-outcome-mapping)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -318,6 +320,68 @@ initialisation, execution reporting, traceback formatting, a controlled-exceptio
 unexpected-exception policy. The later process/error layer remains responsible for controlled exception
 classification, the approved `0`/`1` process-exit mapping, user-facing reporting, logging and executable
 adapter decisions. Wider Application/Run therefore remains incomplete.
+
+---
+
+### 7.1.4 Application/Run Slice 4 — Controlled Application Outcome Mapping
+
+Application/Run Slice 4 is approved for implementation but is not implemented. It introduces exactly the
+following separate application/process wrapper in `main.py`:
+
+```python
+run_process() -> int
+```
+
+It preserves the implemented Slice-3 callable:
+
+```python
+main() -> None
+```
+
+The Slice-4 flow is exactly:
+
+```text
+run_process()
+→ main()
+→ existing Slice-3/Slice-2/Slice-1/Generator chain
+```
+
+`run_process()` shall invoke `main()` exactly once. On successful `main()` completion it shall return the
+integer `0`. When `main()` raises a known controlled application exception, it shall catch that exception and
+return the integer `1`. It shall not return `None`.
+
+The known controlled application exception set consists exactly of the existing `ConfigurationError`,
+`DocumentationProcessingError` and `AzureDevOpsRestClientError` bases, and the existing explicit
+Generator/domain classes `SourceIdentityValidationError`, `ExistingWorkItemResolutionError` and
+`ConflictingReusedChildRelationshipError`. `AzureDevOpsHttpError`, including HTTP `401` and `403`, and
+`AzureDevOpsResponseError`, including malformed-response failures, are controlled through the existing
+`AzureDevOpsRestClientError` hierarchy. Slice 4 shall not introduce a shared exception base or change existing
+exception inheritance.
+
+An exception outside that explicit set, including arbitrary `ValueError`, `TypeError`, untranslated `OSError`
+or another arbitrary `Exception` subclass, shall propagate unchanged. Slice 4 shall not catch `Exception`
+generically, translate an unexpected exception to `1`, retry, fall back or invoke `main()` a second time.
+
+Slice 4 maps callable outcomes only. It shall not produce stdout or stderr output, user-facing messages, error
+formatting, sanitisation or traceback policy; initialise or call logging; raise or call `SystemExit` or
+`sys.exit`; add a direct-execution guard, `__main__.py`, `[project.scripts]`, console-script registration or
+executable packaging; or implement an execution summary. Generic direct rendering of every current exception
+message is not yet approved as sufficiently secret-safe. Future reporting shall define an explicit safe
+rendering policy.
+
+`main()` remains responsible only for acquiring `sys.argv[1:]` and delegating to
+`coordinate_application_bootstrap(...)`; it does not map outcomes or terminate the process. CLI/process-specific
+outcome, reporting and termination behaviour shall remain outside the shared Application Core. In consequence,
+alternate presentation adapters, including a future GUI, may reuse typed application/core boundaries such as
+`coordinate_application_run(configuration: Configuration) -> None` without process exit codes, `SystemExit`,
+stdout/stderr behaviour or CLI-specific error formatting. This preserves architectural compatibility only; it
+does not approve a GUI feature, implementation, framework or Version 1.0 scope.
+
+The wider Application/Run phase remains incomplete. User-facing controlled-failure reporting, stdout/stderr
+policy, safe rendering, logging initialisation and failure logging, execution reporting, unexpected-exception
+handling, traceback/diagnostic policy, an executable adapter, `SystemExit` ownership, `__main__.py` and/or
+console-script packaging if approved, integration/end-to-end validation, Operational Readiness, Operational
+Recovery / DR, Review Gate 3 and final release readiness remain future.
 
 ---
 
