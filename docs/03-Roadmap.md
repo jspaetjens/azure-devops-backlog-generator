@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.24
+**Version:** 1.25
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-02
 
@@ -48,6 +48,7 @@
 | 1.22 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining subsequent application/run, readiness and review work. |
 | 1.23 | 2026-09-01 | Approved Baseline | Jack Spaetjens | Defined the approved Application/Run Slice 3 Process Bootstrap Invocation implementation slice. |
 | 1.24 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete wider application/run responsibilities. |
+| 1.25 | 2026-09-02 | Draft | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping implementation contract. |
 
 ---
 
@@ -172,6 +173,26 @@ unexpected-exception/traceback policy, actual executable adapter, direct executi
 `__main__.py`, console-script packaging if approved, integration/end-to-end validation, Operational Readiness,
 Operational Recovery / DR, Review Gate 3 and final release readiness remain future. The wider Application/Run
 phase is not yet complete.
+
+Application/Run Slice 4 — Controlled Application Outcome Mapping is approved for implementation but is not
+implemented. It introduces the separate `run_process() -> int` wrapper above the implemented `main() -> None`:
+
+```text
+run_process()
+→ main()
+→ controlled application outcome classification
+→ 0 or 1 return
+```
+
+Successful `main()` completion shall return `0`; an exception in the approved explicit known controlled set
+shall return `1`; and an exception outside that set shall propagate unchanged. Slice 4 retains one `main()`
+invocation and introduces no retry, fallback, output, logging, `SystemExit` or executable packaging. It
+preserves `main()` as the `sys.argv[1:]` acquisition and bootstrap-delegation callable, and keeps
+CLI/process-specific outcome, reporting and termination behaviour outside the shared Application Core. This
+preserves future alternate-interface compatibility without approving or implementing a GUI. User-facing
+reporting, stdout/stderr policy, safe rendering, logging, unexpected-exception handling, executable adaptation,
+integration/end-to-end validation, Operational Readiness, Operational Recovery / DR, Review Gate 3 and final
+release readiness remain future.
 
 ---
 

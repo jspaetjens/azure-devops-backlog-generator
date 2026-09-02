@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.19
+**Version:** 2.20
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-02
 
@@ -53,6 +53,7 @@
 | 2.17 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 composition coverage and validation evidence. |
 | 2.18 | 2026-09-01 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 3 Process Bootstrap Invocation composition coverage. |
 | 2.19 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation composition coverage and validation evidence. |
+| 2.20 | 2026-09-02 | Draft | Jack Spaetjens | Defined mandatory Application/Run Slice 4 Controlled Application Outcome Mapping coverage. |
 
 ---
 
@@ -375,6 +376,25 @@ require subprocess tests because Slice 3 deliberately defines no executable adap
 with 0 failed, skipped, warnings, xfail or xpass. Ruff passed. Coverage was 95% across 1,297 statements with
 64 missed statements; `main.py` had 16 statements with 0 missed, and all new Slice-3 production statements
 were covered.
+
+Application/Run Slice 4 — Controlled Application Outcome Mapping shall add focused
+`tests/test_main.py` coverage at the process-outcome boundary for the approved but unimplemented
+`run_process() -> int` wrapper. A successful-outcome test shall prove exactly one successful `main()` invocation,
+an exact integer return of `0`, no retry or fallback, no stdout, no stderr, no logging and no `SystemExit`.
+Controlled-failure mapping tests shall use representative instances or subclasses, with parameterisation where
+appropriate, to prove exact integer return `1` for the `ConfigurationError`, `DocumentationProcessingError` and
+`AzureDevOpsRestClientError` hierarchies and for `SourceIdentityValidationError`,
+`ExistingWorkItemResolutionError` and `ConflictingReusedChildRelationshipError`. They shall prove exactly one
+`main()` invocation, no retry, fallback or second invocation, no re-raise of the controlled exception, no
+stdout, no stderr, no logging and no `SystemExit`.
+
+An unexpected-failure test shall make `main()` raise one sentinel exception outside that approved controlled
+set and prove that the exact object propagates unchanged; `run_process()` shall not return `1`, catch it
+generically, retry, fall back or invoke `main()` again, and shall produce no stdout, stderr, logging or
+`SystemExit`. Slice-4 tests shall not duplicate configuration parsing or PAT validation; document parsing;
+Azure DevOps transport, HTTP `401`/`403` or malformed-response semantics; Generator lifecycle or relationship
+behaviour; or Slice-1, Slice-2 or Slice-3 composition. No subprocess coverage is required because Slice 4
+defines no executable adapter.
 
 Work Item Create Payload validation shall additionally cover:
 
