@@ -28,6 +28,57 @@ def _configuration(source_directory: Path) -> Configuration:
     )
 
 
+def test_main_delegates_process_arguments_to_bootstrap_once(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    process_arguments = ["backlog-generator", "--config-file=config/custom.toml", "--literal"]
+    expected_arguments = ["--config-file=config/custom.toml", "--literal"]
+    received_arguments: list[list[str]] = []
+
+    def coordinate_bootstrap(arguments_received: list[str]) -> None:
+        received_arguments.append(arguments_received)
+
+    monkeypatch.setattr(main_module.sys, "argv", process_arguments)
+    monkeypatch.setattr(main_module, "coordinate_application_bootstrap", coordinate_bootstrap)
+
+    assert main_module.main() is None
+    assert received_arguments == [expected_arguments]
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+    assert caplog.records == []
+
+
+def test_main_propagates_bootstrap_failure_without_retry_or_exit_conversion(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    process_arguments = ["backlog-generator", "--config-file", "config/custom.toml"]
+    expected_arguments = ["--config-file", "config/custom.toml"]
+    error = _SentinelError()
+    received_arguments: list[list[str]] = []
+
+    def coordinate_bootstrap(arguments_received: list[str]) -> None:
+        received_arguments.append(arguments_received)
+        raise error
+
+    monkeypatch.setattr(main_module.sys, "argv", process_arguments)
+    monkeypatch.setattr(main_module, "coordinate_application_bootstrap", coordinate_bootstrap)
+
+    with pytest.raises(_SentinelError) as raised:
+        main_module.main()
+
+    assert raised.value is error
+    assert received_arguments == [expected_arguments]
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+    assert caplog.records == []
+
+
 def test_composes_application_bootstrap_with_the_exact_collaborator_values(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
