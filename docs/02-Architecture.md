@@ -6,7 +6,7 @@
 
 **Version:** 2.32
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-03
 
@@ -65,7 +65,7 @@
 | 2.29 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete wider application/run responsibilities. |
 | 2.30 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping contract. |
 | 2.31 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete wider application/run responsibilities. |
-| 2.32 | 2026-09-03 | Draft | Jack Spaetjens | Defined the Application/Run Slice 5 Controlled Failure Reporting to Standard Error contract. |
+| 2.32 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 5 Controlled Failure Reporting to Standard Error contract. |
 
 ---
 
