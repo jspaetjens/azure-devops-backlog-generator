@@ -57,18 +57,24 @@ def test_run_process_returns_zero_after_one_successful_main_invocation(
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "expected_stderr"),
     [
-        ConfigurationFileError(),
-        DocumentationReadError(),
-        AzureDevOpsTransportError(),
-        SourceIdentityValidationError(SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY),
-        ExistingWorkItemResolutionError(),
-        ConflictingReusedChildRelationshipError(
-            2,
-            1,
-            ReusedChildRelationshipClassification.CONFLICTING,
-            AzureDevOpsWorkItemRelationshipState(revision=1, reverse_parent_ids=(3,)),
+        (ConfigurationFileError(), "Configuration error.\n"),
+        (DocumentationReadError(), "Documentation processing error.\n"),
+        (AzureDevOpsTransportError(), "Azure DevOps error.\n"),
+        (
+            SourceIdentityValidationError(SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY),
+            "Source identity validation error.\n",
+        ),
+        (ExistingWorkItemResolutionError(), "Existing work item resolution error.\n"),
+        (
+            ConflictingReusedChildRelationshipError(
+                2,
+                1,
+                ReusedChildRelationshipClassification.CONFLICTING,
+                AzureDevOpsWorkItemRelationshipState(revision=1, reverse_parent_ids=(3,)),
+            ),
+            "Conflicting reused child relationship error.\n",
         ),
     ],
     ids=[
@@ -85,6 +91,7 @@ def test_run_process_maps_each_controlled_failure_to_one(
     capsys: pytest.CaptureFixture[str],
     caplog: pytest.LogCaptureFixture,
     error: Exception,
+    expected_stderr: str,
 ) -> None:
     calls = 0
 
@@ -102,7 +109,35 @@ def test_run_process_maps_each_controlled_failure_to_one(
     assert calls == 1
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert captured.err == ""
+    assert captured.err == expected_stderr
+    assert caplog.records == []
+
+
+def test_run_process_does_not_render_controlled_failure_detail(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    detail = (
+        "SYNTHETIC_PAT_DO_NOT_RENDER "
+        "--config-file=C:\\secret\\config.toml https://example.invalid/private"
+    )
+
+    calls = 0
+
+    def failing_main() -> None:
+        nonlocal calls
+        calls += 1
+        raise ConfigurationFileError(detail)
+
+    monkeypatch.setattr(main_module, "main", failing_main)
+
+    assert main_module.run_process() == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Configuration error.\n"
+    assert detail not in captured.err
+    assert calls == 1
     assert caplog.records == []
 
 
