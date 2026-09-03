@@ -4,11 +4,11 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.20
+**Version:** 1.21
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-02
+**Last Updated:** 2026-09-03
 
 **Target Release:** v1.0.0
 
@@ -44,6 +44,7 @@
 | 1.18 | 2026-08-31 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 2 status while retaining incomplete release readiness. |
 | 1.19 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete release readiness. |
 | 1.20 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete release readiness. |
+| 1.21 | 2026-09-03 | Draft | Jack Spaetjens | Recorded approved but unimplemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error. |
 
 ---
 
@@ -143,12 +144,14 @@ unchanged. Application/Run Slice 4 is implemented: `run_process() -> int` invoke
 returns the exact integer `0` on successful completion, returns the exact integer `1` for the approved
 controlled failure set without re-raising it, and propagates an unexpected exception unchanged. It adds no
 retry, fallback, stdout/stderr output, reporting, logging, `SystemExit`, executable adapter, direct execution
-or packaging. The wider Application/Run phase is not yet complete. Version 1.0 remains pre-release:
-user-facing controlled-failure reporting, stdout/stderr policy, safe rendering and sanitisation, runtime
-logging initialisation and failure logging, execution reporting, unexpected-exception handling,
-traceback/diagnostic policy, an executable process/CLI adapter, `SystemExit` ownership, `__main__.py` and/or
-console-script packaging if later approved, integration/end-to-end validation, Operational Readiness,
-Operational Recovery / DR, Review Gate 3 and final release-readiness work remain incomplete. The release
+or packaging. Application/Run Slice 5 — Controlled Failure Reporting to Standard Error is approved for
+implementation but is not implemented. It shall add only category-only stderr reporting for the existing controlled
+set: exactly one fixed message and newline, no stdout and existing return `1`; successful `run_process()` execution
+shall remain silent and return `0`. No exception detail may be rendered. The wider Application/Run phase is not yet
+complete. Version 1.0 remains pre-release: runtime logging initialisation and failure logging, execution summary,
+unexpected-exception handling, traceback diagnostics, an executable process/CLI adapter, `SystemExit` ownership,
+`__main__.py` and/or console-script packaging if later approved, integration/end-to-end validation, Operational
+Readiness, Operational Recovery / DR, Review Gate 3 and final release-readiness work remain incomplete. The release
 criteria in this document remain unchanged.
 
 ---
