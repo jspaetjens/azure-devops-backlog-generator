@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.27
+**Version:** 1.28
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-03
 
@@ -51,6 +51,7 @@
 | 1.25 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping implementation contract. |
 | 1.26 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete wider application/run responsibilities. |
 | 1.27 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 5 Controlled Failure Reporting to Standard Error implementation contract. |
+| 1.28 | 2026-09-03 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 
 ---
 
@@ -197,25 +198,30 @@ executable adaptation, `SystemExit` ownership, direct execution and/or package `
 packaging if approved, integration/end-to-end validation, Operational Readiness, Operational Recovery / DR,
 Review Gate 3 and final release readiness remain future.
 
-Application/Run Slice 5 — Controlled Failure Reporting to Standard Error is approved for implementation but is
-not implemented. It shall extend the existing `run_process() -> int` process adapter only as follows:
+Application/Run Slice 5 — Controlled Failure Reporting to Standard Error is implemented. It extends the existing
+`run_process() -> int` process adapter only as follows:
 
 ```text
-controlled failure
+run_process()
+→ controlled failure
+→ _render_controlled_failure(error)
 → exact category-only stderr line
-→ existing return 1
+→ return 1
 ```
 
-The six approved categories shall use only their fixed messages: `Configuration error.`,
+The six approved categories use only their fixed messages: `Configuration error.`,
 `Documentation processing error.`, `Azure DevOps error.`, `Source identity validation error.`,
-`Existing work item resolution error.` and `Conflicting reused child relationship error.` Each message shall be one
-stderr line with one newline and shall contain no exception detail. Successful execution shall remain silent, with
-no stdout or stderr, and shall retain the exact integer return `0`. `main() -> None`, unchanged unexpected-exception
-propagation, presentation-neutral shared Application Core boundaries and future alternate-interface compatibility
-shall be preserved. Slice 5 does not approve logging, execution summaries, unexpected-exception reporting,
-tracebacks, `sys.exit` or `SystemExit`, direct execution, packaging or GUI implementation. Slices 1, 2, 3 and 4
-remain implemented; the wider Application/Run phase remains incomplete, and Operational Readiness, Operational
-Recovery / DR, Review Gate 3, integration/end-to-end and final release-readiness work remain future.
+`Existing work item resolution error.` and `Conflicting reused child relationship error.` Each message is one stderr
+line with one newline and contains no exception detail. The renderer exposes no `str(exception)`, `repr(exception)`,
+exception arguments, CLI argument text, paths, source-derived content, Azure DevOps URLs, response bodies, headers,
+PAT or Authorization values, or arbitrary exception messages. Focused tests prove synthetic sensitive-looking detail
+is absent from stderr. Successful execution remains silent, with no stdout or stderr, and returns the exact integer
+`0`. `main() -> None`, unchanged unexpected-exception propagation, presentation-neutral shared Application Core
+boundaries and future alternate-interface compatibility are preserved. Slice 5 does not introduce logging,
+execution summaries, unexpected-exception reporting, tracebacks, `sys.exit` or `SystemExit`, direct execution,
+packaging or GUI implementation. Slices 1, 2, 3, 4 and 5 are implemented; the wider Application/Run phase remains
+incomplete, and Operational Readiness, Operational Recovery / DR, Review Gate 3, integration/end-to-end and final
+release-readiness work remain future.
 
 ---
 
