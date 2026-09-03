@@ -31,9 +31,34 @@ def run_process() -> int:
         SourceIdentityValidationError,
         ExistingWorkItemResolutionError,
         ConflictingReusedChildRelationshipError,
-    ):
+    ) as error:
+        _render_controlled_failure(error)
         return 1
     return 0
+
+
+def _render_controlled_failure(
+    error: ConfigurationError
+    | DocumentationProcessingError
+    | AzureDevOpsRestClientError
+    | SourceIdentityValidationError
+    | ExistingWorkItemResolutionError
+    | ConflictingReusedChildRelationshipError,
+) -> None:
+    """Write the fixed stderr message for one controlled application failure."""
+    if isinstance(error, ConfigurationError):
+        message = "Configuration error."
+    elif isinstance(error, DocumentationProcessingError):
+        message = "Documentation processing error."
+    elif isinstance(error, AzureDevOpsRestClientError):
+        message = "Azure DevOps error."
+    elif isinstance(error, SourceIdentityValidationError):
+        message = "Source identity validation error."
+    elif isinstance(error, ExistingWorkItemResolutionError):
+        message = "Existing work item resolution error."
+    else:
+        message = "Conflicting reused child relationship error."
+    print(message, file=sys.stderr)
 
 
 def main() -> None:
