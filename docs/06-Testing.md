@@ -6,7 +6,7 @@
 
 **Version:** 2.23
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-03
 
@@ -56,7 +56,7 @@
 | 2.20 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 4 Controlled Application Outcome Mapping coverage. |
 | 2.21 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping coverage and validation evidence. |
 | 2.22 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage. |
-| 2.23 | 2026-09-03 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage and validation evidence. |
+| 2.23 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage and validation evidence. |
 
 ---
 
