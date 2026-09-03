@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.21
+**Version:** 1.22
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-03
 
@@ -45,6 +45,7 @@
 | 1.19 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 3 Process Bootstrap Invocation status while retaining incomplete release readiness. |
 | 1.20 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete release readiness. |
 | 1.21 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Recorded approved but unimplemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error. |
+| 1.22 | 2026-09-03 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 
 ---
 
@@ -144,11 +145,15 @@ unchanged. Application/Run Slice 4 is implemented: `run_process() -> int` invoke
 returns the exact integer `0` on successful completion, returns the exact integer `1` for the approved
 controlled failure set without re-raising it, and propagates an unexpected exception unchanged. It adds no
 retry, fallback, stdout/stderr output, reporting, logging, `SystemExit`, executable adapter, direct execution
-or packaging. Application/Run Slice 5 — Controlled Failure Reporting to Standard Error is approved for
-implementation but is not implemented. It shall add only category-only stderr reporting for the existing controlled
-set: exactly one fixed message and newline, no stdout and existing return `1`; successful `run_process()` execution
-shall remain silent and return `0`. No exception detail may be rendered. The wider Application/Run phase is not yet
-complete. Version 1.0 remains pre-release: runtime logging initialisation and failure logging, execution summary,
+or packaging. Application/Run Slice 5 — Controlled Failure Reporting to Standard Error is implemented. The
+existing `run_process() -> int` retains controlled classification and, on a caught controlled failure, calls the
+private `_render_controlled_failure(error)`, writes exactly one fixed category-only stderr message and newline, and
+returns the existing exact integer `1`, with stdout empty and no re-raise. The renderer exposes no exception detail,
+including `str(exception)`, `repr(exception)`, exception arguments, paths, source-derived content, Azure DevOps
+URLs, response bodies, headers, PAT values, Authorization values or arbitrary exception messages; focused tests
+prove synthetic sensitive-looking detail absent from stderr. Successful `run_process()` execution remains silent and
+returns `0`; unexpected exceptions propagate unchanged with no Slice-5 output or generic `Exception` catch. The
+wider Application/Run phase is not yet complete. Version 1.0 remains pre-release: runtime logging initialisation and failure logging, execution summary,
 unexpected-exception handling, traceback diagnostics, an executable process/CLI adapter, `SystemExit` ownership,
 `__main__.py` and/or console-script packaging if later approved, integration/end-to-end validation, Operational
 Readiness, Operational Recovery / DR, Review Gate 3 and final release-readiness work remain incomplete. The release

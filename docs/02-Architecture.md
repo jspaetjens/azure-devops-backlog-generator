@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.32
+**Version:** 2.33
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-03
 
@@ -66,6 +66,7 @@
 | 2.30 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 4 Controlled Application Outcome Mapping contract. |
 | 2.31 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete wider application/run responsibilities. |
 | 2.32 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 5 Controlled Failure Reporting to Standard Error contract. |
+| 2.33 | 2026-09-03 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 
 ---
 
@@ -389,10 +390,11 @@ Recovery / DR, Review Gate 3 and final release readiness remain future.
 
 ### 7.1.5 Application/Run Slice 5 — Controlled Failure Reporting to Standard Error
 
-Application/Run Slice 5 is approved for implementation but is not implemented. It extends the existing
-`run_process() -> int` process adapter with controlled-failure category rendering to standard error; it does not
-change the return type, the existing controlled-failure classification or the `0`/`1` application-outcome mapping.
-`run_process()` shall continue to invoke `main()` exactly once.
+Application/Run Slice 5 is implemented. It retains controlled-failure classification in the existing
+`run_process() -> int` process adapter, which invokes `main()` exactly once. On a caught controlled failure, it
+calls the private `_render_controlled_failure(error)`, writes the fixed category-only standard-error line and
+returns the exact integer `1`. It does not change the return type, the existing controlled-failure classification
+or the `0`/`1` application-outcome mapping.
 
 The approved controlled categories shall render exactly one corresponding category-only line to `stderr`, followed
 by exactly one newline: `ConfigurationError` hierarchy — `Configuration error.`;
@@ -401,21 +403,24 @@ by exactly one newline: `ConfigurationError` hierarchy — `Configuration error.
 `SourceIdentityValidationError` — `Source identity validation error.`;
 `ExistingWorkItemResolutionError` — `Existing work item resolution error.`; and
 `ConflictingReusedChildRelationshipError` — `Conflicting reused child relationship error.`. Each such controlled
-failure shall return the exact integer `1`, shall not be re-raised and shall leave `stdout` empty.
+failure returns the exact integer `1`, is not re-raised and leaves `stdout` empty.
 
-The reporting is category-only. No data from an exception object may be rendered: this expressly excludes
-`str(exception)`, exception representations, CLI arguments, paths, source-derived content, Azure DevOps response
-content, URLs, headers, PATs, Authorization values and arbitrary exception messages. HTTP `401` and `403`, and
-other controlled REST-client subclasses, remain within the existing `AzureDevOpsRestClientError` hierarchy and
-therefore render only `Azure DevOps error.`. Slice 5 introduces no shared exception base and changes no lower-layer
-or REST semantics. A private controlled-failure renderer may select and write the fixed message; no public reporting
-API or application-wide abstraction is approved.
+The reporting is category-only. The implemented renderer exposes no data from an exception object: this expressly
+excludes `str(exception)`, `repr(exception)`, exception arguments, CLI argument text, configuration paths,
+documentation paths, source titles, source-derived arbitrary content, Azure DevOps URLs, response bodies, headers,
+PAT values, Authorization values and arbitrary exception messages. The six fixed category strings are the complete
+Slice-5 controlled-failure user-facing output. HTTP `401` and `403` remain controlled through the existing
+`AzureDevOpsRestClientError` hierarchy and therefore render only `Azure DevOps error.`.
+`AzureDevOpsTransportError`, `AzureDevOpsHttpError`, `AzureDevOpsResponseError` and other existing controlled
+REST-client subclasses retain their lower-layer semantics. Slice 5 introduces no shared exception base and changes
+no lower-layer or REST contract. The private renderer selects and writes fixed messages by approved exception type
+only; no public reporting API or application-wide abstraction exists.
 
-Successful execution shall remain silent: after one successful `main()` invocation, `run_process()` shall return the
-exact integer `0` with no `stdout`, no `stderr`, no logging, no retry, no fallback and no process termination. An
-unexpected exception remains outside the approved controlled set and shall propagate as the exact same object,
-unchanged and without Slice-5 output, generic `Exception` catching, conversion to `1`, logging, retry, fallback or
-second invocation. Slice 5 does not implement unexpected-exception reporting.
+Successful execution remains silent: after one successful `main()` invocation, `run_process()` returns the exact
+integer `0` with no `stdout`, no `stderr`, no logging, no retry, no fallback and no process termination. An
+unexpected exception remains outside the approved controlled set and propagates as the exact same object, unchanged
+and without Slice-5 output, generic `Exception` catching, conversion to `1`, logging, retry, fallback or second
+invocation. Slice 5 does not implement unexpected-exception reporting.
 
 `main() -> None` remains responsible only for `sys.argv`, `sys.argv[1:]` and one
 `coordinate_application_bootstrap(...)` invocation; it shall not catch failures, render `stderr`, log or terminate.
@@ -425,7 +430,7 @@ the stderr presentation, preserving alternate presentation adapters, including a
 stderr behaviour into the shared Application Core. This is architectural compatibility only and does not approve a
 GUI feature, implementation, framework or Version 1.0 scope.
 
-Slice 5 does not approve logging initialisation or calls, an execution summary, dynamic exception detail,
+Slice 5 does not introduce logging initialisation or calls, an execution summary, dynamic exception detail,
 tracebacks, `sys.exit`, `SystemExit`, a direct-execution guard, `__main__.py`, `[project.scripts]`, console-script
 packaging, an executable adapter, retries, fallback, new CLI options, dependencies or GUI implementation. Runtime
 logging, execution-summary, unexpected-exception, executable-boundary, integration/end-to-end, Operational

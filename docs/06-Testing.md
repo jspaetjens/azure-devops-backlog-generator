@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.22
+**Version:** 2.23
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-03
 
@@ -56,6 +56,7 @@
 | 2.20 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 4 Controlled Application Outcome Mapping coverage. |
 | 2.21 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping coverage and validation evidence. |
 | 2.22 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage. |
+| 2.23 | 2026-09-03 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage and validation evidence. |
 
 ---
 
@@ -401,30 +402,35 @@ defines no executable adapter. The focused `tests/test_main.py` suite recorded 1
 Coverage was 95% across 1,309 statements with 64 missed statements; `main.py` had 28 statements with 0 missed,
 and all new Slice-4 production statements were covered.
 
-Application/Run Slice 5 — Controlled Failure Reporting to Standard Error shall add focused process-boundary
-coverage in `tests/test_main.py`; it shall not duplicate lower-layer generation, configuration, documentation,
-REST, HTTP `401`/`403`, work-item resolution, relationship, Slice-1, Slice-2, Slice-3 or Slice-4 classification
-tests. A successful-execution test shall prove exactly one `main()` invocation, exact integer `0`, empty stdout,
-empty stderr, no logging, no `SystemExit`, no retry and no fallback. No subprocess test is required because no
-executable adapter is approved.
+Implemented Application/Run Slice 5 — Controlled Failure Reporting to Standard Error focused process-boundary
+coverage in `tests/test_main.py` does not duplicate lower-layer generation, configuration, documentation, REST,
+HTTP `401`/`403`, work-item resolution, relationship, Slice-1, Slice-2, Slice-3 or Slice-4 classification tests. A
+successful-execution test proves exactly one `main()` invocation, exact integer `0`, empty stdout, empty stderr, no
+logging, no `SystemExit`, no retry and no fallback. No subprocess tests exist because executable adaptation remains
+future.
 
 For each approved controlled category — the `ConfigurationError`, `DocumentationProcessingError` and
 `AzureDevOpsRestClientError` hierarchies, and `SourceIdentityValidationError`, `ExistingWorkItemResolutionError`
-and `ConflictingReusedChildRelationshipError` — focused tests shall prove exactly one `main()` invocation, exact
-integer `1`, empty stdout, no logging, no `SystemExit`, no retry, no fallback, no second invocation and no re-raise.
-They shall prove exact stderr content comprising only the corresponding fixed message and one newline:
+and `ConflictingReusedChildRelationshipError` — focused tests prove exactly one `main()` invocation, exact integer
+`1`, empty stdout, no logging, no `SystemExit`, no retry, no fallback, no second invocation and no re-raise. They
+prove exact stderr content comprising only the corresponding fixed message and one newline:
 `Configuration error.\n`, `Documentation processing error.\n`, `Azure DevOps error.\n`,
 `Source identity validation error.\n`, `Existing work item resolution error.\n` or
 `Conflicting reused child relationship error.\n`. Representative existing concrete exceptions or subclasses may be
 used where useful.
 
-At least one secret-safety test shall use synthetic arbitrary or sensitive-looking detail where an existing controlled
-exception constructor permits it, and shall prove that stderr contains only the applicable fixed category message,
-that the synthetic detail is absent, that stdout is empty and that the result is `1`. No exception classes shall be
-changed merely to facilitate this test. An unexpected-failure test shall make `main()` raise one sentinel exception
-outside the approved controlled set and prove that the exact object propagates unchanged after one invocation, with
-empty stdout and stderr, no controlled message, no logging, no `SystemExit`, retry, fallback or second invocation.
-The tests shall not require dynamic exception rendering, generic exception catching or an executable adapter.
+A secret-safety test uses synthetic PAT-like detail, a synthetic configuration path and a synthetic URL in an
+existing controlled exception, and proves that stderr contains only the applicable fixed category message, that all
+synthetic detail is absent, that stdout is empty and that the result is `1`. No exception classes were changed merely
+to facilitate this test. An unexpected-failure test makes `main()` raise one sentinel exception outside the approved
+controlled set and proves that the exact object propagates unchanged after one invocation, with empty stdout and
+stderr, no controlled message, no logging, no `SystemExit`, retry, fallback or second invocation. The tests require
+no dynamic exception rendering, generic exception catching or executable adapter.
+
+The focused `tests/test_main.py` suite recorded 18 passed; the full suite and `pytest -W error` each recorded 698
+passed, with 0 failed, skipped, warnings, xfail or xpass. Ruff passed. Coverage was 95% across 1,323 statements
+with 64 missed statements; `main.py` had 42 statements with 0 missed, and all new Slice-5 production statements
+were covered.
 
 Work Item Create Payload validation shall additionally cover:
 
