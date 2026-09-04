@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.23
+**Version:** 2.24
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-03
+**Last Updated:** 2026-09-04
 
 **Target Release:** v1.0.0
 
@@ -57,6 +57,7 @@
 | 2.21 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping coverage and validation evidence. |
 | 2.22 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage. |
 | 2.23 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage and validation evidence. |
+| 2.24 | 2026-09-04 | Draft | Jack Spaetjens | Defined required but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage. |
 
 ---
 
@@ -431,6 +432,34 @@ The focused `tests/test_main.py` suite recorded 18 passed; the full suite and `p
 passed, with 0 failed, skipped, warnings, xfail or xpass. Ruff passed. Coverage was 95% across 1,323 statements
 with 64 missed statements; `main.py` had 42 statements with 0 missed, and all new Slice-5 production statements
 were covered.
+
+Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events is approved but not yet implemented.
+Its future focused coverage shall use standard pytest facilities such as `tmp_path`, `capsys`, `caplog` where useful,
+`monkeypatch` and filesystem assertions. It shall prove configured-directory use; the exact
+`azure-devops-backlog-generator.log` filename; append and UTF-8 handler semantics; logger identity
+`azure_devops_backlog_generator`; `propagate=False`; configured threshold application; and no root or console
+output. A successful run shall return exact integer `0` with empty stdout and stderr and no Slice-6 success or
+lifecycle event.
+
+For every reachable post-initialisation existing controlled category, tests shall prove exact integer `1`, empty
+stdout, the unchanged exact stderr line and one newline, exactly one emission attempt, and, when emission succeeds,
+exactly one file record at `CRITICAL` with the exact logger name and fixed category message and no dynamic exception
+detail. Tests shall also prove that a pre-initialisation
+`ConfigurationError` produces only its existing stderr line and no configured-file or fallback logging, and that a
+logger-initialisation failure is `ApplicationLoggingError` with exactly `Application logging error.\n`, empty stdout,
+integer `1`, no file event, no dynamic filesystem/logging detail and no fallback. Synthetic PAT-like text, a
+configuration path and a URL shall be absent from stdout, stderr beyond the fixed line, and file contents.
+
+Repeated-invocation coverage shall prove no duplicate owned handlers, duplicate controlled-failure records or stale
+handler reuse. Mandatory focused D5 coverage shall arrange a successfully initialised runtime logger, a controlled
+application failure and failure of its subsequent controlled-failure emission, then prove the original exact stderr
+category and one newline, empty stdout, exact integer `1`, no `ApplicationLoggingError` rendering, no second stderr
+line, no logging-internal traceback, no secondary-error propagation, no retry, fallback, alternate destination or
+duplicate emission attempt. It need not require a file record when the emission fails. Logging-infrastructure-error
+coverage shall prove no Python logging-internal traceback, root/console fallback or stderr output. Unexpected-exception coverage shall preserve exact sentinel propagation with no controlled
+stderr message, controlled-failure event or traceback logging. No subprocess, `SystemExit` or traceback-content tests
+are required. The Slice-5 validation evidence above remains pre-Slice-6 implementation evidence; no Slice-6 test
+count, quality result or coverage metric is claimed.
 
 Work Item Create Payload validation shall additionally cover:
 
