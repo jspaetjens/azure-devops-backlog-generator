@@ -4,9 +4,9 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.9
+**Version:** 1.10
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-04
 
@@ -33,6 +33,7 @@
 | 1.7 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Aligned the Version 1.0 process exit-status boundary with the approved REST operational contract. |
 | 1.8 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 configuration bootstrap template convention. |
 | 1.9 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined approved but unimplemented Slice-6 runtime file-logging configuration and bootstrap semantics. |
+| 1.10 | 2026-09-04 | Draft | Jack Spaetjens | Synchronized implemented Slice-6 runtime file-logging configuration and bootstrap semantics. |
 
 ---
 
@@ -243,19 +244,19 @@ If the resolved logging directory does not exist, the application shall create i
 
 Parent-directory creation semantics for arbitrary nested logging paths are not defined by this specification.
 
-The approved but unimplemented Application/Run Slice 6 runtime logger shall use no additional configuration key.
-After successful configuration loading and validation, it shall configure the application logger threshold and file
-handler threshold from the effective uppercase `logging.level`. Controlled process-termination category events shall
-use `CRITICAL`, which remains visible for every allowed threshold. The logger shall write UTF-8 append records to
+The implemented Application/Run Slice 6 runtime logger uses no additional configuration key. After successful
+configuration loading and validation, it configures the application logger threshold and file-handler threshold from
+the effective uppercase `logging.level`. Controlled process-termination category events use `CRITICAL`, which remains
+visible for every allowed threshold. The logger writes UTF-8 append records to
 `azure-devops-backlog-generator.log` inside the validated `logging.log_directory`; rotation, retention, console
 logging, filename, format and bootstrap-location configuration are not supported.
 
 Configured file logging can begin only after configuration load and validation make the validated logging directory
 available and runtime logger initialisation succeeds. A configuration loading or validation failure necessarily
-precedes runtime logger initialisation and shall retain the approved fixed `Configuration error.` stderr-only process
-boundary and exact integer `1`; it shall make no configured-file log attempt and use no fallback/default/bootstrap
+precedes runtime logger initialisation and retains the approved fixed `Configuration error.` stderr-only process
+boundary and exact integer `1`; it makes no configured-file log attempt and uses no fallback/default/bootstrap
 logger or alternate destination. If valid configuration is followed by runtime file-logger initialisation failure,
-the application shall raise the dedicated controlled `ApplicationLoggingError`; it shall not be treated as
+the application raises the dedicated controlled `ApplicationLoggingError`; it is not treated as
 `ConfigurationError`, and no file-log event or fallback destination shall be used. Later controlled failures may use
 the controlled-failure emission contract; a secondary file-write failure preserves the primary controlled failure.
 
