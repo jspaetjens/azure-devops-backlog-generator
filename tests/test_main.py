@@ -1,5 +1,7 @@
 """Tests for Application/Run composition."""
 
+import logging
+from io import StringIO
 from pathlib import Path
 
 import pytest
@@ -30,6 +32,13 @@ _SYNTHETIC_PAT = "slice-1-synthetic-pat"
 
 class _SentinelError(Exception):
     pass
+
+
+@pytest.fixture(autouse=True)
+def _reset_runtime_logging() -> None:
+    main_module._deactivate_runtime_logging()
+    yield
+    main_module._deactivate_runtime_logging()
 
 
 def test_run_process_returns_zero_after_one_successful_main_invocation(
@@ -167,11 +176,11 @@ def test_run_process_propagates_the_exact_unexpected_exception(
     assert caplog.records == []
 
 
-def _configuration(source_directory: Path) -> Configuration:
+def _configuration(source_directory: Path, log_directory: Path = Path("logs")) -> Configuration:
     return Configuration(
         azure_devops=AzureDevOpsConfig(organization="organization", project="project"),
         documentation=DocumentationConfig(source_directory=source_directory),
-        logging=LoggingConfig(level="INFO", log_directory=Path("logs")),
+        logging=LoggingConfig(level="INFO", log_directory=log_directory),
         personal_access_token=_SYNTHETIC_PAT,
     )
 
@@ -229,9 +238,10 @@ def test_main_propagates_bootstrap_failure_without_retry_or_exit_conversion(
 
 def test_composes_application_bootstrap_with_the_exact_collaborator_values(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     arguments = ["--config-file", "config/config.toml"]
-    configuration = _configuration(Path("documentation-input"))
+    configuration = _configuration(Path("documentation-input"), tmp_path)
     events: list[str] = []
 
     def load_configuration(arguments_received: object) -> Configuration:
@@ -279,9 +289,10 @@ def test_propagates_configuration_failure_without_invoking_slice_1(
 
 def test_propagates_slice_1_failure_without_retry_or_fallback(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     arguments = ["--config-file", "config/config.toml"]
-    configuration = _configuration(Path("documentation-input"))
+    configuration = _configuration(Path("documentation-input"), tmp_path)
     error = _SentinelError()
     events: list[str] = []
 
@@ -439,3 +450,373 @@ def test_propagates_generator_failure_without_retry_or_fallback(
 
     assert raised.value is error
     assert events == ["process", "rest-client-init", "generator"]
+
+
+@pytest.mark.parametrize("level", ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+def test_runtime_logger_uses_validated_settings_and_records_critical_failures(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+    level: str,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    configuration = Configuration(
+        azure_devops=configuration.azure_devops,
+        documentation=configuration.documentation,
+        logging=LoggingConfig(level=level, log_directory=tmp_path),
+        personal_access_token=configuration.personal_access_token,
+    )
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+
+    def fail(_: Configuration) -> None:
+        raise DocumentationReadError(
+            "SYNTHETIC_PAT_DO_NOT_RENDER C:\\secret\\config.toml https://example.invalid/private"
+        )
+
+    monkeypatch.setattr(main_module, "coordinate_application_run", fail)
+    log_file = tmp_path / "azure-devops-backlog-generator.log"
+    log_file.write_text("prior invocation\n", encoding="utf-8")
+
+    assert main_module.run_process() == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Documentation processing error.\n"
+
+    logger = logging.getLogger("azure_devops_backlog_generator")
+    owned_handlers = [
+        handler
+        for handler in logger.handlers
+        if getattr(handler, main_module._OWNED_HANDLER_ATTRIBUTE, False)
+    ]
+    assert logger.level == getattr(logging, level)
+    assert logger.propagate is False
+    assert len(owned_handlers) == 1
+    assert owned_handlers[0].level == getattr(logging, level)
+    assert owned_handlers[0].encoding == "utf-8"
+    assert owned_handlers[0].baseFilename == str(tmp_path / "azure-devops-backlog-generator.log")
+    assert owned_handlers[0].formatter is not None
+    assert owned_handlers[0].formatter._fmt == "%(asctime)s %(levelname)s %(name)s %(message)s"
+    assert owned_handlers[0].formatter.datefmt == "%Y-%m-%dT%H:%M:%S"
+    contents = log_file.read_text(encoding="utf-8")
+    assert contents.startswith("prior invocation\n")
+    assert contents.count("Documentation processing error.") == 1
+    assert " CRITICAL azure_devops_backlog_generator Documentation processing error.\n" in contents
+    assert "SYNTHETIC_PAT_DO_NOT_RENDER" not in contents
+    assert "C:\\secret\\config.toml" not in captured.out + captured.err + contents
+    assert "https://example.invalid/private" not in captured.out + captured.err + contents
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (AzureDevOpsTransportError("detail"), "Azure DevOps error."),
+        (
+            SourceIdentityValidationError(SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY),
+            "Source identity validation error.",
+        ),
+        (ExistingWorkItemResolutionError("detail"), "Existing work item resolution error."),
+        (
+            ConflictingReusedChildRelationshipError(
+                2,
+                1,
+                ReusedChildRelationshipClassification.CONFLICTING,
+                AzureDevOpsWorkItemRelationshipState(revision=1, reverse_parent_ids=(3,)),
+            ),
+            "Conflicting reused child relationship error.",
+        ),
+    ],
+)
+def test_each_reachable_post_initialisation_controlled_failure_is_logged_once(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+    error: Exception,
+    message: str,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(
+        main_module,
+        "coordinate_application_run",
+        lambda _: (_ for _ in ()).throw(error),
+    )
+
+    assert main_module.run_process() == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == f"{message}\n"
+    contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+    assert contents.count(message) == 1
+    assert f" CRITICAL azure_devops_backlog_generator {message}\n" in contents
+
+
+def test_successful_run_is_silent_and_writes_no_lifecycle_record(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", lambda _: None)
+
+    assert main_module.run_process() == 0
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+    assert (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8") == ""
+
+
+def test_configuration_error_has_no_file_event_and_deactivates_a_stale_handler(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    calls = 0
+
+    def load(_: object) -> Configuration:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return configuration
+        raise ConfigurationFileError("SYNTHETIC_PAT_DO_NOT_RENDER C:\\secret\\config.toml")
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", load)
+    monkeypatch.setattr(main_module, "coordinate_application_run", lambda _: None)
+
+    assert main_module.run_process() == 0
+    first_handler = main_module._ACTIVE_LOG_HANDLER
+    assert first_handler is not None
+    assert main_module.run_process() == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Configuration error.\n"
+    assert first_handler.stream is None
+    assert main_module._ACTIVE_LOG_HANDLER is None
+    assert (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8") == ""
+
+
+def test_logging_initialisation_failure_is_a_controlled_application_error(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+
+    class FailingHandler:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            raise OSError("SYNTHETIC_PAT_DO_NOT_RENDER")
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "_ApplicationFileHandler", FailingHandler)
+
+    assert main_module.run_process() == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Application logging error.\n"
+    assert "SYNTHETIC_PAT_DO_NOT_RENDER" not in captured.err
+    assert main_module._ACTIVE_LOG_HANDLER is None
+    assert not (tmp_path / "azure-devops-backlog-generator.log").exists()
+
+
+def test_partial_logging_initialisation_failure_closes_the_created_handler(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    created_handlers: list[logging.FileHandler] = []
+    original_handler = main_module._ApplicationFileHandler
+
+    class TrackingHandler(original_handler):
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            super().__init__(*args, **kwargs)
+            created_handlers.append(self)
+
+    def fail_to_attach(_: logging.Handler) -> None:
+        raise OSError("SYNTHETIC_PAT_DO_NOT_RENDER")
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "_ApplicationFileHandler", TrackingHandler)
+    with monkeypatch.context() as initialisation_patch:
+        initialisation_patch.setattr(main_module._LOGGER, "addHandler", fail_to_attach)
+        result = main_module.run_process()
+
+    assert result == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Application logging error.\n"
+    assert "SYNTHETIC_PAT_DO_NOT_RENDER" not in captured.err
+    assert len(created_handlers) == 1
+    assert created_handlers[0].stream is None
+    assert main_module._ACTIVE_LOG_HANDLER is None
+    assert not any(
+        getattr(handler, main_module._OWNED_HANDLER_ATTRIBUTE, False)
+        for handler in main_module._LOGGER.handlers
+    )
+
+
+def test_controlled_event_bypasses_non_owned_handler_on_the_named_logger(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    stream = StringIO()
+
+    class TrackingHandler(logging.StreamHandler):
+        closed = False
+
+        def close(self) -> None:
+            self.closed = True
+            super().close()
+
+    named_handler = TrackingHandler(stream)
+    root_handler = TrackingHandler(StringIO())
+    main_module._LOGGER.addHandler(named_handler)
+    logging.getLogger().addHandler(root_handler)
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(
+        main_module,
+        "coordinate_application_run",
+        lambda _: (_ for _ in ()).throw(DocumentationReadError("detail")),
+    )
+
+    try:
+        assert main_module.run_process() == 1
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err == "Documentation processing error.\n"
+        assert named_handler in main_module._LOGGER.handlers
+        assert named_handler.closed is False
+        assert stream.getvalue() == ""
+        assert root_handler in logging.getLogger().handlers
+        assert root_handler.closed is False
+        assert main_module._LOGGER.propagate is False
+        contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+        assert contents.count("Documentation processing error.") == 1
+        assert (
+            " CRITICAL azure_devops_backlog_generator Documentation processing error.\n"
+            in contents
+        )
+    finally:
+        main_module._LOGGER.removeHandler(named_handler)
+        named_handler.close()
+        logging.getLogger().removeHandler(root_handler)
+        root_handler.close()
+
+
+def test_secondary_log_write_failure_preserves_the_primary_controlled_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    attempts = 0
+
+    class FailingStream:
+        def write(self, _: str) -> int:
+            raise OSError("write failure")
+
+        def flush(self) -> None:
+            pass
+
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(
+        main_module,
+        "coordinate_application_run",
+        lambda _: (_ for _ in ()).throw(DocumentationReadError("detail")),
+    )
+    def replace_stream() -> None:
+        assert main_module._ACTIVE_LOG_HANDLER is not None
+        assert main_module._ACTIVE_LOG_HANDLER.stream is not None
+        main_module._ACTIVE_LOG_HANDLER.stream.close()
+        main_module._ACTIVE_LOG_HANDLER.stream = FailingStream()
+        original_handle = main_module._ACTIVE_LOG_HANDLER.handle
+
+        def handle(record: logging.LogRecord) -> bool:
+            nonlocal attempts
+            attempts += 1
+            return original_handle(record)
+
+        monkeypatch.setattr(main_module._ACTIVE_LOG_HANDLER, "handle", handle)
+
+    original_run = main_module.coordinate_application_run
+
+    def fail_with_stream(configuration_received: Configuration) -> None:
+        replace_stream()
+        original_run(configuration_received)
+
+    monkeypatch.setattr(main_module, "coordinate_application_run", fail_with_stream)
+
+    assert main_module.run_process() == 1
+    captured = capsys.readouterr()
+    assert attempts == 1
+    assert captured.out == ""
+    assert captured.err == "Documentation processing error.\n"
+    assert "Logging error" not in captured.err
+
+
+def test_repeated_invocations_replace_only_owned_handlers_and_do_not_duplicate_records(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    unrelated_logger = logging.getLogger("unrelated.application.logger")
+    unrelated = logging.StreamHandler()
+    root_handler = logging.StreamHandler()
+    raise_exceptions = logging.raiseExceptions
+    unrelated_logger.addHandler(unrelated)
+    logging.getLogger().addHandler(root_handler)
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(
+        main_module,
+        "coordinate_application_run",
+        lambda _: (_ for _ in ()).throw(DocumentationReadError("detail")),
+    )
+
+    assert main_module.run_process() == 1
+    first_handler = main_module._ACTIVE_LOG_HANDLER
+    assert main_module.run_process() == 1
+    second_handler = main_module._ACTIVE_LOG_HANDLER
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Documentation processing error.\nDocumentation processing error.\n"
+    assert first_handler is not second_handler
+    assert first_handler is not None and first_handler.stream is None
+    assert unrelated in unrelated_logger.handlers
+    assert root_handler in logging.getLogger().handlers
+    assert logging.raiseExceptions is raise_exceptions
+    contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+    assert contents.count("Documentation processing error.") == 2
+    logging.getLogger().removeHandler(root_handler)
+    unrelated_logger.removeHandler(unrelated)
+
+
+def test_unexpected_exception_remains_unlogged_after_logger_initialisation(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    error = _SentinelError()
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(
+        main_module,
+        "coordinate_application_run",
+        lambda _: (_ for _ in ()).throw(error),
+    )
+
+    with pytest.raises(_SentinelError) as raised:
+        main_module.run_process()
+
+    assert raised.value is error
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+    assert (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8") == ""
