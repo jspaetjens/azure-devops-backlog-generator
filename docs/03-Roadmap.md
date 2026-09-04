@@ -6,7 +6,7 @@
 
 **Version:** 1.30
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-04
 
@@ -53,7 +53,7 @@
 | 1.27 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 5 Controlled Failure Reporting to Standard Error implementation contract. |
 | 1.28 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 | 1.29 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
-| 1.30 | 2026-09-04 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
+| 1.30 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 
 ---
 

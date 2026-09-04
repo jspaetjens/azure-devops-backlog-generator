@@ -6,7 +6,7 @@
 
 **Version:** 2.25
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-04
 
@@ -58,7 +58,7 @@
 | 2.22 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined mandatory Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage. |
 | 2.23 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage and validation evidence. |
 | 2.24 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined required but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage. |
-| 2.25 | 2026-09-04 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage and validation evidence. |
+| 2.25 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage and validation evidence. |
 
 ---
 
