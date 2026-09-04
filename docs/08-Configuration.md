@@ -4,11 +4,11 @@
 
 > *This document defines the configuration architecture, configuration parameters and validation rules for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.8
+**Version:** 1.9
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-08-27
+**Last Updated:** 2026-09-04
 
 **Target Release:** v1.0.0
 
@@ -32,6 +32,7 @@
 | 1.6 | 2026-08-21 | Approved Baseline | Jack Spaetjens | Standardised the Approval section to remain valid across Draft and Approved Baseline states. |
 | 1.7 | 2026-08-23 | Approved Baseline | Jack Spaetjens | Aligned the Version 1.0 process exit-status boundary with the approved REST operational contract. |
 | 1.8 | 2026-08-27 | Approved Baseline | Jack Spaetjens | Defined the Version 1.0 configuration bootstrap template convention. |
+| 1.9 | 2026-09-04 | Draft | Jack Spaetjens | Defined approved but unimplemented Slice-6 runtime file-logging configuration and bootstrap semantics. |
 
 ---
 
@@ -242,6 +243,22 @@ If the resolved logging directory does not exist, the application shall create i
 
 Parent-directory creation semantics for arbitrary nested logging paths are not defined by this specification.
 
+The approved but unimplemented Application/Run Slice 6 runtime logger shall use no additional configuration key.
+After successful configuration loading and validation, it shall configure the application logger threshold and file
+handler threshold from the effective uppercase `logging.level`. Controlled process-termination category events shall
+use `CRITICAL`, which remains visible for every allowed threshold. The logger shall write UTF-8 append records to
+`azure-devops-backlog-generator.log` inside the validated `logging.log_directory`; rotation, retention, console
+logging, filename, format and bootstrap-location configuration are not supported.
+
+Configured file logging can begin only after configuration load and validation make the validated logging directory
+available and runtime logger initialisation succeeds. A configuration loading or validation failure necessarily
+precedes runtime logger initialisation and shall retain the approved fixed `Configuration error.` stderr-only process
+boundary and exact integer `1`; it shall make no configured-file log attempt and use no fallback/default/bootstrap
+logger or alternate destination. If valid configuration is followed by runtime file-logger initialisation failure,
+the application shall raise the dedicated controlled `ApplicationLoggingError`; it shall not be treated as
+`ConfigurationError`, and no file-log event or fallback destination shall be used. Later controlled failures may use
+the controlled-failure emission contract; a secondary file-write failure preserves the primary controlled failure.
+
 ## 6.5 Generator
 
 Version 1.0 defines no externally configurable generator parameters. The `[generator]` TOML table may be omitted. An explicitly present empty `[generator]` table is equivalent to omission. Any key inside `[generator]` shall be an unknown-key validation error.
@@ -288,7 +305,9 @@ Validation shall verify:
 
 Application execution shall not continue when required configuration validation fails.
 
-Meaningful validation errors shall be presented to the user and recorded through the application's logging mechanism.
+Meaningful validation errors shall be presented through the application's approved process boundary. Configuration
+loading and validation failures occur before configured runtime logging can initialise, so they remain stderr-only;
+no configured-file log attempt or fallback logging destination is authorised.
 
 Unknown configuration sections or keys shall be validation errors. Validation shall fail before application execution when unknown configuration sections or keys are present.
 

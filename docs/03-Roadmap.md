@@ -4,11 +4,11 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.28
+**Version:** 1.29
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-03
+**Last Updated:** 2026-09-04
 
 **Target Release:** v1.0.0
 
@@ -52,6 +52,7 @@
 | 1.26 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete wider application/run responsibilities. |
 | 1.27 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 5 Controlled Failure Reporting to Standard Error implementation contract. |
 | 1.28 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
+| 1.29 | 2026-09-04 | Draft | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 
 ---
 
@@ -222,6 +223,21 @@ execution summaries, unexpected-exception reporting, tracebacks, `sys.exit` or `
 packaging or GUI implementation. Slices 1, 2, 3, 4 and 5 are implemented; the wider Application/Run phase remains
 incomplete, and Operational Readiness, Operational Recovery / DR, Review Gate 3, integration/end-to-end and final
 release-readiness work remain future.
+
+Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events is approved but not yet implemented.
+It shall initialise one configured application-owned UTF-8 append file handler after successful configuration
+loading and validation, using `azure_devops_backlog_generator`, `propagate=False`, the fixed
+`azure-devops-backlog-generator.log` filename, the configured logging threshold and a deterministic timestamp,
+level, logger-name and message format. Each post-initialisation controlled process failure shall cause exactly one
+category-only `CRITICAL` file-event emission attempt; when that attempt succeeds, exactly one record shall be
+written. A secondary write failure shall not replace the primary controlled failure, its fixed stderr line or its
+`1` outcome. It adds `ApplicationLoggingError` as a seventh controlled process category for logger-initialisation
+failure; that error and pre-initialisation configuration failures produce no file event or fallback logging.
+Dynamic diagnostics, PAT/Authorization, tracebacks, root/console output and logging-internal stderr diagnostics are
+prohibited. Slices 1–5 remain implemented and the wider Application/Run phase remains incomplete. Success/lifecycle
+logging, an execution-summary/result contract, unexpected-exception and traceback policy, executable
+adapter/SystemExit ownership, packaging/direct execution, integration/E2E, Operational Readiness, Operational
+Recovery / DR, Review Gate 3 and final Version 1.0 release readiness remain future.
 
 ---
 

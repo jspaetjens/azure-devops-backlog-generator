@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.33
+**Version:** 2.34
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-03
+**Last Updated:** 2026-09-04
 
 **Target Release:** v1.0.0
 
@@ -67,6 +67,7 @@
 | 2.31 | 2026-09-02 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 4 Controlled Application Outcome Mapping status while retaining incomplete wider application/run responsibilities. |
 | 2.32 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 5 Controlled Failure Reporting to Standard Error contract. |
 | 2.33 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
+| 2.34 | 2026-09-04 | Draft | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 
 ---
 
@@ -88,6 +89,8 @@
     - [7.1.2 Application/Run Slice 2](#712-applicationrun-slice-2)
     - [7.1.3 Application/Run Slice 3 — Process Bootstrap Invocation](#713-applicationrun-slice-3--process-bootstrap-invocation)
     - [7.1.4 Application/Run Slice 4 — Controlled Application Outcome Mapping](#714-applicationrun-slice-4--controlled-application-outcome-mapping)
+    - [7.1.5 Application/Run Slice 5 — Controlled Failure Reporting to Standard Error](#715-applicationrun-slice-5--controlled-failure-reporting-to-standard-error)
+    - [7.1.6 Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events](#716-applicationrun-slice-6--runtime-file-logging-and-controlled-failure-events)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -436,6 +439,74 @@ packaging, an executable adapter, retries, fallback, new CLI options, dependenci
 logging, execution-summary, unexpected-exception, executable-boundary, integration/end-to-end, Operational
 Readiness, Operational Recovery / DR, Review Gate 3 and final release-readiness work remain future. The wider
 Application/Run phase remains incomplete.
+
+---
+
+### 7.1.6 Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events
+
+Application/Run Slice 6 is an approved contract and is not yet implemented. It adds application-wide runtime
+file logging for controlled process-terminating failures without changing the existing shared Application Core,
+Generator, REST Client, Documentation Processor or domain result contracts.
+
+After configuration has loaded and validated successfully, and before downstream application work requiring
+logging, the application/bootstrap boundary shall initialise one application-owned file handler for the current
+invocation. The logger name shall be `azure_devops_backlog_generator`; it shall use `propagate=False` and shall
+not emit through root or console handlers. The sole file shall be
+`<validated logging.log_directory>/azure-devops-backlog-generator.log`, opened in append mode with UTF-8
+encoding. It shall use standard-library Python logging only, no rotation, no retention policy, and no external
+logging dependency. The configured `logging.level` shall apply to the application logger and handler.
+
+Each record shall contain exactly the logical fields timestamp, level, logger name and message, with format
+`%(asctime)s %(levelname)s %(name)s %(message)s` and timestamp format `%Y-%m-%dT%H:%M:%S`. Slice-6 controlled
+failure events shall use `CRITICAL`, so they remain visible for every permitted configured threshold. This level
+expresses process-termination severity for this slice only and does not alter lower-layer exception semantics.
+
+The process-facing `run_process() -> int` remains the owner of controlled classification, category-only stderr
+rendering, integer outcome mapping and unexpected-exception propagation. For each controlled failure that reaches it
+after logging has initialised for the current invocation, it shall make exactly one application-owned `CRITICAL`
+controlled-failure event-emission attempt. When the attempt succeeds, exactly one file record shall be written. The
+event message shall be the same fixed category-only message rendered to stderr. No
+dynamic exception detail may be logged, including `str(exception)`, `repr(exception)`, arguments, causes, paths,
+source identities, titles, URLs, response bodies, headers, PAT values, Authorization values, arbitrary messages or
+tracebacks. PAT and Authorization shall never be logged.
+
+The seven controlled categories and exact messages shall be: `ConfigurationError` — `Configuration error.`;
+`DocumentationProcessingError` — `Documentation processing error.`; `AzureDevOpsRestClientError` — `Azure DevOps
+error.`; `SourceIdentityValidationError` — `Source identity validation error.`;
+`ExistingWorkItemResolutionError` — `Existing work item resolution error.`;
+`ConflictingReusedChildRelationshipError` — `Conflicting reused child relationship error.`; and the new dedicated
+application-layer `ApplicationLoggingError` — `Application logging error.`. Slice 6 adds no shared/base exception
+hierarchy. A valid configuration followed by runtime file-logging initialisation failure shall raise
+`ApplicationLoggingError`. `run_process()` shall render exactly `Application logging error.` followed by one newline
+to stderr, leave stdout empty, return exact integer `1`, and not re-raise, retry, fall back or use another logging
+destination. As logging did not initialise, that error shall produce no file event. Logging infrastructure shall not
+produce Python logging-internal diagnostics, a `Logging error` traceback, root-handler fallback or console output on
+stdout or stderr.
+
+File logging begins only after configuration loading, validation and logger initialisation succeed. A configuration
+loading or validation `ConfigurationError` necessarily occurs before that point and retains the existing
+`Configuration error.` stderr line and exact integer `1`, with no configured-file log attempt,
+fallback/default/bootstrap file logger or alternate destination. Only controlled failures after successful
+configuration loading, validation and runtime logging initialisation participate in the controlled-failure
+event-emission contract. If their single emission attempt fails, the write failure is secondary: the original
+controlled failure remains authoritative, its fixed stderr line and exact integer `1` remain unchanged, and stdout
+remains empty. The application shall not retry, fall back, use another destination, emit another application event,
+add stderr output, emit a logging traceback or Python logging-internal diagnostic, substitute
+`ApplicationLoggingError`, or propagate the secondary logging error. `ApplicationLoggingError` applies only to
+runtime logger initialisation failure before downstream execution.
+
+Logging configuration is per invocation. At most one owned handler may be active; repeated `run_process()` calls in
+one interpreter shall not duplicate handlers or events, and a prior owned handler shall not be reused as the active
+handler of a later invocation. The application may remove and close only handlers it owns, shall leave unrelated
+and root handlers untouched, and shall leave no partially active owned handler after unsuccessful initialisation.
+
+Successful execution remains silent and produces no Slice-6 success or lifecycle event. An unexpected exception
+continues to propagate as the exact same object, without a generic `Exception` catch, user-facing message,
+traceback logging or controlled-failure event. Slice 6 does not add an execution summary, `sys.exit`, `SystemExit`,
+direct-execution guard, `__main__.py`, console-script packaging, subprocess contract, new CLI option, retry,
+fallback, rollback, compensation or GUI implementation. File logging is operational infrastructure, not a
+presentation adapter; stdout, stderr, process outcomes and termination remain outside the presentation-neutral
+shared Application Core so a future GUI may reuse the typed application/core boundaries.
 
 ---
 
