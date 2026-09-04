@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.34
+**Version:** 2.35
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-04
 
@@ -68,6 +68,7 @@
 | 2.32 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Defined the Application/Run Slice 5 Controlled Failure Reporting to Standard Error contract. |
 | 2.33 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 | 2.34 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
+| 2.35 | 2026-09-04 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 
 ---
 
@@ -444,17 +445,19 @@ Application/Run phase remains incomplete.
 
 ### 7.1.6 Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events
 
-Application/Run Slice 6 is an approved contract and is not yet implemented. It adds application-wide runtime
+Application/Run Slice 6 is implemented. It adds application-wide runtime
 file logging for controlled process-terminating failures without changing the existing shared Application Core,
 Generator, REST Client, Documentation Processor or domain result contracts.
 
-After configuration has loaded and validated successfully, and before downstream application work requiring
-logging, the application/bootstrap boundary shall initialise one application-owned file handler for the current
-invocation. The logger name shall be `azure_devops_backlog_generator`; it shall use `propagate=False` and shall
-not emit through root or console handlers. The sole file shall be
+At the beginning of each application/bootstrap invocation, before configuration loading, the application removes and
+closes prior application-owned handlers and clears `_ACTIVE_LOG_HANDLER`; unrelated and root handlers remain
+untouched. After configuration has loaded and validated successfully, and before downstream application work requiring
+logging, the application/bootstrap boundary initialises one application-owned file handler for the current invocation.
+The logger name is `azure_devops_backlog_generator`; it uses `propagate=False` and does not emit through root or
+console handlers. The sole file is
 `<validated logging.log_directory>/azure-devops-backlog-generator.log`, opened in append mode with UTF-8
-encoding. It shall use standard-library Python logging only, no rotation, no retention policy, and no external
-logging dependency. The configured `logging.level` shall apply to the application logger and handler.
+encoding. It uses standard-library Python logging only, no rotation, no retention policy, and no external logging
+dependency. The configured `logging.level` applies to the application logger and owned handler.
 
 Each record shall contain exactly the logical fields timestamp, level, logger name and message, with format
 `%(asctime)s %(levelname)s %(name)s %(message)s` and timestamp format `%Y-%m-%dT%H:%M:%S`. Slice-6 controlled
@@ -463,8 +466,10 @@ expresses process-termination severity for this slice only and does not alter lo
 
 The process-facing `run_process() -> int` remains the owner of controlled classification, category-only stderr
 rendering, integer outcome mapping and unexpected-exception propagation. For each controlled failure that reaches it
-after logging has initialised for the current invocation, it shall make exactly one application-owned `CRITICAL`
-controlled-failure event-emission attempt. When the attempt succeeds, exactly one file record shall be written. The
+after logging has initialised for the current invocation, it makes exactly one application-owned `CRITICAL`
+controlled-failure event-emission attempt. It creates a `LogRecord` using the named application logger and dispatches
+it directly only to `_ACTIVE_LOG_HANDLER`; non-owned handlers attached to that same named logger receive no controlled
+event. When the attempt succeeds, exactly one file record is written. The
 event message shall be the same fixed category-only message rendered to stderr. No
 dynamic exception detail may be logged, including `str(exception)`, `repr(exception)`, arguments, causes, paths,
 source identities, titles, URLs, response bodies, headers, PAT values, Authorization values, arbitrary messages or
@@ -495,10 +500,11 @@ add stderr output, emit a logging traceback or Python logging-internal diagnosti
 `ApplicationLoggingError`, or propagate the secondary logging error. `ApplicationLoggingError` applies only to
 runtime logger initialisation failure before downstream execution.
 
-Logging configuration is per invocation. At most one owned handler may be active; repeated `run_process()` calls in
-one interpreter shall not duplicate handlers or events, and a prior owned handler shall not be reused as the active
-handler of a later invocation. The application may remove and close only handlers it owns, shall leave unrelated
-and root handlers untouched, and shall leave no partially active owned handler after unsuccessful initialisation.
+Logging configuration is per invocation. At most one owned handler is active; repeated `run_process()` calls in one
+interpreter do not duplicate handlers or events, and a prior owned handler is not reused as the active handler of a
+later invocation. Partial initialisation is cleaned up. The application-owned handler suppresses only its own
+logging-internal error diagnostics for secondary write failures; it does not change `logging.raiseExceptions` or
+globally reconfigure logging.
 
 Successful execution remains silent and produces no Slice-6 success or lifecycle event. An unexpected exception
 continues to propagate as the exact same object, without a generic `Exception` catch, user-facing message,

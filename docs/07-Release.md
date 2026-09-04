@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.23
+**Version:** 1.24
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-04
 
@@ -47,6 +47,7 @@
 | 1.21 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Recorded approved but unimplemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error. |
 | 1.22 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 | 1.23 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
+| 1.24 | 2026-09-04 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 
 ---
 
@@ -155,11 +156,11 @@ URLs, response bodies, headers, PAT values, Authorization values or arbitrary ex
 prove synthetic sensitive-looking detail absent from stderr. Successful `run_process()` execution remains silent and
 returns `0`; unexpected exceptions propagate unchanged with no Slice-5 output or generic `Exception` catch. The
 wider Application/Run phase is not yet complete. Application/Run Slice 6 — Runtime File Logging and Controlled-Failure
-Events is approved but unimplemented. It defines one configured application-owned UTF-8 append file handler and one
+Events is implemented. Runtime controlled-failure file logging now uses one configured application-owned UTF-8 append handler and one
 safe category-only `CRITICAL` emission attempt per eligible controlled failure; a record is written exactly once when
 that attempt succeeds, while a secondary write failure preserves the primary controlled failure. It permits no
 root/console/fallback logging and adds an `ApplicationLoggingError` controlled category only when initialisation
-fails. Runtime logging does not yet exist. Version 1.0 remains pre-release:
+fails. Version 1.0 remains pre-release:
 success/lifecycle logging, execution summary/result contract, unexpected-exception handling, traceback diagnostics,
 an executable process/CLI adapter, `SystemExit` ownership,
 `__main__.py` and/or console-script packaging if later approved, integration/end-to-end validation, Operational
