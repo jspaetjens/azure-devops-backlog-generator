@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.35
+**Version:** 2.36
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-04
+**Last Updated:** 2026-09-06
 
 **Target Release:** v1.0.0
 
@@ -69,6 +69,7 @@
 | 2.33 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 | 2.34 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 | 2.35 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
+| 2.36 | 2026-09-06 | Draft | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 7 Package Execution Adapter with Controlled Process Termination contract. |
 
 ---
 
@@ -92,6 +93,7 @@
     - [7.1.4 Application/Run Slice 4 — Controlled Application Outcome Mapping](#714-applicationrun-slice-4--controlled-application-outcome-mapping)
     - [7.1.5 Application/Run Slice 5 — Controlled Failure Reporting to Standard Error](#715-applicationrun-slice-5--controlled-failure-reporting-to-standard-error)
     - [7.1.6 Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events](#716-applicationrun-slice-6--runtime-file-logging-and-controlled-failure-events)
+    - [7.1.7 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination](#717-applicationrun-slice-7--package-execution-adapter-with-controlled-process-termination)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -513,6 +515,107 @@ direct-execution guard, `__main__.py`, console-script packaging, subprocess cont
 fallback, rollback, compensation or GUI implementation. File logging is operational infrastructure, not a
 presentation adapter; stdout, stderr, process outcomes and termination remain outside the presentation-neutral
 shared Application Core so a future GUI may reuse the typed application/core boundaries.
+
+---
+
+### 7.1.7 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination
+
+Application/Run Slice 7 is an approved contract and is not yet implemented. S7-D1 and S7-D2 are approved
+owner decisions; this document revision remains Draft. Application/Run Slices 1–6 remain implemented and
+the wider Application/Run phase remains incomplete.
+
+**S7-D1 — Executable invocation surface.** Slice 7 shall establish exactly one executable package surface:
+
+```text
+python -m azure_devops_backlog_generator
+```
+
+The production surface shall be `src/azure_devops_backlog_generator/__main__.py`. This package module shall
+be the outer executable adapter. Its executable path shall invoke the existing `run_process()` exactly
+once and use the returned integer unchanged to raise or cause `SystemExit(returned_integer)`:
+
+| Existing callable outcome | Executable adapter outcome | Operating-system process exit status |
+|---------------------------|----------------------------|--------------------------------------|
+| Exact integer `0` | `SystemExit(0)` | `0` |
+| Exact integer `1` | `SystemExit(1)` | `1` |
+
+The adapter shall not call `main()` or `coordinate_application_bootstrap()` directly, inspect lower-layer
+exceptions, reinterpret the integer, add another result mapping, or duplicate controlled classification,
+stderr rendering or logging. It shall produce no stdout or stderr of its own.
+
+`SystemExit` ownership shall belong exclusively to the executable adapter. The existing
+`run_process() -> int`, `main() -> None`, `coordinate_application_bootstrap(...) -> None`,
+`coordinate_application_run(...) -> None` and Generator orchestration/traversal `None` return contracts
+shall remain unchanged. Neither those callables nor the Generator, REST Client, Documentation Processor
+or domain models shall acquire executable termination responsibilities.
+
+Ordinary `import azure_devops_backlog_generator` and
+`import azure_devops_backlog_generator.__main__` shall not invoke `run_process()` or `main()`, start the
+application, raise `SystemExit` or emit stdout/stderr. Importing the executable module for testing or
+introspection shall remain safe. Execution shall occur only through executable package entry semantics;
+a conventional `if __name__ == "__main__":` boundary may be used inside `__main__.py` for that purpose.
+There shall be no import-time side effects beyond normal module definition/import behaviour.
+
+The adapter shall not parse or alter CLI arguments. Existing `main()` behaviour shall continue to pass
+`sys.argv[1:]` to bootstrap. In particular,
+`python -m azure_devops_backlog_generator --config-file <path>` shall use the existing configuration
+loader semantics. No CLI option, positional argument, environment-variable meaning or configuration
+field shall be added; `AZDO_PAT` shall remain the sole credential source.
+
+Successful executable invocation shall exit with status `0`, empty stdout and empty stderr, with no
+success/lifecycle event. An existing controlled failure shall exit with status `1`, empty stdout and
+exactly the existing fixed category-only stderr line followed by one newline. The adapter shall emit no
+traceback for a controlled failure. The seven categories/messages in Section 7.1.6 shall remain unchanged;
+no eighth category for unexpected exceptions shall be introduced.
+
+Slice 7 shall preserve the approved D1–D5 runtime logging decisions and all Section 7.1.6 semantics:
+the named application logger and fixed file, append mode, UTF-8, configured thresholds, fixed formatter,
+`propagate=False`, controlled `CRITICAL` events, one owned handler per invocation, stale-handler cleanup
+before configuration loading, owned-handler-only dispatch and unchanged `logging.raiseExceptions`.
+The adapter shall not initialise logging, add handlers or emit duplicate, lifecycle or traceback events.
+`ApplicationLoggingError` shall remain runtime logger initialisation-only. Under D5, a secondary
+controlled-event write failure shall preserve the primary category, original stderr and returned integer
+`1`, without additional output, retry, fallback or substitution with `ApplicationLoggingError`; the
+adapter shall simply translate that returned integer into `SystemExit(1)`. Controlled stderr and
+category-only log-event secret-safety shall remain intact.
+
+**S7-D2 — Interim unexpected-exception executable behaviour.** If `run_process()` raises unexpectedly,
+the exact same exception shall propagate out of the executable adapter. The adapter shall not catch it,
+introduce a generic `Exception` catch, classify it as controlled, render a fixed generic message,
+sanitise or rewrite it, log a traceback, or manufacture a result. No integer has returned, so the adapter
+shall not construct controlled `SystemExit(0)` or `SystemExit(1)`.
+
+Application-generated Slice-7 output for unexpected exceptions shall be absent. Interpreter-generated
+output is a separate boundary: real Python execution may terminate nonzero and render its native
+traceback to stderr. Slice 7 shall not promise empty whole-process stderr, an exact unexpected numeric
+exit code beyond nonzero, or exact native traceback text, formatting, paths or line numbers.
+It shall not claim that arbitrary native unexpected traceback output is category-only or secret-safe.
+This is an explicitly bounded interim pre-Version-1.0 behaviour, not an approved final diagnostic
+solution. Final controlled unexpected-error handling, reporting and diagnostic/traceback safety remain
+mandatory future work before final Version 1.0 readiness; Slice 7 adds no sanitisation policy.
+
+Existing setuptools src-layout/package discovery is sufficient to include `__main__.py`; no packaging
+metadata, dependency or project-version change is approved. Slice 7 shall not add `[project.scripts]`,
+console-script registration, a named installed launcher, a second executable surface or a direct-execution
+guard in `main.py`. Direct execution of `main.py`, including
+`python src/azure_devops_backlog_generator/main.py`, is not the supported interface. README invocation
+documentation is outside this contract task.
+
+The executable adapter shall own process-specific termination only; `run_process()` shall retain process
+outcome/reporting ownership. Application-wide logging remains operational infrastructure and shared
+Application Core remains presentation-neutral. Generator, REST, Documentation and domain layers shall
+remain free of stdout/stderr, `SystemExit` and process-result semantics. A future GUI or alternate adapter
+may reuse application/core functionality without using `__main__.py`; no GUI implementation, framework
+or Version 1.0 GUI scope is approved.
+
+Slice 7 excludes success/lifecycle logging, new logfile events, execution summaries, result models,
+created/reused/repaired counts, Generator return-type changes, unexpected controlled handling, traceback
+persistence or sanitisation, diagnostic allowlists, correlation/incident IDs, new controlled categories,
+new CLI frameworks/options, retry, fallback, rollback, compensation, continuation after failure, alternate
+credentials, PAT in CLI/TOML, dry-run, Generator toggles, dependencies and REST changes.
+It does not perform Operational Readiness, Operational Recovery / DR, Review Gate 3 or release approval.
+Once implemented, the package surface and observable controlled OS exit statuses will enable subprocess
+validation and operator invocation, advancing towards Gate 3 without establishing readiness.
 
 ---
 
