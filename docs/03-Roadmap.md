@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.32
+**Version:** 1.33
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-06
 
@@ -56,6 +56,7 @@
 | 1.30 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 | 1.31 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and remaining readiness work. |
 | 1.32 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slices 1–7 status and remaining readiness work. |
+| 1.33 | 2026-09-06 | Draft | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging capability and remaining readiness work. |
 
 ---
 
@@ -270,6 +271,36 @@ subprocess validation. The successful child-process evidence validates the adapt
 successful application E2E. Remaining logging/reporting, execution-summary, unexpected-error/diagnostic
 policy, broader integration/E2E, operational readiness/recovery evidence and API status reconciliation
 prevent a readiness claim.
+
+Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging is the approved next
+bounded capability: **APPROVED CONTRACT — NOT YET IMPLEMENTED**. Architecture Section 7.1.8 records
+approved owner decisions S8-D1–D3: exactly `Application run started.` and
+`Application run completed successfully.`, both INFO with normal configured threshold filtering,
+and best-effort writes without output, retry, fallback or application-outcome changes. Bootstrap owns
+START after configuration validation/logging initialisation and immediately before configured execution;
+COMPLETION follows only normal application return. Delivery remains current-owned-handler-only.
+
+Slices 1–7 remain implemented and approved. The owner-approved lifecycle boundary now justifies the
+next number, Slice 8; no Slice 9, one-slice-per-capability allocation or future capability order is defined.
+This revision is Draft pending separate contract review and approval-only promotion; approved owner
+decisions do not establish Approved Baseline document status or implementation completion.
+
+Slice 8 covers only configured-run START and successful COMPLETION. Existing controlled-failure logging
+remains Slice 6; other broader logging requirements remain future where not already implemented.
+It preserves D1–D5, seven controlled categories, Slice-7 package execution/SystemExit ownership,
+application/core return types, Generator, REST, configuration and CLI. It defines no result model,
+counters or execution summary. Focused planned validation is in Testing Section 8; no live Azure DevOps
+or new subprocess tests are required by default.
+
+Wider Application/Run remains incomplete and Version 1.0 remains pre-release. The remaining work above
+is preserved, including summary content/presentation, remaining logging, final unexpected handling,
+diagnostic/traceback secret safety, broader integration/E2E, live Azure validation, Operational Readiness
+checklist/evidence and final readiness. Arbitrary native unexpected tracebacks remain not guaranteed
+secret-safe. Review Gate 3 remains future; no complete normative Gate-3 acceptance checklist has been
+established, and Slice 8 does not complete its prerequisites. API Section 6.1 reconciliation remains
+separate future documentation work required before Gate 3. Operational Recovery / DR scope and exact
+Gate-3 placement remain future/unsettled; Generator later-run recovery does not settle them or constitute
+Operational Recovery / DR. No new recovery requirement is defined.
 
 ---
 
