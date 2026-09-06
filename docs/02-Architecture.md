@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.36
+**Version:** 2.37
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-06
 
@@ -70,6 +70,7 @@
 | 2.34 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 | 2.35 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 | 2.36 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 7 Package Execution Adapter with Controlled Process Termination contract. |
+| 2.37 | 2026-09-06 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 package execution status and preserved interim limitations. |
 
 ---
 
@@ -281,9 +282,9 @@ or map failures to process exit status.
 
 Slice 2 is configuration-file selection/bootstrap support, not the completed application CLI. It does not
 implement `main()`, `__main__.py`, console-script registration, help, version output, new CLI options,
-logging/reporting, user-facing error formatting or process-exit mapping. A future process/CLI wrapper remains
-the separate executable application boundary. The callable `None` return does not replace the approved future
-process-level exit-status behaviour.
+logging/reporting, user-facing error formatting or process-exit mapping. The process/CLI boundaries implemented
+in Slices 3–7 remain separate from bootstrap.
+The callable `None` return does not replace the implemented process-level exit-status behaviour.
 
 ---
 
@@ -386,11 +387,11 @@ alternate presentation adapters, including a future GUI, may reuse typed applica
 stdout/stderr behaviour or CLI-specific error formatting. This preserves architectural compatibility only; it
 does not approve a GUI feature, implementation, framework or Version 1.0 scope.
 
-The wider Application/Run phase remains incomplete. User-facing controlled-failure reporting, stdout/stderr
-policy, safe rendering, logging initialisation and failure logging, execution reporting, unexpected-exception
-handling, traceback/diagnostic policy, an executable adapter, `SystemExit` ownership, `__main__.py` and/or
-console-script packaging if approved, integration/end-to-end validation, Operational Readiness, Operational
-Recovery / DR, Review Gate 3 and final release readiness remain future.
+The wider Application/Run phase remains incomplete. Slices 5–7 implement controlled-failure reporting,
+logging and executable termination as described below. Required success/lifecycle logging, execution-summary
+content and presentation, final unexpected-error handling and diagnostic safety, broader integration/E2E,
+Operational Readiness, Operational Recovery / DR, Review Gate 3 and final release readiness remain future.
+Console-script packaging remains conditional on separate approval.
 
 ---
 
@@ -438,10 +439,11 @@ GUI feature, implementation, framework or Version 1.0 scope.
 
 Slice 5 does not introduce logging initialisation or calls, an execution summary, dynamic exception detail,
 tracebacks, `sys.exit`, `SystemExit`, a direct-execution guard, `__main__.py`, `[project.scripts]`, console-script
-packaging, an executable adapter, retries, fallback, new CLI options, dependencies or GUI implementation. Runtime
-logging, execution-summary, unexpected-exception, executable-boundary, integration/end-to-end, Operational
-Readiness, Operational Recovery / DR, Review Gate 3 and final release-readiness work remain future. The wider
-Application/Run phase remains incomplete.
+packaging, an executable adapter, retries, fallback, new CLI options, dependencies or GUI implementation.
+Slices 6–7 implement runtime controlled-failure logging and the executable boundary as described below.
+Required success/lifecycle logging, execution summaries, final unexpected-error handling and diagnostic safety,
+broader integration/E2E, Operational Readiness, Operational Recovery / DR, Review Gate 3 and final
+release-readiness work remain future. The wider Application/Run phase remains incomplete.
 
 ---
 
@@ -520,92 +522,101 @@ shared Application Core so a future GUI may reuse the typed application/core bou
 
 ### 7.1.7 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination
 
-Application/Run Slice 7 is an approved contract and is not yet implemented. S7-D1 and S7-D2 are approved
-owner decisions; this document revision is Approved Baseline. Application/Run Slices 1–6 remain implemented and
-the wider Application/Run phase remains incomplete.
+Application/Run Slice 7 is implemented in PR #136 (implementation commit `468d98d`, merge `009ef71`),
+following the contract in PR #134 and approval in PR #135. S7-D1 and S7-D2 remain approved owner decisions.
+Application/Run Slices 1–7 are implemented; the wider Application/Run phase remains incomplete.
 
-**S7-D1 — Executable invocation surface.** Slice 7 shall establish exactly one executable package surface:
+**S7-D1 — Executable invocation surface.** Slice 7 implements exactly one executable package surface:
 
 ```text
 python -m azure_devops_backlog_generator
 ```
 
-The production surface shall be `src/azure_devops_backlog_generator/__main__.py`. This package module shall
-be the outer executable adapter. Its executable path shall invoke the existing `run_process()` exactly
-once and use the returned integer unchanged to raise or cause `SystemExit(returned_integer)`:
+The production surface is `src/azure_devops_backlog_generator/__main__.py`. Its complete adapter is:
+
+```python
+"""Execute the application with controlled process termination."""
+
+from azure_devops_backlog_generator.main import run_process
+
+if __name__ == "__main__":
+    raise SystemExit(run_process())
+```
+
+The executable path invokes `run_process()` exactly once and uses its returned integer directly as the
+`SystemExit` code, without reinterpretation:
 
 | Existing callable outcome | Executable adapter outcome | Operating-system process exit status |
 |---------------------------|----------------------------|--------------------------------------|
 | Exact integer `0` | `SystemExit(0)` | `0` |
 | Exact integer `1` | `SystemExit(1)` | `1` |
 
-The adapter shall not call `main()` or `coordinate_application_bootstrap()` directly, inspect lower-layer
-exceptions, reinterpret the integer, add another result mapping, or duplicate controlled classification,
-stderr rendering or logging. It shall produce no stdout or stderr of its own.
+The adapter does not call `main()` or `coordinate_application_bootstrap()` directly, inspect lower-layer
+exceptions, add result mappings, classify failures, translate exceptions, retry or fall back. It emits no
+stdout, stderr or logging and does not duplicate controlled reporting.
 
-`SystemExit` ownership shall belong exclusively to the executable adapter. The existing
+`SystemExit` ownership belongs exclusively to the executable adapter. The existing
 `run_process() -> int`, `main() -> None`, `coordinate_application_bootstrap(...) -> None`,
 `coordinate_application_run(...) -> None` and Generator orchestration/traversal `None` return contracts
-shall remain unchanged. Neither those callables nor the Generator, REST Client, Documentation Processor
-or domain models shall acquire executable termination responsibilities.
+remain unchanged. Neither those callables nor the Generator, REST Client, Documentation Processor
+or domain models acquire executable termination responsibilities.
 
-Ordinary `import azure_devops_backlog_generator` and
-`import azure_devops_backlog_generator.__main__` shall not invoke `run_process()` or `main()`, start the
-application, raise `SystemExit` or emit stdout/stderr. Importing the executable module for testing or
-introspection shall remain safe. Execution shall occur only through executable package entry semantics;
-a conventional `if __name__ == "__main__":` boundary may be used inside `__main__.py` for that purpose.
-There shall be no import-time side effects beyond normal module definition/import behaviour.
+Import safety is implemented and tested for ordinary `import azure_devops_backlog_generator` and
+`import azure_devops_backlog_generator.__main__`. Neither import executes the application, invokes
+`run_process()`, `main()` or bootstrap, raises `SystemExit`, emits stdout/stderr or produces
+adapter-controlled logging. The `if __name__ == "__main__":` guard in `__main__.py` restricts application
+execution to executable entry semantics; ordinary import remains safe.
 
-The adapter shall not parse or alter CLI arguments. Existing `main()` behaviour shall continue to pass
+The adapter does not parse or alter CLI arguments. Existing `main()` behaviour continues to pass
 `sys.argv[1:]` to bootstrap. In particular,
-`python -m azure_devops_backlog_generator --config-file <path>` shall use the existing configuration
+`python -m azure_devops_backlog_generator --config-file <path>` uses the existing configuration
 loader semantics. No CLI option, positional argument, environment-variable meaning or configuration
-field shall be added; `AZDO_PAT` shall remain the sole credential source.
+field is added; `AZDO_PAT` remains the sole credential source.
 
-Successful executable invocation shall exit with status `0`, empty stdout and empty stderr, with no
-success/lifecycle event. An existing controlled failure shall exit with status `1`, empty stdout and
-exactly the existing fixed category-only stderr line followed by one newline. The adapter shall emit no
-traceback for a controlled failure. The seven categories/messages in Section 7.1.6 shall remain unchanged;
-no eighth category for unexpected exceptions shall be introduced.
+Controlled success exits with status `0`, empty stdout and empty stderr, with no success/lifecycle event.
+A controlled failure exits with status `1`, empty stdout and exactly the existing fixed category-only
+stderr line followed by one newline, owned by `run_process()`. The adapter adds no traceback or duplicate
+output. The seven categories/messages in Section 7.1.6 remain unchanged; no eighth unexpected-exception
+category exists. Success subprocess evidence validates the adapter boundary, not successful application E2E.
 
-Slice 7 shall preserve the approved D1–D5 runtime logging decisions and all Section 7.1.6 semantics:
-the named application logger and fixed file, append mode, UTF-8, configured thresholds, fixed formatter,
-`propagate=False`, controlled `CRITICAL` events, one owned handler per invocation, stale-handler cleanup
-before configuration loading, owned-handler-only dispatch and unchanged `logging.raiseExceptions`.
-The adapter shall not initialise logging, add handlers or emit duplicate, lifecycle or traceback events.
-`ApplicationLoggingError` shall remain runtime logger initialisation-only. Under D5, a secondary
-controlled-event write failure shall preserve the primary category, original stderr and returned integer
-`1`, without additional output, retry, fallback or substitution with `ApplicationLoggingError`; the
-adapter shall simply translate that returned integer into `SystemExit(1)`. Controlled stderr and
-category-only log-event secret-safety shall remain intact.
+Slice 7 preserves the approved D1–D5 runtime logging decisions and all Section 7.1.6 semantics:
+logger `azure_devops_backlog_generator`, file
+`<validated logging.log_directory>/azure-devops-backlog-generator.log`, append mode, UTF-8, configured
+threshold, fixed formatter, `propagate=False`, controlled `CRITICAL` events, exactly one active
+application-owned handler, stale owned-handler cleanup before configuration loading, owned-handler-only
+dispatch and unchanged `logging.raiseExceptions`. The adapter does not initialise logging, add handlers
+or emit duplicate, lifecycle or traceback events. `ApplicationLoggingError` remains runtime logger
+initialisation-only; there is no root/console fallback. Under D5, a secondary controlled-event write
+failure preserves the primary category, original stderr and returned integer `1`, without additional
+output, retry, fallback or substitution with `ApplicationLoggingError`; the adapter translates that
+integer directly into `SystemExit(1)`. Controlled stderr and category-only log-event secret-safety remain intact.
 
 **S7-D2 — Interim unexpected-exception executable behaviour.** If `run_process()` raises unexpectedly,
-the exact same exception shall propagate out of the executable adapter. The adapter shall not catch it,
+the exact same exception object propagates out of the executable adapter. The adapter does not catch it,
 introduce a generic `Exception` catch, classify it as controlled, render a fixed generic message,
 sanitise or rewrite it, log a traceback, or manufacture a result. No integer has returned, so the adapter
-shall not construct controlled `SystemExit(0)` or `SystemExit(1)`.
+does not construct controlled `SystemExit(0)` or `SystemExit(1)`.
 
-Application-generated Slice-7 output for unexpected exceptions shall be absent. Interpreter-generated
-output is a separate boundary: real Python execution may terminate nonzero and render its native
-traceback to stderr. Slice 7 shall not promise empty whole-process stderr, an exact unexpected numeric
-exit code beyond nonzero, or exact native traceback text, formatting, paths or line numbers.
-It shall not claim that arbitrary native unexpected traceback output is category-only or secret-safe.
-This is an explicitly bounded interim pre-Version-1.0 behaviour, not an approved final diagnostic
-solution. Final controlled unexpected-error handling, reporting and diagnostic/traceback safety remain
+Application-generated Slice-7 output for unexpected exceptions is absent. Interpreter-generated output
+is a separate boundary: real Python execution may terminate nonzero and render its native traceback to
+stderr. Slice 7 does not promise empty whole-process stderr, an exact unexpected numeric exit code beyond
+nonzero, or exact native traceback text, formatting, paths or line numbers. Arbitrary native unexpected
+traceback output is not guaranteed category-only or secret-safe. This remains an interim pre-Version-1.0
+limitation, not final unexpected-error handling or an approved final diagnostic solution. Final controlled
+unexpected-error handling, user-facing reporting and diagnostic/traceback and secret-safety policy remain
 mandatory future work before final Version 1.0 readiness; Slice 7 adds no sanitisation policy.
 
-Existing setuptools src-layout/package discovery is sufficient to include `__main__.py`; no packaging
-metadata, dependency or project-version change is approved. Slice 7 shall not add `[project.scripts]`,
-console-script registration, a named installed launcher, a second executable surface or a direct-execution
-guard in `main.py`. Direct execution of `main.py`, including
+Existing setuptools src-layout/package discovery includes `__main__.py`. Slice 7 changes no packaging
+metadata, dependency or package version and adds no `[project.scripts]`, console script, installed launcher,
+second executable surface or direct-execution guard in `main.py`. Direct execution of `main.py`, including
 `python src/azure_devops_backlog_generator/main.py`, is not the supported interface. README invocation
-documentation is outside this contract task.
+documentation remains unchanged.
 
-The executable adapter shall own process-specific termination only; `run_process()` shall retain process
+The executable adapter owns process-specific termination only; `run_process()` retains process
 outcome/reporting ownership. Application-wide logging remains operational infrastructure and shared
-Application Core remains presentation-neutral. Generator, REST, Documentation and domain layers shall
-remain free of stdout/stderr, `SystemExit` and process-result semantics. A future GUI or alternate adapter
-may reuse application/core functionality without using `__main__.py`; no GUI implementation, framework
+Application Core remains presentation-neutral. Generator, REST, Documentation and domain layers remain
+free of stdout/stderr, `SystemExit` and process-result semantics. A future GUI or alternate adapter may
+reuse application/core functionality without using `__main__.py`; no GUI implementation, framework
 or Version 1.0 GUI scope is approved.
 
 Slice 7 excludes success/lifecycle logging, new logfile events, execution summaries, result models,
@@ -613,9 +624,13 @@ created/reused/repaired counts, Generator return-type changes, unexpected contro
 persistence or sanitisation, diagnostic allowlists, correlation/incident IDs, new controlled categories,
 new CLI frameworks/options, retry, fallback, rollback, compensation, continuation after failure, alternate
 credentials, PAT in CLI/TOML, dry-run, Generator toggles, dependencies and REST changes.
-It does not perform Operational Readiness, Operational Recovery / DR, Review Gate 3 or release approval.
-Once implemented, the package surface and observable controlled OS exit statuses will enable subprocess
-validation and operator invocation, advancing towards Gate 3 without establishing readiness.
+Execution-summary content and presentation remain future; typed execution-result/aggregation and
+created/reused/repaired counts remain conditional on later summary requirements.
+Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness, Operational Recovery / DR,
+API Section 6.1 status-drift reconciliation before Review Gate 3, Gate 3 and final Version 1.0 release
+readiness remain future. Console-script packaging requires separate approval; GUI implementation remains future.
+The implemented package surface and controlled OS exit statuses support subprocess validation and operator
+invocation without establishing readiness. Version 1.0 remains pre-release.
 
 ---
 
@@ -686,7 +701,7 @@ Responsibilities include:
 - Providing implemented root existing/new Work Item lifecycle coordination. The root-only coordinator invokes existing/new resolution once; for NEW it passes the exact supplied candidate and PAT to persistent Create once and returns the Create response ID, while for REUSED it returns the validated existing ID without Create. It returns no revision and performs no relationship-state GET, classification, gate, Parent-Child Relationship PATCH, descendant processing, validation-only Create or compatibility orchestration. Resolution and Create failures propagate without retry, fallback, reread, rollback, deletion compensation or other compensation. Application/Run Slice 1 composes this coordinator without changing its responsibilities.
 - Preventing duplicate work item creation.
 - Providing implemented full preflight coordination through the mutation barrier. `coordinate_full_preflight` first validates run-wide source identities, then constructs every candidate in deterministic source order, retrieves and retains canonical project evidence, retrieves required work-item-type and field metadata, evaluates structural Scrum compatibility, and submits every exact candidate through validation-only Create in that order. It returns immutable, slotted `PreflightState` evidence containing the original `DocumentationHierarchy`, the canonical `AzureDevOpsProject` and the exact candidate tuple. Source-identity failure occurs before REST activity; later preflight failures propagate unchanged, stop subsequent preflight operations and introduce no retry, fallback, rollback, compensation, credential switching or continuation. The final successful validation-only Create reaches the mutation barrier; no WIQL lookup, Work Item GET, persistent Create, relationship-state GET, relationship PATCH, lifecycle invocation or persistent hierarchy traversal occurs in this coordinator.
-- Providing implemented deterministic hierarchy traversal and Generator composition. `coordinate_deterministic_hierarchy_traversal` first validates that the semantic-item sequence and retained `PreflightState` candidate tuple have equal cardinality and positionally matching source identities, before any persistent REST operation. It then processes documents, roots and descendants in deterministic depth-first preorder, using the exact validation-only checked candidates without reconstruction. Roots delegate exactly once to the root lifecycle coordinator; each non-root resolves exactly once and delegates to the non-root lifecycle coordinator with its eligible direct parent ID. Descendants begin only after eligibility. Failures propagate globally without retry, rollback, compensation or continuation; existing lower-level lifecycle behaviour composes later-run MISSING recovery, CORRECT continuation and CONFLICTING stop. Preflight project, metadata, compatibility and validation-only operations are not repeated. `coordinate_generator_orchestration` is the implemented final Generator-owned entry coordinator: it passes the exact `DocumentationHierarchy`, REST client and PAT to full preflight once, passes the exact returned `PreflightState`, REST client and PAT to traversal once, and returns `None`. Successful full preflight is the required mutation barrier before traversal; a preflight failure prevents traversal and persistence. Implemented full-orchestration coverage proves malformed-response, HTTP `401` and HTTP `403` propagation with no retry, alternate credential, PAT event leakage or later descendant, sibling, root, document or persistence operation. Generator Orchestration implementation and required pre-Review-Gate-2 composition coverage are complete. Review Gate 2 completed with PASS, zero findings and no required remediation. Application/Run Slice 1 is implemented and does not own this Generator-internal sequencing; the wider Application/Run phase and Review Gate 3 remain future.
+- Providing implemented deterministic hierarchy traversal and Generator composition. `coordinate_deterministic_hierarchy_traversal` first validates that the semantic-item sequence and retained `PreflightState` candidate tuple have equal cardinality and positionally matching source identities, before any persistent REST operation. It then processes documents, roots and descendants in deterministic depth-first preorder, using the exact validation-only checked candidates without reconstruction. Roots delegate exactly once to the root lifecycle coordinator; each non-root resolves exactly once and delegates to the non-root lifecycle coordinator with its eligible direct parent ID. Descendants begin only after eligibility. Failures propagate globally without retry, rollback, compensation or continuation; existing lower-level lifecycle behaviour composes later-run MISSING recovery, CORRECT continuation and CONFLICTING stop. Preflight project, metadata, compatibility and validation-only operations are not repeated. `coordinate_generator_orchestration` is the implemented final Generator-owned entry coordinator: it passes the exact `DocumentationHierarchy`, REST client and PAT to full preflight once, passes the exact returned `PreflightState`, REST client and PAT to traversal once, and returns `None`. Successful full preflight is the required mutation barrier before traversal; a preflight failure prevents traversal and persistence. Implemented full-orchestration coverage proves malformed-response, HTTP `401` and HTTP `403` propagation with no retry, alternate credential, PAT event leakage or later descendant, sibling, root, document or persistence operation. Generator Orchestration implementation and required pre-Review-Gate-2 composition coverage are complete. Review Gate 2 completed with PASS, zero findings and no required remediation. Application/Run Slice 1 is implemented and does not own this Generator-internal sequencing; the wider Application/Run phase remains incomplete and Review Gate 3 remains future.
 
 ---
 

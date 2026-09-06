@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.31
+**Version:** 1.32
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-06
 
@@ -55,6 +55,7 @@
 | 1.29 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 | 1.30 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 | 1.31 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and remaining readiness work. |
+| 1.32 | 2026-09-06 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slices 1–7 status and remaining readiness work. |
 
 ---
 
@@ -140,7 +141,7 @@ compatibility evaluation; Work Item Candidate construction; Work Item Create JSO
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
 GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; successful eligibility return only after the relationship state is safe; and root existing/new Work Item lifecycle coordination, in which NEW creates once and REUSED returns the validated existing ID without relationship work.
 
-The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/Run Slices 1, 2, 3 and 4 are implemented. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
+The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/Run Slices 1–7 are implemented. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
 
 Following the successful implementation merge, Application/Run Slice 2 is implemented; the preceding
 implementation-plan status is superseded. Application/Run Slice 1 is implemented: an already-validated
@@ -173,12 +174,9 @@ process argv
 It introduces `main() -> None` as the process-facing callable, acquires `sys.argv[1:]`, and delegates that
 resulting sequence directly to `coordinate_application_bootstrap(...)` exactly once. It adds no
 direct-execution guard, executable adapter, `__main__.py`, console-script registration, error handling,
-process-exit mapping, output, logging or reporting. Controlled process exception classification, process exit-code mapping, user-facing error
-reporting, stdout/stderr policy, logging initialisation and failure logging, execution reporting,
-unexpected-exception/traceback policy, actual executable adapter, direct execution and/or package
-`__main__.py`, console-script packaging if approved, integration/end-to-end validation, Operational Readiness,
-Operational Recovery / DR, Review Gate 3 and final release readiness remain future. The wider Application/Run
-phase is not yet complete.
+process-exit mapping, output, logging or reporting. Slices 4–7 implement controlled classification,
+reporting, runtime file logging and executable termination as described below. The remaining Application/Run
+and readiness work is recorded after Slice 7; the wider phase is not yet complete.
 
 Application/Run Slice 4 — Controlled Application Outcome Mapping is implemented. It introduces the separate
 `run_process() -> int` wrapper above the implemented `main() -> None`:
@@ -195,11 +193,9 @@ controlled set returns the exact integer `1`; and an exception outside that set 
 retains one `main()` invocation and introduces no retry, fallback, output, logging, `SystemExit` or executable
 packaging. It preserves `main()` as the `sys.argv[1:]` acquisition and bootstrap-delegation callable, and keeps
 CLI/process-specific outcome, reporting and termination behaviour outside the shared Application Core. This
-preserves future alternate-interface compatibility without approving or implementing a GUI. User-facing
-reporting, stdout/stderr policy, safe rendering, logging, unexpected-exception handling, traceback policy,
-executable adaptation, `SystemExit` ownership, direct execution and/or package `__main__.py`, console-script
-packaging if approved, integration/end-to-end validation, Operational Readiness, Operational Recovery / DR,
-Review Gate 3 and final release readiness remain future.
+preserves future alternate-interface compatibility without approving or implementing a GUI. Slices 5–7
+implement controlled reporting, runtime file logging and executable termination as described below;
+the remaining Application/Run and readiness work is recorded after Slice 7.
 
 Application/Run Slice 5 — Controlled Failure Reporting to Standard Error is implemented. It extends the existing
 `run_process() -> int` process adapter only as follows:
@@ -222,7 +218,7 @@ is absent from stderr. Successful execution remains silent, with no stdout or st
 `0`. `main() -> None`, unchanged unexpected-exception propagation, presentation-neutral shared Application Core
 boundaries and future alternate-interface compatibility are preserved. Slice 5 does not introduce logging,
 execution summaries, unexpected-exception reporting, tracebacks, `sys.exit` or `SystemExit`, direct execution,
-packaging or GUI implementation. Slices 1, 2, 3, 4 and 5 are implemented; the wider Application/Run phase remains
+packaging or GUI implementation. Slices 1–7 are implemented; the wider Application/Run phase remains
 incomplete, and Operational Readiness, Operational Recovery / DR, Review Gate 3, integration/end-to-end and final
 release-readiness work remain future.
 
@@ -236,40 +232,44 @@ written. A secondary write failure does not replace the primary controlled failu
 `1` outcome. It adds `ApplicationLoggingError` as a seventh controlled process category for logger-initialisation
 failure only; that error and pre-initialisation configuration failures produce no file event or fallback logging.
 Dynamic diagnostics, PAT/Authorization, tracebacks, root/console output and logging-internal stderr diagnostics are
-prohibited for Slice-6 controlled logging. Slices 1–6 are implemented and the wider Application/Run phase remains
-incomplete. The following Slice-7 contract defines the next executable boundary and the remaining work.
+prohibited for Slice-6 controlled logging. Slices 1–7 are implemented and the wider Application/Run phase remains
+incomplete. The following Slice-7 status records the implemented executable boundary and remaining work.
 
-Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is an approved
-contract and is not yet implemented. S7-D1 and S7-D2 are approved owner decisions; this document revision
-is Approved Baseline. Slices 1–6 remain implemented. Architecture Section 7.1.7 defines the approved next
-executable boundary: `python -m azure_devops_backlog_generator`, implemented only in
-`src/azure_devops_backlog_generator/__main__.py`. The adapter shall call `run_process()` exactly once
-and translate its unchanged integer to `SystemExit`, preserving import safety, CLI arguments, controlled
-output, logging and all existing application/Generator return contracts. No console-script registration,
-`[project.scripts]`, `main.py` execution guard or packaging metadata change is approved.
+Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is implemented
+in PR #136 (implementation commit `468d98d`, merge `009ef71`), following contract PR #134 and approval PR #135.
+S7-D1 and S7-D2 remain approved owner decisions. Slices 1–7 are implemented. Architecture Section 7.1.7
+records the sole executable surface: `python -m azure_devops_backlog_generator`, implemented in
+`src/azure_devops_backlog_generator/__main__.py`. The adapter calls `run_process()` exactly once
+and uses its unchanged integer directly as the `SystemExit` code: controlled `0` and `1` produce OS
+statuses `0` and `1`. Import safety, CLI arguments, controlled output, runtime logging, D1–D5 and all
+existing application/Generator return contracts are preserved. The adapter adds no stdout, stderr or
+logging. No console script, `[project.scripts]`, `main.py` execution guard or packaging metadata was added.
 
-Unexpected exceptions shall continue outward unchanged. Native interpreter stderr may contain a traceback;
-this interim behaviour does not establish arbitrary unexpected traceback secret-safety or final diagnostic
-sufficiency. Final controlled unexpected-error handling and diagnostic safety remain mandatory before
-Version 1.0 readiness.
+Unexpected exceptions propagate as the exact same object. Native interpreter stderr may contain a
+traceback; this interim behaviour does not establish arbitrary unexpected traceback secret-safety or
+final diagnostic sufficiency. Final controlled unexpected-error handling, user-facing reporting and
+diagnostic/traceback and secret-safety policy remain mandatory before Version 1.0 readiness.
 
-The wider Application/Run phase remains incomplete. After Slice 7 implementation, remaining work includes
-required success/lifecycle logging, execution-summary content and presentation, result aggregation only
-if later summary requirements need it, controlled unexpected-error handling, diagnostic/traceback safety
-policy, integration/E2E beyond the adapter, Operational Readiness, Operational Recovery / DR, Review Gate 3
-and final Version 1.0 release readiness. Console-script packaging remains future only if later approved;
-GUI implementation remains outside Version 1.0 scope. These responsibilities do not prescribe a separate
-slice for each item.
+The wider Application/Run phase remains incomplete and Version 1.0 remains pre-release. Remaining work
+includes required success/lifecycle logging, execution-summary content and presentation, typed
+execution-result/aggregation and created/reused/repaired counts only if later summary requirements need
+them, final controlled unexpected-error handling and reporting, diagnostic/traceback and secret-safety
+policy, broader integration/E2E, live Azure DevOps Services validation, Operational Readiness,
+Operational Recovery / DR, Review Gate 3 and final Version 1.0 release readiness. Console-script
+packaging remains future only if separately approved; GUI implementation remains future and outside
+Version 1.0 scope. These responsibilities prescribe neither new slices nor an order for future capabilities.
 
-Known non-blocking documentation drift remains in `05-API.md` Section 6.1, whose broad deferred
-Application/Run status predates the more specific implemented Slice-1–6 baselines. Those specific Approved
-Baseline slice documents govern current implementation status. API status-drift reconciliation is required
-before Review Gate 3; Slice 7 does not edit the API Specification or change REST semantics.
+Known pre-existing non-blocking documentation drift remains in `05-API.md` Section 6.1, whose broad
+deferred Application/Run orchestration/CLI/logging/process-lifecycle status predates the more specific
+current slice documents showing Slices 1–7 implemented. API status-drift reconciliation remains required
+before Review Gate 3; it is not a Slice-7 implementation blocker. This status sync does not edit the API
+Specification or change REST semantics.
 
-Once implemented, Slice 7 will provide one real package execution surface, observable controlled OS exit
-statuses and a subprocess-testable operator invocation path. It advances towards Gate 3; remaining
-logging/reporting, execution-summary, unexpected-error/diagnostic policy, broader integration/E2E,
-operational readiness/recovery evidence and API status reconciliation prevent a readiness claim.
+Slice 7 now provides one real package execution surface, observable controlled OS exit statuses and
+subprocess validation. The successful child-process evidence validates the adapter boundary only, not
+successful application E2E. Remaining logging/reporting, execution-summary, unexpected-error/diagnostic
+policy, broader integration/E2E, operational readiness/recovery evidence and API status reconciliation
+prevent a readiness claim.
 
 ---
 
