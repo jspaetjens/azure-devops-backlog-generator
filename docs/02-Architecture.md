@@ -6,7 +6,7 @@
 
 **Version:** 2.36
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-06
 
@@ -69,7 +69,7 @@
 | 2.33 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 | 2.34 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 | 2.35 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
-| 2.36 | 2026-09-06 | Draft | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 7 Package Execution Adapter with Controlled Process Termination contract. |
+| 2.36 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 7 Package Execution Adapter with Controlled Process Termination contract. |
 
 ---
 
@@ -521,7 +521,7 @@ shared Application Core so a future GUI may reuse the typed application/core bou
 ### 7.1.7 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination
 
 Application/Run Slice 7 is an approved contract and is not yet implemented. S7-D1 and S7-D2 are approved
-owner decisions; this document revision remains Draft. Application/Run Slices 1–6 remain implemented and
+owner decisions; this document revision is Approved Baseline. Application/Run Slices 1–6 remain implemented and
 the wider Application/Run phase remains incomplete.
 
 **S7-D1 — Executable invocation surface.** Slice 7 shall establish exactly one executable package surface:
