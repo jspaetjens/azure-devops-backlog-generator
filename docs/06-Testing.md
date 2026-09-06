@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.25
+**Version:** 2.26
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-04
+**Last Updated:** 2026-09-06
 
 **Target Release:** v1.0.0
 
@@ -59,6 +59,7 @@
 | 2.23 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage and validation evidence. |
 | 2.24 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined required but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage. |
 | 2.25 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage and validation evidence. |
+| 2.26 | 2026-09-06 | Draft | Jack Spaetjens | Defined required/planned Application/Run Slice 7 import, termination and subprocess coverage while preserving pre-Slice-7 evidence. |
 
 ---
 
@@ -454,8 +455,62 @@ exception object with no controlled event or traceback logging.
 The focused `tests/test_main.py` suite recorded 35 passed. The full suite and `pytest -W error` each recorded 715
 passed, with 0 failed, skipped, warnings, xfail or xpass. Ruff passed. Coverage was 95% across 1,367 statements with
 64 missed statements; `main.py` had 86 statements with 0 missed (100%), and all meaningful Slice-6 production
-statements were covered. No subprocess, `SystemExit` or traceback-content tests are required because those remain
-future work.
+statements were covered. Slice 6 required no subprocess, `SystemExit` or traceback-content tests; the
+following Slice-7 obligations are planned separately.
+
+Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is an approved
+contract and is not yet implemented. The following coverage is required/planned for implementation,
+not executed evidence. S7-D1/S7-D2 and Architecture Section 7.1.7 govern the boundary; this document
+revision remains Draft. Existing Slices 1–6 and their validation evidence remain unchanged.
+
+Mandatory adapter tests shall cover:
+
+1. Import safety for both `azure_devops_backlog_generator` and
+   `azure_devops_backlog_generator.__main__`: ordinary import shall not invoke `run_process()` or
+   `main()`, start the application, raise `SystemExit` or emit stdout/stderr. The test technique shall
+   distinguish ordinary import from executable entry semantics and shall not accidentally execute the
+   adapter while testing import safety.
+2. Exact one-call delegation to `run_process()` at the executable boundary, with no direct adapter call
+   to `main()` or bootstrap and no duplicate classification, rendering or logging.
+3. Substituted `run_process()` returning exact integer `0`: exactly one call, `SystemExit.code` equal
+   to `0` with exact `int` type, and no adapter stdout/stderr.
+4. Substituted `run_process()` returning exact integer `1`: exactly one call, `SystemExit.code` equal
+   to `1` with exact `int` type, and no output added by the adapter.
+5. Substituted `run_process()` raising a unique unexpected sentinel: the exact same exception object
+   escapes in-process, with one call, no translation to `SystemExit`, no generic catch and no adapter
+   stdout/stderr or traceback logging.
+6. A real isolated subprocess invoking `python -m azure_devops_backlog_generator` with existing CLI
+   semantics that deterministically cause a controlled configuration failure. Use an intentionally
+   invalid/missing configuration invocation independent of the developer's real configuration; no network
+   access or real PAT shall be used. Assert status `1`, empty stdout, stderr exactly
+   `Configuration error.\n` and no Python traceback. The failure shall occur before network activity.
+
+Subprocesses shall use the canonical project virtual-environment interpreter. Configuration, environment
+and working-directory isolation shall prevent reliance on developer credentials or local configuration.
+Existing Slice-5/6 tests remain authoritative for all seven controlled categories, exact reporting,
+owned-handler logging, D5 and controlled secret-safety. Adapter tests shall not duplicate every category
+or introduce result-model, console-script or `[project.scripts]` tests.
+
+A subprocess success-boundary test is preferred where cleanly achievable: the narrowest isolated child
+harness shall exercise the real package adapter while safely substituting `run_process()` with a
+successful boundary, proving status `0` and empty stdout/stderr. This is adapter validation, not a
+successful no-network end-to-end application run. No production success bypass or test hook is permitted.
+If the harness would require invasive packaging/PYTHONPATH manipulation or test-only production hooks,
+the implementation handoff shall document that limitation and rely on the mandatory in-process exact
+`SystemExit(0)` test plus real subprocess controlled-failure test.
+
+Where a clean isolated child harness can substitute an unexpected sentinel without production changes,
+it should characterise nonzero termination and nonempty native interpreter stderr. It shall not attribute
+a controlled category to the adapter, fix an exact unexpected numeric status beyond nonzero, or assert
+complete traceback formatting, paths or line numbers. This child test is not required if it would need
+test-specific production hooks; exact same-object in-process propagation remains mandatory.
+Application-generated output and interpreter-generated stderr shall be distinguished. Empty whole-process
+stderr and secret-safety for arbitrary native unexpected tracebacks shall not be asserted.
+
+The preceding 35 focused / 715 full / 715 Werror passes, zero failed/skipped/warnings/xfail/xpass, Ruff pass,
+95% coverage, 1,367 statements, 64 missed statements and `main.py` 86 statements / 0 missed / 100% are
+pre-Slice-7 implementation evidence only. No Slice-7 test counts or execution evidence are claimed.
+Broader integration/E2E, operational readiness/recovery evidence and Review Gate 3 remain future.
 
 Work Item Create Payload validation shall additionally cover:
 
