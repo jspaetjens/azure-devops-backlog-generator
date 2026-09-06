@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.26
+**Version:** 2.27
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-06
 
@@ -60,6 +60,7 @@
 | 2.24 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined required but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage. |
 | 2.25 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage and validation evidence. |
 | 2.26 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined required/planned Application/Run Slice 7 import, termination and subprocess coverage while preserving pre-Slice-7 evidence. |
+| 2.27 | 2026-09-06 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 test coverage and measured validation evidence. |
 
 ---
 
@@ -359,7 +360,7 @@ The implemented Slice-2 composition tests prove that the coordinator does not it
 validate configuration, read environment variables, perform document processing, construct a REST client,
 invoke the Generator directly, log or report, or map process exits. Composition-test events and diagnostics do
 not contain a synthetic PAT value. These tests do not duplicate configuration-loader parsing or validation tests,
-nor Slice-1 composition tests. Future process-entrypoint tests, including executable CLI, user-facing output
+nor Slice-1 composition tests. Process-entrypoint tests, including executable CLI, user-facing output
 and process-exit behaviour, remain outside Slice 2. The focused `tests/test_main.py` suite recorded 7 passed;
 the full suite and `pytest -W error` each recorded 687 passed, with 0 failed, skipped, warnings, xfail or xpass.
 Ruff passed. Coverage was 95% across 1,294 statements with 64 missed statements; `main.py` had 13 statements
@@ -409,8 +410,8 @@ Implemented Application/Run Slice 5 — Controlled Failure Reporting to Standard
 coverage in `tests/test_main.py` does not duplicate lower-layer generation, configuration, documentation, REST,
 HTTP `401`/`403`, work-item resolution, relationship, Slice-1, Slice-2, Slice-3 or Slice-4 classification tests. A
 successful-execution test proves exactly one `main()` invocation, exact integer `0`, empty stdout, empty stderr, no
-logging, no `SystemExit`, no retry and no fallback. No subprocess tests exist because executable adaptation remains
-future.
+logging, no `SystemExit`, no retry and no fallback. Slice 5 includes no subprocess tests; the implemented
+Slice-7 adapter subprocess coverage is recorded below.
 
 For each approved controlled category — the `ConfigurationError`, `DocumentationProcessingError` and
 `AzureDevOpsRestClientError` hierarchies, and `SourceIdentityValidationError`, `ExistingWorkItemResolutionError`
@@ -455,62 +456,71 @@ exception object with no controlled event or traceback logging.
 The focused `tests/test_main.py` suite recorded 35 passed. The full suite and `pytest -W error` each recorded 715
 passed, with 0 failed, skipped, warnings, xfail or xpass. Ruff passed. Coverage was 95% across 1,367 statements with
 64 missed statements; `main.py` had 86 statements with 0 missed (100%), and all meaningful Slice-6 production
-statements were covered. Slice 6 required no subprocess, `SystemExit` or traceback-content tests; the
-following Slice-7 obligations are planned separately.
+statements were covered. These are pre-Slice-7 baseline results. Slice 6 required no subprocess,
+`SystemExit` or traceback-content tests; implemented Slice-7 evidence follows.
 
-Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is an approved
-contract and is not yet implemented. The following coverage is required/planned for implementation,
-not executed evidence. S7-D1/S7-D2 and Architecture Section 7.1.7 govern the boundary; this document
-revision is Approved Baseline. Existing Slices 1–6 and their validation evidence remain unchanged.
+Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is implemented.
+The focused `tests/test___main__.py` module provides executed coverage of the approved S7-D1/S7-D2
+boundary in Architecture Section 7.1.7. Slices 1–7 are implemented; wider Application/Run remains incomplete.
 
-Mandatory adapter tests shall cover:
+Implemented coverage includes:
 
-1. Import safety for both `azure_devops_backlog_generator` and
-   `azure_devops_backlog_generator.__main__`: ordinary import shall not invoke `run_process()` or
-   `main()`, start the application, raise `SystemExit` or emit stdout/stderr. The test technique shall
-   distinguish ordinary import from executable entry semantics and shall not accidentally execute the
-   adapter while testing import safety.
-2. Exact one-call delegation to `run_process()` at the executable boundary, with no direct adapter call
-   to `main()` or bootstrap and no duplicate classification, rendering or logging.
-3. Substituted `run_process()` returning exact integer `0`: exactly one call, `SystemExit.code` equal
-   to `0` with exact `int` type, and no adapter stdout/stderr.
-4. Substituted `run_process()` returning exact integer `1`: exactly one call, `SystemExit.code` equal
-   to `1` with exact `int` type, and no output added by the adapter.
-5. Substituted `run_process()` raising a unique unexpected sentinel: the exact same exception object
-   escapes in-process, with one call, no translation to `SystemExit`, no generic catch and no adapter
-   stdout/stderr or traceback logging.
-6. A real isolated subprocess invoking `python -m azure_devops_backlog_generator` with existing CLI
-   semantics that deterministically cause a controlled configuration failure. Use an intentionally
-   invalid/missing configuration invocation independent of the developer's real configuration; no network
-   access or real PAT shall be used. Assert status `1`, empty stdout, stderr exactly
-   `Configuration error.\n` and no Python traceback. The failure shall occur before network activity.
+1. Ordinary package and executable-module import safety: no application execution, `run_process()`,
+   `main()` or bootstrap call, `SystemExit`, stdout/stderr or adapter-controlled logging.
+2. Exact one-call delegation to `run_process()`, without direct `main()` or bootstrap invocation;
+   exact integer `0` and `1` become `SystemExit(0)` and `SystemExit(1)` without adapter output or logging.
+3. Same-object unexpected-exception propagation in-process: no controlled translation, generic catch,
+   `SystemExit(1)`, stdout/stderr or application-generated traceback logging.
+4. Real package controlled-failure subprocess invocation:
+   `python -m azure_devops_backlog_generator --config-file <explicit missing temp file>`.
+   Measured return code is `1`, stdout is empty and stderr is exactly `Configuration error.\n`, without
+   a Python traceback. The explicit configuration remains absent, no runtime logfile is created on this
+   pre-logging configuration-failure path, and no network/application processing is reached.
+5. Isolated successful child adapter harness: substituted `run_process()` returns `0`; process status is
+   `0`, stdout and stderr are empty. This is adapter-boundary validation, not successful application E2E.
+6. Isolated unexpected child adapter harness: substituted `run_process()` raises; termination is nonzero,
+   stdout is empty and native interpreter stderr is nonempty. No exact unexpected exit code, traceback
+   content or formatting, or final diagnostic policy is claimed.
 
-Subprocesses shall use the canonical project virtual-environment interpreter. Configuration, environment
-and working-directory isolation shall prevent reliance on developer credentials or local configuration.
-Existing Slice-5/6 tests remain authoritative for all seven controlled categories, exact reporting,
-owned-handler logging, D5 and controlled secret-safety. Adapter tests shall not duplicate every category
-or introduce result-model, console-script or `[project.scripts]` tests.
+Child processes use the project interpreter with an intentionally allowlisted environment and an isolated
+temporary working directory. Only available `SystemRoot`/`WINDIR` values are inherited; explicit settings
+are absolute repository `src` `PYTHONPATH`, `PYTHONNOUSERSITE=1`, `PYTHONDONTWRITEBYTECODE=1`,
+`PYTHONIOENCODING=utf-8` and isolated `TEMP`/`TMP`/`TMPDIR`. The child does not inherit `AZDO_PAT`,
+proxy variables, developer `PYTHONPATH`, `PYTHONHOME`, `PYTHONSTARTUP`, `PYTHONWARNINGS`, coverage
+subprocess activation or broader developer environment credentials/configuration. These are test-isolation
+settings, not new application configuration. This isolation does not establish secret-safety for arbitrary
+native unexpected traceback output. Native traceback behaviour remains an interim pre-Version-1.0 limitation;
+final unexpected-error handling, user-facing reporting and diagnostic/traceback and secret-safety policy remain future.
 
-A subprocess success-boundary test is preferred where cleanly achievable: the narrowest isolated child
-harness shall exercise the real package adapter while safely substituting `run_process()` with a
-successful boundary, proving status `0` and empty stdout/stderr. This is adapter validation, not a
-successful no-network end-to-end application run. No production success bypass or test hook is permitted.
-If the harness would require invasive packaging/PYTHONPATH manipulation or test-only production hooks,
-the implementation handoff shall document that limitation and rely on the mandatory in-process exact
-`SystemExit(0)` test plus real subprocess controlled-failure test.
+Recorded Slice-7 implementation validation evidence from PR #136 (commit `468d98d`, merge `009ef71`):
 
-Where a clean isolated child harness can substitute an unexpected sentinel without production changes,
-it should characterise nonzero termination and nonempty native interpreter stderr. It shall not attribute
-a controlled category to the adapter, fix an exact unexpected numeric status beyond nonzero, or assert
-complete traceback formatting, paths or line numbers. This child test is not required if it would need
-test-specific production hooks; exact same-object in-process propagation remains mandatory.
-Application-generated output and interpreter-generated stderr shall be distinguished. Empty whole-process
-stderr and secret-safety for arbitrary native unexpected tracebacks shall not be asserted.
+| Validation | Collected | Passed | Failed | Skipped | Warnings | Xfail | Xpass |
+|------------|-----------|--------|--------|---------|----------|-------|-------|
+| Focused `tests/test___main__.py` | 8 | 8 | 0 | 0 | 0 | 0 | 0 |
+| Full pytest | 723 | 723 | 0 | 0 | 0 | 0 | 0 |
+| `pytest -W error` | 723 | 723 | 0 | 0 | 0 | 0 | 0 |
 
-The preceding 35 focused / 715 full / 715 Werror passes, zero failed/skipped/warnings/xfail/xpass, Ruff pass,
-95% coverage, 1,367 statements, 64 missed statements and `main.py` 86 statements / 0 missed / 100% are
-pre-Slice-7 implementation evidence only. No Slice-7 test counts or execution evidence are claimed.
-Broader integration/E2E, operational readiness/recovery evidence and Review Gate 3 remain future.
+Ruff passed. Overall coverage is 95% across 1,370 statements with 64 missed.
+
+| Module | Statements | Missed | Coverage |
+|--------|------------|--------|----------|
+| `src/azure_devops_backlog_generator/__main__.py` | 3 | 0 | 100% |
+| `src/azure_devops_backlog_generator/main.py` | 86 | 0 | 100% |
+
+Compared with the pre-Slice-7 baseline, tests increased from 715 to 723 (+8), statements from 1,367 to
+1,370 (+3), missed statements remained 64 and coverage remained 95%. `main.py` remains unchanged at
+86 statements / 0 missed / 100%. The implementation added exactly `src/azure_devops_backlog_generator/__main__.py`
+and `tests/test___main__.py`: 2 files, 210 insertions, 0 deletions. The adapter has 6 physical lines and
+3 coverage-counted statements; the focused test module has 204 physical lines. Physical line counts
+are not a measure of production complexity. These are recorded implementation results, not new test runs
+performed during this documentation status sync.
+
+Existing Slice-5/6 evidence remains authoritative for all seven controlled categories, exact reporting,
+owned-handler logging, D1–D5 and controlled secret-safety; Slice 7 changes none of those contracts.
+Required success/lifecycle logging, execution-summary content and presentation, broader integration/E2E,
+live Azure DevOps Services validation, Operational Readiness, Operational Recovery / DR, API Section 6.1
+status-drift reconciliation before Review Gate 3, Gate 3 and final Version 1.0 readiness remain future.
+Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness claim is made.
 
 Work Item Create Payload validation shall additionally cover:
 

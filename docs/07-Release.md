@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.25
+**Version:** 1.26
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-06
 
@@ -49,6 +49,7 @@
 | 1.23 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 | 1.24 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 | 1.25 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and interim pre-release limitations. |
+| 1.26 | 2026-09-06 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 executable outcomes and pre-release limitations. |
 
 ---
 
@@ -161,38 +162,45 @@ Events is implemented. Runtime controlled-failure file logging now uses one conf
 safe category-only `CRITICAL` emission attempt per eligible controlled failure; a record is written exactly once when
 that attempt succeeds, while a secondary write failure preserves the primary controlled failure. It permits no
 root/console/fallback logging and adds an `ApplicationLoggingError` controlled category only when initialisation
-fails. Version 1.0 remains pre-release. The following Slice-7 contract defines the approved next executable
+fails. Version 1.0 remains pre-release. The following Slice-7 status records the implemented executable
 boundary while retaining incomplete wider Application/Run and release readiness.
 
-Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is an approved
-contract and is not yet implemented. S7-D1/S7-D2 are approved owner decisions; this document revision
-is Approved Baseline. Slices 1–6 remain implemented. The approved next executable boundary is
-`python -m azure_devops_backlog_generator` through
-`src/azure_devops_backlog_generator/__main__.py`, with exactly one call to `run_process()` and
-translation of its unchanged controlled integer result into `SystemExit`. Import safety, controlled output, runtime logging and
-existing application/core return contracts shall be preserved. No console-script registration,
-`[project.scripts]`, `main.py` execution guard, packaging metadata, dependency, project-version or
-README change is approved by this contract task.
+Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is implemented
+in PR #136 (implementation commit `468d98d`, merge `009ef71`), following contract PR #134 and approval PR #135.
+S7-D1/S7-D2 remain approved owner decisions. Slices 1–7 are implemented. The sole implemented executable
+surface is `python -m azure_devops_backlog_generator` through
+`src/azure_devops_backlog_generator/__main__.py`, with exactly one call to `run_process()` and direct
+use of its unchanged integer as the `SystemExit` code. The executable adapter exclusively owns
+`SystemExit`. Controlled success maps `0` to OS status `0` with empty stdout/stderr; controlled failure
+maps `1` to OS status `1` with empty stdout and the existing exact stderr owned by `run_process()`,
+without adapter traceback or duplicate output. Import safety is implemented for both the package and
+`__main__`; ordinary import does not start the application or emit adapter output or logging.
+Runtime logging, D1–D5, all seven controlled categories and existing application/core return contracts
+remain unchanged. No console script, `[project.scripts]`, `main.py` execution guard, packaging metadata,
+dependency, package-version or README invocation change was introduced.
 
-Even after Slice 7 implementation, uncaught unexpected exceptions may produce native interpreter
-tracebacks on stderr and nonzero termination. The adapter adds no application output or traceback logging.
-This is an interim pre-Version-1.0 limitation: arbitrary native unexpected traceback output is not
-guaranteed secret-safe, and native tracebacks are not an approved final diagnostic solution.
+Unexpected exceptions propagate as the exact same object without adapter classification, translation,
+sanitisation or output. Real interpreter execution may produce native traceback stderr and nonzero
+termination. This remains an interim pre-Version-1.0 limitation: arbitrary native unexpected traceback
+output is not guaranteed secret-safe, and native tracebacks are not an approved final diagnostic solution.
+Neither an exact unexpected exit code nor exact traceback contents or formatting is promised.
 
-Version 1.0 remains pre-release and release readiness remains incomplete. Required success/lifecycle
-logging, execution-summary requirements, final controlled unexpected-error handling and diagnostic/traceback
-safety remain incomplete; result aggregation is needed only if later summary requirements require it.
-Broader integration/E2E, Operational Readiness, Operational Recovery / DR and Review Gate 3 remain future.
-Console-script packaging is future only if later approved; GUI implementation is outside Version 1.0.
-The known non-blocking `05-API.md` Section 6.1 Application/Run status drift shall be reconciled before Gate 3;
-the more specific Approved Baseline slice documents govern current implementation status. Slice 7 leaves
-the API Specification and REST semantics unchanged.
+Version 1.0 remains pre-release; wider Application/Run and release readiness remain incomplete. Required
+success/lifecycle logging, execution-summary content and presentation, final controlled unexpected-error
+handling, user-facing reporting and diagnostic/traceback and secret-safety policy remain future. Typed
+execution-result/aggregation and created/reused/repaired counts are conditional on later summary requirements.
+Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness, Operational Recovery / DR
+and Review Gate 3 remain future. Console-script packaging requires separate approval; GUI implementation
+remains future and outside Version 1.0. The known pre-existing non-blocking `05-API.md` Section 6.1 broad
+deferred Application/Run status conflicts with the more specific current documents showing Slices 1–7
+implemented. Reconciliation remains required before Gate 3 and is not a Slice-7 implementation blocker.
+The API Specification and REST semantics remain unchanged by this status sync.
 
-Once implemented, the package adapter will advance towards Gate 3 with a real package execution surface,
-observable controlled OS exit statuses and a subprocess-testable operator invocation path. It will not
-establish production readiness or complete the remaining logging/reporting, summary, unexpected diagnostic
-policy, wider integration/E2E, operational readiness/recovery evidence or API status reconciliation.
-The existing release criteria remain unchanged; Gate 3 and final Version 1.0 approval are not claimed.
+The package adapter now supplies a real executable surface and controlled OS statuses `0`/`1`.
+Testing Section 8 records the implementation evidence, including the real package configuration-failure
+subprocess and isolated successful/unexpected adapter-boundary subprocesses. Success-boundary validation
+does not establish successful application E2E. The existing release criteria remain unchanged; production
+readiness, Gate 3 completion and final Version 1.0 approval are not claimed.
 
 ---
 
