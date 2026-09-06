@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.37
+**Version:** 2.38
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-06
 
@@ -71,6 +71,7 @@
 | 2.35 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 | 2.36 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 7 Package Execution Adapter with Controlled Process Termination contract. |
 | 2.37 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 package execution status and preserved interim limitations. |
+| 2.38 | 2026-09-06 | Draft | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 8 lifecycle file-logging contract. |
 
 ---
 
@@ -95,6 +96,7 @@
     - [7.1.5 Application/Run Slice 5 — Controlled Failure Reporting to Standard Error](#715-applicationrun-slice-5--controlled-failure-reporting-to-standard-error)
     - [7.1.6 Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events](#716-applicationrun-slice-6--runtime-file-logging-and-controlled-failure-events)
     - [7.1.7 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination](#717-applicationrun-slice-7--package-execution-adapter-with-controlled-process-termination)
+    - [7.1.8 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging](#718-applicationrun-slice-8--process-neutral-application-lifecycle-file-logging)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -631,6 +633,141 @@ API Section 6.1 status-drift reconciliation before Review Gate 3, Gate 3 and fin
 readiness remain future. Console-script packaging requires separate approval; GUI implementation remains future.
 The implemented package surface and controlled OS exit statuses support subprocess validation and operator
 invocation without establishing readiness. Version 1.0 remains pre-release.
+
+---
+
+### 7.1.8 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging
+
+**APPROVED CONTRACT — NOT YET IMPLEMENTED.** Slices 1–7 remain the implemented, approved baseline.
+S8-D1, S8-D2 and S8-D3 below are approved owner decisions. This document revision is Draft pending
+contract review and separate approval-only promotion; approved decisions do not make it an Approved Baseline.
+The owner-approved lifecycle boundary continues the established sequence as Slice 8.
+
+**S8-D1 — Lifecycle boundary and exact events.** Slice 8 shall add exactly two fixed-message lifecycle
+events at the configured application-run boundary:
+
+| Event | Exact message | Level | Timing |
+|-------|---------------|-------|--------|
+| START | `Application run started.` | INFO | After configuration load/validation and runtime logging initialisation succeed, immediately before `coordinate_application_run(configuration)`. |
+| COMPLETION | `Application run completed successfully.` | INFO | Only after `coordinate_application_run(configuration)` returns normally, before bootstrap returns successfully to `main()`/`run_process()`. |
+
+START means configured application execution is about to begin, not process startup. There is no separate
+configuration-validation or logger-initialised event. Each invocation has at most one eligible START and
+at most one eligible successful COMPLETION. For each eligible configured execution attempt, exactly one
+START emission attempt shall occur when INFO passes the configured threshold; exactly one COMPLETION
+emission attempt shall occur when INFO passes that threshold and application execution returns normally.
+A successful write produces one corresponding record. Neither event contains dynamic values.
+Completion establishes only normal return, not any created, reused, repaired, skipped or total item count.
+
+**S8-D2 — Severity and filtering.** Both lifecycle events shall use INFO and normal existing
+`logging.level` filtering before owned-handler delivery. At INFO (or DEBUG), the records are eligible;
+at WARNING, ERROR or CRITICAL, lifecycle INFO records are filtered and no lifecycle write attempt is
+required. INFO shall not be forced through a higher threshold. No special lifecycle threshold,
+configuration field or logging-level semantic change is introduced. Existing controlled CRITICAL
+event behaviour remains unchanged.
+
+**S8-D3 — Lifecycle write-failure behaviour.** The two lifecycle events are best effort. A failed
+START write shall still allow configured application execution; a failed COMPLETION write shall still
+allow bootstrap to return normally. A lifecycle write failure shall not change the underlying
+application outcome, `run_process()` result or adapter `SystemExit` status. It shall not raise or
+substitute `ApplicationLoggingError`, convert success to controlled failure, propagate the secondary
+write error, emit stdout/stderr, retry, fall back, use another logfile/destination, use root or console
+logging, emit a second event, emit logging-internal diagnostics/tracebacks or expose exception details.
+This does not suppress a later, independently eligible COMPLETION or an existing controlled-failure
+event: those retain their own boundary semantics. `ApplicationLoggingError` remains initialisation-only.
+Slice-6 D5 remains authoritative for secondary controlled-failure writes; S8-D3 extends best-effort
+handling only to the two new lifecycle events.
+
+Lifecycle ownership belongs to `coordinate_application_bootstrap(...)`, or a narrowly scoped
+application-owned helper used by bootstrap; no new public API is required. The verified existing path
+shall be preserved, with only the two approved observations added after logging initialisation:
+
+```text
+python -m azure_devops_backlog_generator
+→ __main__.py → run_process() → main()
+→ coordinate_application_bootstrap(sys.argv[1:])
+→ deactivate previous owned logging
+→ load/validate Configuration
+→ initialise runtime file logging
+→ eligible INFO START attempt
+→ coordinate_application_run(configuration)
+  → DocumentationProcessor → AzureDevOpsRestClient → Generator orchestration
+→ eligible INFO COMPLETION attempt only after normal application return
+→ normal bootstrap return
+```
+
+Lifecycle records shall be delivered only to the current invocation's active application-owned handler.
+Normal logger propagation is not the delivery mechanism. Configured-level filtering must apply before
+this owned-handler-only dispatch; root, unrelated and same-named non-owned handlers shall receive no
+lifecycle records and remain untouched. Repeated invocations shall not reuse stale owned handlers or
+produce duplicate lifecycle records.
+
+| Failure boundary | Lifecycle behaviour | Preserved outcome |
+|------------------|---------------------|-------------------|
+| Configuration load/validation fails | No START, COMPLETION or lifecycle logfile attempt. | Existing `ConfigurationError` process behaviour; no fallback logger. |
+| Runtime logging initialisation fails | No START or COMPLETION. | Existing initialisation-only `ApplicationLoggingError` behaviour; no fallback. |
+| Controlled application failure after START | START may have been written if INFO was eligible; COMPLETION is absent. | Exactly the existing controlled CRITICAL attempt, fixed category-only stderr line, result `1` and adapter `SystemExit(1)`; no duplicate controlled event. |
+| Unexpected application failure after START | START may have been written if INFO was eligible; COMPLETION is absent. | The exact same exception object propagates, with no generic catch, controlled conversion, generic stderr, application-generated traceback logging, sanitisation or controlled `SystemExit` construction. |
+
+All Slice-6 D1–D5 semantics in Section 7.1.6 remain unchanged: standard-library logging only, logger
+`azure_devops_backlog_generator`, file
+`<validated logging.log_directory>/azure-devops-backlog-generator.log`, file-only append mode, UTF-8,
+formatter `%(asctime)s %(levelname)s %(name)s %(message)s`, date format `%Y-%m-%dT%H:%M:%S`,
+configured threshold, `propagate=False`, no root emission or console handler, one active owned handler
+per invocation, stale owned-handler cleanup before configuration load, and removal/closure of only
+owned handlers. Controlled category-only CRITICAL events, owned-handler dispatch, unchanged
+`logging.raiseExceptions`, initialisation-only `ApplicationLoggingError`, and no retry, fallback or
+alternate destination are preserved. The exact seven categories/messages in Section 7.1.6 remain
+authoritative; lifecycle write failure introduces no eighth category.
+
+`run_process() -> int` retains controlled classification, outcome mapping, stderr reporting and the
+existing controlled-failure logging trigger. `main() -> None` retains argument delegation.
+`coordinate_application_bootstrap(...) -> None`, `coordinate_application_run(...) -> None` and
+Generator orchestration/traversal `None` contracts are unchanged. `__main__.py` remains the sole
+executable adapter and exclusive `SystemExit` owner; the only supported executable surface remains
+`python -m azure_devops_backlog_generator`. No lifecycle implementation is required in that adapter,
+`run_process()`, Generator, REST Client, Documentation Processor or domain models. No
+`[project.scripts]`, console script, installed launcher, `main.py` execution guard or second surface is added.
+
+Successful stdout/stderr remain empty; controlled failures retain empty stdout and exactly the existing
+category-only stderr line. Slice 8 adds no user-facing output. For unexpected failures, Slice 8 generates
+no stdout/stderr or diagnostic event; real interpreter execution may still emit a native traceback.
+Arbitrary native unexpected traceback output remains not guaranteed secret-safe. Final unexpected
+handling and diagnostic/traceback safety remain future Version-1.0 work.
+
+The two lifecycle message strings shall contain no PAT, Authorization value, configuration value, path,
+filename, document/work-item title, source identity, URL, Azure DevOps organisation/project, exception
+string/repr, traceback, counter or arbitrary user content. Their fixed-message safety requires no dynamic
+secret sanitisation and makes no claim about native unexpected traceback safety.
+
+Shared Application Core remains presentation-neutral. Lifecycle file logging is process-neutral
+operational infrastructure, independent of `SystemExit`, stdout, stderr, console UI and terminal
+formatting. Future GUI/alternate adapters may reuse application/core behaviour without `__main__.py`
+or `run_process()` where architecture permits; no GUI implementation or Version-1.0 GUI scope is added.
+
+Generator remains unchanged: no result model, count aggregation, callbacks, per-item instrumentation,
+traversal/preflight/relationship-lifecycle changes, or retry/fallback/rollback changes. REST remains
+unchanged: no request/response, URL, response-body, Authorization or PAT logging. No configuration field,
+environment variable, logging option, CLI change or dependency is added; `AZDO_PAT` remains the sole
+credential source, with no PAT in CLI or TOML. No live Azure DevOps access is required.
+
+Execution-summary content, destination and presentation remain future. Slice 8 defines no summary
+message, application/Generator result type or created/reused/repaired/skipped/total counter.
+Completion is not an execution summary. It adds no documentation-processing, Azure DevOps communication,
+per-item creation/reuse/repair, configuration-validation, logger-initialised or summary events.
+It does not complete the broader logging requirements in Section 12; existing controlled-failure
+logging remains Slice 6, and other required logging topics remain future where not already implemented.
+No unexpected-exception catch, generic stderr/category, exception/traceback logging or persistence,
+diagnostic allowlist/model, incident ID or correlation ID is introduced.
+
+Wider Application/Run remains incomplete and Version 1.0 remains pre-release. Remaining summary/logging,
+final unexpected handling, diagnostic safety, broader integration/E2E, live Azure DevOps Services validation,
+Operational Readiness checklist/evidence, Review Gate 3 and final release readiness remain future.
+No complete normative Gate-3 acceptance checklist has been established; Slice 8 contributes operational
+execution evidence without completing Gate-3 prerequisites. Known pre-existing API Section 6.1 status
+drift requires separate reconciliation before Review Gate 3; this contract does not edit the API.
+Operational Recovery / DR scope and exact Gate-3 placement remain future/unsettled; existing Generator
+later-run recovery is not equivalent to Operational Recovery / DR. No new recovery requirements are defined.
 
 ---
 
