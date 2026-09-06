@@ -6,7 +6,7 @@
 
 **Version:** 2.28
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-06
 
@@ -61,7 +61,7 @@
 | 2.25 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage and validation evidence. |
 | 2.26 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined required/planned Application/Run Slice 7 import, termination and subprocess coverage while preserving pre-Slice-7 evidence. |
 | 2.27 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 test coverage and measured validation evidence. |
-| 2.28 | 2026-09-06 | Draft | Jack Spaetjens | Defined planned Application/Run Slice 8 lifecycle logging validation and preserved pre-Slice-8 evidence. |
+| 2.28 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined planned Application/Run Slice 8 lifecycle logging validation and preserved pre-Slice-8 evidence. |
 
 ---
 
@@ -525,8 +525,8 @@ Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness c
 
 **Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging: APPROVED CONTRACT —
 NOT YET IMPLEMENTED.** Architecture Section 7.1.8 is authoritative for owner-approved S8-D1–D3.
-This Draft revision defines required/planned coverage only, pending separate contract review and
-approval-only promotion. No Slice-8 tests have been written or executed and no future counts are asserted.
+This Approved Baseline revision defines required/planned coverage only; Slice 8 remains not implemented.
+No Slice-8 tests have been written or executed and no future counts are asserted.
 
 The recorded Slice-7 evidence above is the PRE-SLICE-8 implementation quality baseline: focused 8/8,
 full pytest 723/723 and `pytest -W error` 723/723, each with zero failed, skipped, warnings, xfail

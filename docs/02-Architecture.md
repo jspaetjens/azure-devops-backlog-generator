@@ -6,7 +6,7 @@
 
 **Version:** 2.38
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-06
 
@@ -71,7 +71,7 @@
 | 2.35 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 | 2.36 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 7 Package Execution Adapter with Controlled Process Termination contract. |
 | 2.37 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 package execution status and preserved interim limitations. |
-| 2.38 | 2026-09-06 | Draft | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 8 lifecycle file-logging contract. |
+| 2.38 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 8 lifecycle file-logging contract. |
 
 ---
 
@@ -639,8 +639,7 @@ invocation without establishing readiness. Version 1.0 remains pre-release.
 ### 7.1.8 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging
 
 **APPROVED CONTRACT — NOT YET IMPLEMENTED.** Slices 1–7 remain the implemented, approved baseline.
-S8-D1, S8-D2 and S8-D3 below are approved owner decisions. This document revision is Draft pending
-contract review and separate approval-only promotion; approved decisions do not make it an Approved Baseline.
+S8-D1, S8-D2 and S8-D3 below are approved owner decisions. This document revision is Approved Baseline.
 The owner-approved lifecycle boundary continues the established sequence as Slice 8.
 
 **S8-D1 — Lifecycle boundary and exact events.** Slice 8 shall add exactly two fixed-message lifecycle
