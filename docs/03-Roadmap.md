@@ -6,7 +6,7 @@
 
 **Version:** 1.33
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-06
 
@@ -56,7 +56,7 @@
 | 1.30 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 | 1.31 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and remaining readiness work. |
 | 1.32 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slices 1–7 status and remaining readiness work. |
-| 1.33 | 2026-09-06 | Draft | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging capability and remaining readiness work. |
+| 1.33 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging capability and remaining readiness work. |
 
 ---
 
@@ -282,8 +282,8 @@ COMPLETION follows only normal application return. Delivery remains current-owne
 
 Slices 1–7 remain implemented and approved. The owner-approved lifecycle boundary now justifies the
 next number, Slice 8; no Slice 9, one-slice-per-capability allocation or future capability order is defined.
-This revision is Draft pending separate contract review and approval-only promotion; approved owner
-decisions do not establish Approved Baseline document status or implementation completion.
+This revision is Approved Baseline; approved owner decisions and document approval do not establish
+implementation completion.
 
 Slice 8 covers only configured-run START and successful COMPLETION. Existing controlled-failure logging
 remains Slice 6; other broader logging requirements remain future where not already implemented.
