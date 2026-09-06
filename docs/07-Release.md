@@ -6,7 +6,7 @@
 
 **Version:** 1.25
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-06
 
@@ -48,7 +48,7 @@
 | 1.22 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error status. |
 | 1.23 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 | 1.24 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
-| 1.25 | 2026-09-06 | Draft | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and interim pre-release limitations. |
+| 1.25 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and interim pre-release limitations. |
 
 ---
 
@@ -166,7 +166,7 @@ boundary while retaining incomplete wider Application/Run and release readiness.
 
 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is an approved
 contract and is not yet implemented. S7-D1/S7-D2 are approved owner decisions; this document revision
-remains Draft. Slices 1–6 remain implemented. The approved next executable boundary is
+is Approved Baseline. Slices 1–6 remain implemented. The approved next executable boundary is
 `python -m azure_devops_backlog_generator` through
 `src/azure_devops_backlog_generator/__main__.py`, with exactly one call to `run_process()` and
 translation of its unchanged controlled integer result into `SystemExit`. Import safety, controlled output, runtime logging and

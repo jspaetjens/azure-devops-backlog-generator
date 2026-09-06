@@ -6,7 +6,7 @@
 
 **Version:** 2.26
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-06
 
@@ -59,7 +59,7 @@
 | 2.23 | 2026-09-03 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 5 Controlled Failure Reporting to Standard Error coverage and validation evidence. |
 | 2.24 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined required but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage. |
 | 2.25 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events coverage and validation evidence. |
-| 2.26 | 2026-09-06 | Draft | Jack Spaetjens | Defined required/planned Application/Run Slice 7 import, termination and subprocess coverage while preserving pre-Slice-7 evidence. |
+| 2.26 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined required/planned Application/Run Slice 7 import, termination and subprocess coverage while preserving pre-Slice-7 evidence. |
 
 ---
 
@@ -461,7 +461,7 @@ following Slice-7 obligations are planned separately.
 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is an approved
 contract and is not yet implemented. The following coverage is required/planned for implementation,
 not executed evidence. S7-D1/S7-D2 and Architecture Section 7.1.7 govern the boundary; this document
-revision remains Draft. Existing Slices 1–6 and their validation evidence remain unchanged.
+revision is Approved Baseline. Existing Slices 1–6 and their validation evidence remain unchanged.
 
 Mandatory adapter tests shall cover:
 
