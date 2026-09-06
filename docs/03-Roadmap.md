@@ -6,7 +6,7 @@
 
 **Version:** 1.32
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-06
 
@@ -55,7 +55,7 @@
 | 1.29 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events contract. |
 | 1.30 | 2026-09-04 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 6 Runtime File Logging and Controlled-Failure Events status. |
 | 1.31 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and remaining readiness work. |
-| 1.32 | 2026-09-06 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slices 1–7 status and remaining readiness work. |
+| 1.32 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slices 1–7 status and remaining readiness work. |
 
 ---
 
