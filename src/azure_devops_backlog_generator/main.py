@@ -121,6 +121,30 @@ def _emit_controlled_failure(message: str) -> None:
         handler.handle(record)
 
 
+def _emit_lifecycle_event(message: str) -> None:
+    """Attempt one eligible lifecycle event without changing the application outcome."""
+    try:
+        handler = _ACTIVE_LOG_HANDLER
+        if (
+            handler is None
+            or not _LOGGER.isEnabledFor(logging.INFO)
+            or handler.level > logging.INFO
+        ):
+            return
+        record = _LOGGER.makeRecord(
+            _LOGGER.name,
+            logging.INFO,
+            "",
+            0,
+            message,
+            (),
+            None,
+        )
+        handler.handle(record)
+    except Exception:
+        pass
+
+
 def run_process() -> int:
     """Run the application and map controlled failures to a process outcome."""
     try:
@@ -156,7 +180,9 @@ def coordinate_application_bootstrap(arguments: Sequence[str]) -> None:
     _deactivate_runtime_logging()
     configuration = load_configuration_from_cli(arguments)
     _initialise_runtime_logging(configuration)
+    _emit_lifecycle_event("Application run started.")
     coordinate_application_run(configuration)
+    _emit_lifecycle_event("Application run completed successfully.")
 
 
 def coordinate_application_run(configuration: Configuration) -> None:
