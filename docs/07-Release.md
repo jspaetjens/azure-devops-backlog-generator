@@ -6,7 +6,7 @@
 
 **Version:** 1.28
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-08
 
@@ -51,7 +51,7 @@
 | 1.25 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and interim pre-release limitations. |
 | 1.26 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 executable outcomes and pre-release limitations. |
 | 1.27 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging contract and pre-release exclusions. |
-| 1.28 | 2026-09-08 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining pre-release limitations. |
+| 1.28 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining pre-release limitations. |
 
 ---
 
@@ -207,7 +207,7 @@ readiness, Gate 3 completion and final Version 1.0 approval are not claimed.
 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging is **IMPLEMENTED**
 in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following contract PR #139 and approval
 PR #140. Architecture Section 7.1.8 defines implemented, approved owner decisions S8-D1–D3. This
-status-sync document revision is Draft pending separate status review and approval-only promotion.
+status-sync document revision is Approved Baseline.
 
 Slice 8 adds only two process-neutral INFO file lifecycle messages: `Application run started.`
 after successful configuration validation/logging initialisation and immediately before configured
