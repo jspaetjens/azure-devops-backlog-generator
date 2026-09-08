@@ -4,11 +4,11 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.27
+**Version:** 1.28
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-06
+**Last Updated:** 2026-09-08
 
 **Target Release:** v1.0.0
 
@@ -51,6 +51,7 @@
 | 1.25 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and interim pre-release limitations. |
 | 1.26 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 executable outcomes and pre-release limitations. |
 | 1.27 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging contract and pre-release exclusions. |
+| 1.28 | 2026-09-08 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining pre-release limitations. |
 
 ---
 
@@ -168,7 +169,7 @@ boundary while retaining incomplete wider Application/Run and release readiness.
 
 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is implemented
 in PR #136 (implementation commit `468d98d`, merge `009ef71`), following contract PR #134 and approval PR #135.
-S7-D1/S7-D2 remain approved owner decisions. Slices 1–7 are implemented. The sole implemented executable
+S7-D1/S7-D2 remain approved owner decisions. Slices 1–8 are implemented. The sole implemented executable
 surface is `python -m azure_devops_backlog_generator` through
 `src/azure_devops_backlog_generator/__main__.py`, with exactly one call to `run_process()` and direct
 use of its unchanged integer as the `SystemExit` code. The executable adapter exclusively owns
@@ -186,15 +187,15 @@ termination. This remains an interim pre-Version-1.0 limitation: arbitrary nativ
 output is not guaranteed secret-safe, and native tracebacks are not an approved final diagnostic solution.
 Neither an exact unexpected exit code nor exact traceback contents or formatting is promised.
 
-Version 1.0 remains pre-release; wider Application/Run and release readiness remain incomplete. Required
-success/lifecycle logging, execution-summary content and presentation, final controlled unexpected-error
+Version 1.0 remains pre-release; wider Application/Run and release readiness remain incomplete. Remaining
+logging beyond Slice 8, execution-summary content and presentation, final controlled unexpected-error
 handling, user-facing reporting and diagnostic/traceback and secret-safety policy remain future. Typed
 execution-result/aggregation and created/reused/repaired counts are conditional on later summary requirements.
 Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness, Operational Recovery / DR
 and Review Gate 3 remain future. Console-script packaging requires separate approval; GUI implementation
 remains future and outside Version 1.0. The known pre-existing non-blocking `05-API.md` Section 6.1 broad
-deferred Application/Run status conflicts with the more specific current documents showing Slices 1–7
-implemented. Reconciliation remains required before Gate 3 and is not a Slice-7 implementation blocker.
+deferred Application/Run status conflicts with the more specific current documents showing Slices 1–8
+implemented. Reconciliation remains required before Gate 3 and is not a Slice-8 implementation blocker.
 The API Specification and REST semantics remain unchanged by this status sync.
 
 The package adapter now supplies a real executable surface and controlled OS statuses `0`/`1`.
@@ -203,18 +204,19 @@ subprocess and isolated successful/unexpected adapter-boundary subprocesses. Suc
 does not establish successful application E2E. The existing release criteria remain unchanged; production
 readiness, Gate 3 completion and final Version 1.0 approval are not claimed.
 
-Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging is an **APPROVED
-CONTRACT — NOT YET IMPLEMENTED**. Architecture Section 7.1.8 defines approved owner decisions
-S8-D1–D3. This document revision is Approved Baseline.
+Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging is **IMPLEMENTED**
+in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following contract PR #139 and approval
+PR #140. Architecture Section 7.1.8 defines implemented, approved owner decisions S8-D1–D3. This
+status-sync document revision is Draft pending separate status review and approval-only promotion.
 
-Slice 8 will add only two process-neutral INFO file lifecycle messages: `Application run started.`
+Slice 8 adds only two process-neutral INFO file lifecycle messages: `Application run started.`
 after successful configuration validation/logging initialisation and immediately before configured
 execution, and `Application run completed successfully.` only after normal application return.
 Normal configured threshold filtering and current-owned-handler-only isolation apply. Writes are
 best effort, with no retry, fallback, additional output or outcome change; `ApplicationLoggingError`
 remains initialisation-only. Completion is not an execution summary or evidence of item counts.
 
-Slices 1–7 remain implemented and approved. D1–D5, all seven controlled categories, controlled
+Slices 1–8 are implemented; the Slice-8 contract remains approved. D1–D5, all seven controlled categories, controlled
 CRITICAL reporting and the sole package surface `python -m azure_devops_backlog_generator` remain
 unchanged. `__main__.py` exclusively owns SystemExit; `run_process()`, `main()` and application/core
 return contracts remain unchanged. No Generator, REST, configuration, CLI, dependency, result-model,
@@ -234,9 +236,10 @@ Operational Recovery / DR scope and exact Gate-3 placement remain future/unsettl
 recovery is not equivalent and no new recovery requirement is defined.
 
 API Section 6.1 drift remains separate future documentation reconciliation required before Review
-Gate 3; the API Specification is unchanged. Testing Section 8 defines planned focused Slice-8 coverage,
-requiring neither live Azure DevOps nor new subprocess tests by default. Its 723-test/95%-coverage
-evidence remains pre-Slice-8 history, not executed Slice-8 validation. Future GUI/alternate-adapter
+Gate 3; the API Specification is unchanged. Testing Section 8 records merged Slice-8 evidence:
+55/55 focused tests, 743/743 full pytest and 743/743 warnings-as-errors pytest, Ruff passed and 95%
+coverage across 1,381 statements with 64 missed. No live Azure DevOps validation was performed or new
+subprocess tests added; existing Slice-7 package/subprocess coverage passed. Future GUI/alternate-adapter
 reuse remains possible through presentation-neutral application/core behaviour; GUI remains outside
 Version 1.0.
 

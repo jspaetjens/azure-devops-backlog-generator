@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.28
+**Version:** 2.29
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-06
+**Last Updated:** 2026-09-08
 
 **Target Release:** v1.0.0
 
@@ -62,6 +62,7 @@
 | 2.26 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined required/planned Application/Run Slice 7 import, termination and subprocess coverage while preserving pre-Slice-7 evidence. |
 | 2.27 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 test coverage and measured validation evidence. |
 | 2.28 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined planned Application/Run Slice 8 lifecycle logging validation and preserved pre-Slice-8 evidence. |
+| 2.29 | 2026-09-08 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging coverage and measured validation evidence. |
 
 ---
 
@@ -462,7 +463,7 @@ statements were covered. These are pre-Slice-7 baseline results. Slice 6 require
 
 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is implemented.
 The focused `tests/test___main__.py` module provides executed coverage of the approved S7-D1/S7-D2
-boundary in Architecture Section 7.1.7. Slices 1–7 are implemented; wider Application/Run remains incomplete.
+boundary in Architecture Section 7.1.7. Slices 1–8 are implemented; wider Application/Run remains incomplete.
 
 Implemented coverage includes:
 
@@ -493,7 +494,7 @@ settings, not new application configuration. This isolation does not establish s
 native unexpected traceback output. Native traceback behaviour remains an interim pre-Version-1.0 limitation;
 final unexpected-error handling, user-facing reporting and diagnostic/traceback and secret-safety policy remain future.
 
-Recorded Slice-7 implementation validation evidence from PR #136 (commit `468d98d`, merge `009ef71`):
+Historical Slice-7 implementation validation evidence from PR #136 (commit `468d98d`, merge `009ef71`):
 
 | Validation | Collected | Passed | Failed | Skipped | Warnings | Xfail | Xpass |
 |------------|-----------|--------|--------|---------|----------|-------|-------|
@@ -501,7 +502,7 @@ Recorded Slice-7 implementation validation evidence from PR #136 (commit `468d98
 | Full pytest | 723 | 723 | 0 | 0 | 0 | 0 | 0 |
 | `pytest -W error` | 723 | 723 | 0 | 0 | 0 | 0 | 0 |
 
-Ruff passed. Overall coverage is 95% across 1,370 statements with 64 missed.
+Ruff passed. Overall coverage was 95% across 1,370 statements with 64 missed.
 
 | Module | Statements | Missed | Coverage |
 |--------|------------|--------|----------|
@@ -509,7 +510,7 @@ Ruff passed. Overall coverage is 95% across 1,370 statements with 64 missed.
 | `src/azure_devops_backlog_generator/main.py` | 86 | 0 | 100% |
 
 Compared with the pre-Slice-7 baseline, tests increased from 715 to 723 (+8), statements from 1,367 to
-1,370 (+3), missed statements remained 64 and coverage remained 95%. `main.py` remains unchanged at
+1,370 (+3), missed statements remained 64 and coverage remained 95%. `main.py` remained unchanged at
 86 statements / 0 missed / 100%. The implementation added exactly `src/azure_devops_backlog_generator/__main__.py`
 and `tests/test___main__.py`: 2 files, 210 insertions, 0 deletions. The adapter has 6 physical lines and
 3 coverage-counted statements; the focused test module has 204 physical lines. Physical line counts
@@ -518,34 +519,35 @@ performed during this documentation status sync.
 
 Existing Slice-5/6 evidence remains authoritative for all seven controlled categories, exact reporting,
 owned-handler logging, D1–D5 and controlled secret-safety; Slice 7 changes none of those contracts.
-Required success/lifecycle logging, execution-summary content and presentation, broader integration/E2E,
+Remaining logging beyond Slice 8, execution-summary content and presentation, broader integration/E2E,
 live Azure DevOps Services validation, Operational Readiness, Operational Recovery / DR, API Section 6.1
 status-drift reconciliation before Review Gate 3, Gate 3 and final Version 1.0 readiness remain future.
 Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness claim is made.
 
-**Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging: APPROVED CONTRACT —
-NOT YET IMPLEMENTED.** Architecture Section 7.1.8 is authoritative for owner-approved S8-D1–D3.
-This Approved Baseline revision defines required/planned coverage only; Slice 8 remains not implemented.
-No Slice-8 tests have been written or executed and no future counts are asserted.
+**Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging: IMPLEMENTED.**
+The implementation was merged in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following
+contract PR #139 and approval PR #140. Architecture Section 7.1.8 remains authoritative for implemented,
+approved S8-D1–D3. This status-sync document revision is Draft pending separate status review and
+approval-only promotion; the implementation is complete within its approved scope.
 
 The recorded Slice-7 evidence above is the PRE-SLICE-8 implementation quality baseline: focused 8/8,
 full pytest 723/723 and `pytest -W error` 723/723, each with zero failed, skipped, warnings, xfail
 or xpass; Ruff passed. Coverage remains historical evidence of 95%, 1,370 statements and 64 missed,
 with `__main__.py` 3/0/100% and `main.py` 86/0/100%. These figures are not Slice-8 results.
 
-Focused future implementation validation should extend `tests/test_main.py`, which already covers
-bootstrap composition, logging, isolation and failure handling; a new test module is not required.
-Update existing assertions that successful runs have no lifecycle records or that unexpected runs
-remain entirely unlogged to the approved lifecycle boundary while preserving their silence and
-unexpected-diagnostic exclusions. Existing Slice-5/6/7 tests remain authoritative for their behaviour;
-compose regression assertions without duplicating all prior coverage.
+Implemented validation extends `tests/test_main.py`, covering bootstrap composition, logging,
+isolation and failure handling without a new test module. Existing empty-log assertions were updated:
+successful eligible runs record START and COMPLETION; unexpected application failure records START
+only; configuration failure after prior success leaves earlier lifecycle records unchanged. Silence
+and unexpected-diagnostic exclusions remain intact. Existing Slice-5/6/7 coverage remains authoritative
+for its behaviour, with lifecycle assertions added to controlled, isolation and repeated-invocation tests.
 
-| Required/planned category | Behaviour to prove |
+| Implemented category | Verified behaviour |
 |---------------------------|--------------------|
 | Successful eligible sequence | Exactly one START emission, configured application execution, then exactly one COMPLETION emission, in that order. |
 | Exact messages | START is exactly `Application run started.`; COMPLETION is exactly `Application run completed successfully.`. |
 | Severity | Both lifecycle records use INFO. |
-| Configured filtering | INFO threshold permits both records; WARNING, ERROR and CRITICAL filter INFO without threshold bypass or required lifecycle write attempt. |
+| Configured filtering | DEBUG and INFO thresholds permit both records; WARNING, ERROR and CRITICAL filter INFO without threshold bypass or required lifecycle write attempt. |
 | Configuration failure | No lifecycle event or logfile attempt; existing configuration outcome remains unchanged. |
 | Logger initialisation failure | Neither lifecycle event occurs; existing initialisation-only `ApplicationLoggingError` behaviour remains unchanged. |
 | Controlled failure after START | One eligible START, no COMPLETION, existing controlled CRITICAL event exactly once, unchanged exact stderr and result `1`. |
@@ -558,24 +560,44 @@ compose regression assertions without duplicating all prior coverage.
 | Fixed-content secret safety | Synthetic PAT, Authorization markers, paths, dynamic exception text and other supplied sentinel data do not appear in lifecycle records. |
 | Successful output | stdout and stderr remain empty, including best-effort lifecycle write failures. |
 
-The START/COMPLETION timing assertions shall establish successful configuration validation and logging
+The START/COMPLETION timing assertions establish successful configuration loading/validation and logging
 initialisation before START, START immediately before `coordinate_application_run(configuration)`,
 and COMPLETION only after its normal return and before normal bootstrap return. Write-failure coverage
-shall preserve D1–D5, `logging.raiseExceptions`, owned-handler-only delivery and initialisation-only
+verifies preservation of D1–D5, `logging.raiseExceptions`, owned-handler-only delivery and initialisation-only
 `ApplicationLoggingError`; lifecycle failures are not an eighth controlled category. Failure of START
-does not prevent the independently eligible COMPLETION following successful execution. No test shall
-claim fixed lifecycle messages make arbitrary native unexpected traceback output secret-safe.
+does not prevent the independently eligible COMPLETION following successful execution. Tests exercise
+raised lifecycle failures from both `handle()` and `emit()`, bootstrap and `run_process()` composition,
+and failed START followed by controlled or unexpected application failure. `KeyboardInterrupt` and
+`SystemExit` propagation is verified. The helper's `Exception` catch surrounds lifecycle emission only,
+not `coordinate_application_run(configuration)`. Fixed lifecycle messages do not establish secret-safety
+for arbitrary native unexpected traceback output.
 
-No new Slice-8 subprocess tests are inherently required: SystemExit and real package execution are
-unchanged and already covered by Slice 7. Focused application/logging tests are sufficient; later
-integration/E2E may observe lifecycle records through real package execution. No live Azure DevOps,
-network, real PAT, live organisation/project or real work-item mutation is required; use isolated
-application composition.
+No new Slice-8 subprocess tests were required or added: SystemExit and real package execution are
+unchanged, and existing Slice-7 package/subprocess coverage passed. Slice-8 tests use isolated application
+composition; no live Azure DevOps Services validation, network access, real PAT, live organisation/project
+or real work-item mutation was performed. Broader integration/E2E release evidence remains future.
 
-After future implementation, Ruff, full pytest and `pytest -W error` must pass. Coverage must not
-materially regress, and lifecycle production statements should receive meaningful coverage. No quality
-commands are run as part of this contract-only documentation task. Summary, remaining logging,
-unexpected diagnostics/safety, integration/E2E, live validation, Operational Readiness, unsettled
+Recorded merged Slice-8 validation evidence:
+
+| Validation | Collected | Passed | Failed | Skipped | Warnings | Xfail | Xpass |
+|------------|-----------|--------|--------|---------|----------|-------|-------|
+| Focused `tests/test_main.py` | 55 | 55 | 0 | 0 | 0 | 0 | 0 |
+| Full pytest | 743 | 743 | 0 | 0 | 0 | 0 | 0 |
+| `pytest -W error` | 743 | 743 | 0 | 0 | 0 | 0 | 0 |
+
+Ruff passed. Current overall coverage is 95% across 1,381 statements with 64 missed.
+
+| Module | Statements | Missed | Coverage |
+|--------|------------|--------|----------|
+| `src/azure_devops_backlog_generator/main.py` | 97 | 0 | 100% |
+| `src/azure_devops_backlog_generator/__main__.py` | 3 | 0 | 100% |
+
+Compared with the pre-Slice-8 baseline, full tests increased from 723 to 743 (+20), statements from
+1,370 to 1,381 (+11), missed statements remained 64 (+0) and coverage remained 95%. These measured
+results establish no known failures in the executed checks, not mathematical proof of defect freedom.
+They are merged implementation evidence; Ruff and pytest were not rerun for this documentation-only
+status sync. Summary, remaining logging, unexpected diagnostics/safety, integration/E2E, live validation,
+Operational Readiness, unsettled
 Operational Recovery / DR scope/Gate-3 placement, API Section 6.1 reconciliation before Gate 3,
 Review Gate 3 and final Version-1.0 readiness remain future.
 
