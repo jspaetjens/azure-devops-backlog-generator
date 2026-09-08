@@ -4,11 +4,11 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.33
+**Version:** 1.34
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-06
+**Last Updated:** 2026-09-08
 
 **Target Release:** v1.0.0
 
@@ -57,6 +57,7 @@
 | 1.31 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 7 package execution adapter and remaining readiness work. |
 | 1.32 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slices 1–7 status and remaining readiness work. |
 | 1.33 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging capability and remaining readiness work. |
+| 1.34 | 2026-09-08 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining readiness work. |
 
 ---
 
@@ -142,7 +143,7 @@ compatibility evaluation; Work Item Candidate construction; Work Item Create JSO
 construction; validation-only Work Item Create transport; WIQL identity lookup; and Work Item
 GET evidence retrieval; existing/new Work Item resolution; Persistent Work Item Create REST transport; Parent-Child Relationship JSON Patch construction; Parent-Child Relationship HTTP PATCH transport; reused-child fresh relationship-state retrieval with structural relationship evidence validation and reverse-parent target-ID extraction; generator-level MISSING, CORRECT and CONFLICTING classification; MISSING recovery coordination using the existing Parent-Child Relationship PATCH with the fresh relationship-state revision; reused-child descendant gating; NEW Create → Parent-Child Relationship PATCH lifecycle sequencing; REUSED relationship-state GET → classify → gate lifecycle sequencing; successful eligibility return only after the relationship state is safe; and root existing/new Work Item lifecycle coordination, in which NEW creates once and REUSED returns the validated existing ID without relationship work.
 
-The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/Run Slices 1–7 are implemented. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
+The planned Relationship Lifecycle and Generator Orchestration implementation clusters are complete. Full preflight validates source identities before REST activity, constructs and validation-only checks every exact candidate in deterministic source order, retains canonical project evidence and returns immutable `PreflightState` evidence at the mutation barrier. The implemented final Generator-owned entry coordinator passes that exact successful `PreflightState` into deterministic hierarchy traversal, which validates the retained candidate/item association before persistence, processes documents, roots and descendants in depth-first source order, delegates roots to their lifecycle coordinator, resolves each non-root once before its lifecycle coordinator, and begins descendants only after parent eligibility. Complete Generator composition is globally fail-fast without retry or continuation across multiple roots and documents. Review Gate 2 completed with PASS, zero findings and no required remediation, including malformed-response and HTTP `401` and `403` full-orchestration failure coverage. Application/Run Slices 1–8 are implemented. Operational Readiness and Review Gate 3 remain future, while live end-to-end validation and final release-readiness validation remain incomplete.
 
 Following the successful implementation merge, Application/Run Slice 2 is implemented; the preceding
 implementation-plan status is superseded. Application/Run Slice 1 is implemented: an already-validated
@@ -196,7 +197,7 @@ packaging. It preserves `main()` as the `sys.argv[1:]` acquisition and bootstrap
 CLI/process-specific outcome, reporting and termination behaviour outside the shared Application Core. This
 preserves future alternate-interface compatibility without approving or implementing a GUI. Slices 5–7
 implement controlled reporting, runtime file logging and executable termination as described below;
-the remaining Application/Run and readiness work is recorded after Slice 7.
+the remaining Application/Run and readiness work is recorded after Slice 8.
 
 Application/Run Slice 5 — Controlled Failure Reporting to Standard Error is implemented. It extends the existing
 `run_process() -> int` process adapter only as follows:
@@ -219,7 +220,7 @@ is absent from stderr. Successful execution remains silent, with no stdout or st
 `0`. `main() -> None`, unchanged unexpected-exception propagation, presentation-neutral shared Application Core
 boundaries and future alternate-interface compatibility are preserved. Slice 5 does not introduce logging,
 execution summaries, unexpected-exception reporting, tracebacks, `sys.exit` or `SystemExit`, direct execution,
-packaging or GUI implementation. Slices 1–7 are implemented; the wider Application/Run phase remains
+packaging or GUI implementation. Slices 1–8 are implemented; the wider Application/Run phase remains
 incomplete, and Operational Readiness, Operational Recovery / DR, Review Gate 3, integration/end-to-end and final
 release-readiness work remain future.
 
@@ -233,12 +234,12 @@ written. A secondary write failure does not replace the primary controlled failu
 `1` outcome. It adds `ApplicationLoggingError` as a seventh controlled process category for logger-initialisation
 failure only; that error and pre-initialisation configuration failures produce no file event or fallback logging.
 Dynamic diagnostics, PAT/Authorization, tracebacks, root/console output and logging-internal stderr diagnostics are
-prohibited for Slice-6 controlled logging. Slices 1–7 are implemented and the wider Application/Run phase remains
+prohibited for Slice-6 controlled logging. Slices 1–8 are implemented and the wider Application/Run phase remains
 incomplete. The following Slice-7 status records the implemented executable boundary and remaining work.
 
 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is implemented
 in PR #136 (implementation commit `468d98d`, merge `009ef71`), following contract PR #134 and approval PR #135.
-S7-D1 and S7-D2 remain approved owner decisions. Slices 1–7 are implemented. Architecture Section 7.1.7
+S7-D1 and S7-D2 remain approved owner decisions. Slices 1–8 are implemented. Architecture Section 7.1.7
 records the sole executable surface: `python -m azure_devops_backlog_generator`, implemented in
 `src/azure_devops_backlog_generator/__main__.py`. The adapter calls `run_process()` exactly once
 and uses its unchanged integer directly as the `SystemExit` code: controlled `0` and `1` produce OS
@@ -252,7 +253,7 @@ final diagnostic sufficiency. Final controlled unexpected-error handling, user-f
 diagnostic/traceback and secret-safety policy remain mandatory before Version 1.0 readiness.
 
 The wider Application/Run phase remains incomplete and Version 1.0 remains pre-release. Remaining work
-includes required success/lifecycle logging, execution-summary content and presentation, typed
+includes remaining logging beyond Slice 8, execution-summary content and presentation, typed
 execution-result/aggregation and created/reused/repaired counts only if later summary requirements need
 them, final controlled unexpected-error handling and reporting, diagnostic/traceback and secret-safety
 policy, broader integration/E2E, live Azure DevOps Services validation, Operational Readiness,
@@ -262,8 +263,8 @@ Version 1.0 scope. These responsibilities prescribe neither new slices nor an or
 
 Known pre-existing non-blocking documentation drift remains in `05-API.md` Section 6.1, whose broad
 deferred Application/Run orchestration/CLI/logging/process-lifecycle status predates the more specific
-current slice documents showing Slices 1–7 implemented. API status-drift reconciliation remains required
-before Review Gate 3; it is not a Slice-7 implementation blocker. This status sync does not edit the API
+current slice documents showing Slices 1–8 implemented. API status-drift reconciliation remains required
+before Review Gate 3; it is not a Slice-8 implementation blocker. This status sync does not edit the API
 Specification or change REST semantics.
 
 Slice 7 now provides one real package execution surface, observable controlled OS exit statuses and
@@ -272,25 +273,26 @@ successful application E2E. Remaining logging/reporting, execution-summary, unex
 policy, broader integration/E2E, operational readiness/recovery evidence and API status reconciliation
 prevent a readiness claim.
 
-Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging is the approved next
-bounded capability: **APPROVED CONTRACT — NOT YET IMPLEMENTED**. Architecture Section 7.1.8 records
-approved owner decisions S8-D1–D3: exactly `Application run started.` and
+Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging is **IMPLEMENTED**
+in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following contract PR #139 and approval
+PR #140. Architecture Section 7.1.8 records implemented, approved owner decisions S8-D1–D3:
+exactly `Application run started.` and
 `Application run completed successfully.`, both INFO with normal configured threshold filtering,
 and best-effort writes without output, retry, fallback or application-outcome changes. Bootstrap owns
 START after configuration validation/logging initialisation and immediately before configured execution;
 COMPLETION follows only normal application return. Delivery remains current-owned-handler-only.
 
-Slices 1–7 remain implemented and approved. The owner-approved lifecycle boundary now justifies the
-next number, Slice 8; no Slice 9, one-slice-per-capability allocation or future capability order is defined.
-This revision is Approved Baseline; approved owner decisions and document approval do not establish
-implementation completion.
+Slices 1–8 are implemented; the Slice-8 contract remains approved. No Slice 9,
+one-slice-per-capability allocation or future capability order is defined. This status-sync document
+revision is Draft pending separate status review and approval-only promotion.
 
 Slice 8 covers only configured-run START and successful COMPLETION. Existing controlled-failure logging
 remains Slice 6; other broader logging requirements remain future where not already implemented.
 It preserves D1–D5, seven controlled categories, Slice-7 package execution/SystemExit ownership,
 application/core return types, Generator, REST, configuration and CLI. It defines no result model,
-counters or execution summary. Focused planned validation is in Testing Section 8; no live Azure DevOps
-or new subprocess tests are required by default.
+counters or execution summary. Testing Section 8 records measured validation: 55/55 focused tests,
+743/743 full pytest and 743/743 warnings-as-errors pytest, Ruff passed and 95% coverage. No live Azure
+DevOps validation was performed or new subprocess tests added; existing Slice-7 package coverage passed.
 
 Wider Application/Run remains incomplete and Version 1.0 remains pre-release. The remaining work above
 is preserved, including summary content/presentation, remaining logging, final unexpected handling,

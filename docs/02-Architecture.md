@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.38
+**Version:** 2.39
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-06
+**Last Updated:** 2026-09-08
 
 **Target Release:** v1.0.0
 
@@ -72,6 +72,7 @@
 | 2.36 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 7 Package Execution Adapter with Controlled Process Termination contract. |
 | 2.37 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 package execution status and preserved interim limitations. |
 | 2.38 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 8 lifecycle file-logging contract. |
+| 2.39 | 2026-09-08 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 Process-Neutral Application Lifecycle File Logging status. |
 
 ---
 
@@ -390,7 +391,7 @@ stdout/stderr behaviour or CLI-specific error formatting. This preserves archite
 does not approve a GUI feature, implementation, framework or Version 1.0 scope.
 
 The wider Application/Run phase remains incomplete. Slices 5–7 implement controlled-failure reporting,
-logging and executable termination as described below. Required success/lifecycle logging, execution-summary
+logging and executable termination as described below. Remaining logging beyond Slice 8, execution-summary
 content and presentation, final unexpected-error handling and diagnostic safety, broader integration/E2E,
 Operational Readiness, Operational Recovery / DR, Review Gate 3 and final release readiness remain future.
 Console-script packaging remains conditional on separate approval.
@@ -443,7 +444,7 @@ Slice 5 does not introduce logging initialisation or calls, an execution summary
 tracebacks, `sys.exit`, `SystemExit`, a direct-execution guard, `__main__.py`, `[project.scripts]`, console-script
 packaging, an executable adapter, retries, fallback, new CLI options, dependencies or GUI implementation.
 Slices 6–7 implement runtime controlled-failure logging and the executable boundary as described below.
-Required success/lifecycle logging, execution summaries, final unexpected-error handling and diagnostic safety,
+Remaining logging beyond Slice 8, execution summaries, final unexpected-error handling and diagnostic safety,
 broader integration/E2E, Operational Readiness, Operational Recovery / DR, Review Gate 3 and final
 release-readiness work remain future. The wider Application/Run phase remains incomplete.
 
@@ -526,7 +527,7 @@ shared Application Core so a future GUI may reuse the typed application/core bou
 
 Application/Run Slice 7 is implemented in PR #136 (implementation commit `468d98d`, merge `009ef71`),
 following the contract in PR #134 and approval in PR #135. S7-D1 and S7-D2 remain approved owner decisions.
-Application/Run Slices 1–7 are implemented; the wider Application/Run phase remains incomplete.
+Application/Run Slices 1–8 are implemented; the wider Application/Run phase remains incomplete.
 
 **S7-D1 — Executable invocation surface.** Slice 7 implements exactly one executable package surface:
 
@@ -638,9 +639,10 @@ invocation without establishing readiness. Version 1.0 remains pre-release.
 
 ### 7.1.8 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging
 
-**APPROVED CONTRACT — NOT YET IMPLEMENTED.** Slices 1–7 remain the implemented, approved baseline.
-S8-D1, S8-D2 and S8-D3 below are approved owner decisions. This document revision is Approved Baseline.
-The owner-approved lifecycle boundary continues the established sequence as Slice 8.
+**IMPLEMENTED.** Application/Run Slice 8 was merged in PR #141 (implementation commit `378e2b1`,
+merge `8560a89`), following contract PR #139 and approval PR #140. Slices 1–8 are implemented.
+S8-D1, S8-D2 and S8-D3 below remain the approved, implemented owner decisions. This status-sync
+document revision is Draft pending separate status review and approval-only promotion.
 
 **S8-D1 — Lifecycle boundary and exact events.** Slice 8 shall add exactly two fixed-message lifecycle
 events at the configured application-run boundary:
@@ -677,9 +679,12 @@ event: those retain their own boundary semantics. `ApplicationLoggingError` rema
 Slice-6 D5 remains authoritative for secondary controlled-failure writes; S8-D3 extends best-effort
 handling only to the two new lifecycle events.
 
-Lifecycle ownership belongs to `coordinate_application_bootstrap(...)`, or a narrowly scoped
-application-owned helper used by bootstrap; no new public API is required. The verified existing path
-shall be preserved, with only the two approved observations added after logging initialisation:
+Lifecycle ownership belongs to `coordinate_application_bootstrap(...)`, which uses the private
+`_emit_lifecycle_event()` helper in `src/azure_devops_backlog_generator/main.py`; no public API was added.
+The helper checks both logger INFO eligibility and the active owned handler's threshold before direct
+delivery. It catches `Exception` only around lifecycle emission, outside configured application execution;
+`KeyboardInterrupt` and `SystemExit` remain unsuppressed. The implemented path preserves the existing
+sequence, with only the two approved observations added after logging initialisation:
 
 ```text
 python -m azure_devops_backlog_generator
