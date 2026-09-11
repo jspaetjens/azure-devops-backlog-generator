@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.35
+**Version:** 1.36
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-11
 
@@ -59,6 +59,7 @@
 | 1.33 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging capability and remaining readiness work. |
 | 1.34 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining readiness work. |
 | 1.35 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Recorded the owner-approved final unexpected-error handling and diagnostic-safety capability and remaining readiness work. |
+| 1.36 | 2026-09-11 | Draft | Jack Spaetjens | Allocated Final Unexpected-Error Handling and Diagnostic Safety as Application/Run Slice 9 and preserved remaining capability ordering as undefined. |
 
 ---
 
@@ -260,7 +261,8 @@ them, final controlled unexpected-error handling and reporting, diagnostic/trace
 policy, broader integration/E2E, live Azure DevOps Services validation, Operational Readiness,
 Operational Recovery / DR, Review Gate 3 and final Version 1.0 release readiness. Console-script
 packaging remains future only if separately approved; GUI implementation remains future and outside
-Version 1.0 scope. These responsibilities prescribe neither new slices nor an order for future capabilities.
+Version 1.0 scope. Beyond the allocated Slice 9, these responsibilities prescribe neither new slices
+nor an order for future capabilities.
 
 Known pre-existing non-blocking documentation drift remains in `05-API.md` Section 6.1, whose broad
 deferred Application/Run orchestration/CLI/logging/process-lifecycle status predates the more specific
@@ -283,9 +285,10 @@ and best-effort writes without output, retry, fallback or application-outcome ch
 START after configuration validation/logging initialisation and immediately before configured execution;
 COMPLETION follows only normal application return. Delivery remains current-owned-handler-only.
 
-Slices 1–8 are implemented; the Slice-8 contract remains approved. No Slice 9,
-one-slice-per-capability allocation or future capability order is defined. The Slice-8 status-sync
-revision 1.34 is Approved Baseline; revision 1.35 is Approved Baseline.
+Slices 1–8 remain implemented and approved. Slice 9 is allocated with an approved contract and is
+not yet implemented. No one-slice-per-capability allocation or future capability order beyond Slice 9
+is defined. The Slice-8 status-sync revision 1.34 is Approved Baseline; revision 1.36 is Draft
+pending review and separate approval-only promotion.
 
 Slice 8 covers only configured-run START and successful COMPLETION. Existing controlled-failure logging
 remains Slice 6; other broader logging requirements remain future where not already implemented.
@@ -307,11 +310,12 @@ Operational Recovery / DR. No new recovery requirement is defined.
 
 ---
 
-**Final Unexpected-Error Handling and Diagnostic Safety — OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.**
+**Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety — APPROVED CONTRACT — NOT YET IMPLEMENTED.**
 The technical authority is Architecture's
-[Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#final-unexpected-error-handling-and-diagnostic-safety)
-contract, UE-D1–UE-D10. The owner decisions are approved; this document revision is Approved Baseline. No numbered Application/Run implementation slice is allocated.
-Later allocation may follow contract review and document approval; no ordering of other capabilities is established.
+[Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
+contract, UE-D1–UE-D10. These decisions remain Approved Baseline and govern the owner-approved
+Slice-9 allocation; implementation remains pending. Roadmap revision 1.36 is Draft pending review
+and separate approval-only promotion. Future capability ordering beyond Slice 9 remains undefined.
 
 The bounded capability shall add only the final generic `Exception` fallback at `run_process()`, after
 the existing seven controlled categories. It shall return integer `1`, emit exactly
