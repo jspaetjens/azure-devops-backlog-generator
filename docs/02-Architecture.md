@@ -6,7 +6,7 @@
 
 **Version:** 2.42
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -75,7 +75,7 @@
 | 2.39 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 Process-Neutral Application Lifecycle File Logging status. |
 | 2.40 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract. |
 | 2.41 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved Final Unexpected-Error Handling and Diagnostic Safety contract as Application/Run Slice 9 without changing UE-D1–UE-D10. |
-| 2.42 | 2026-09-11 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 Final Unexpected-Error Handling and Diagnostic Safety status. |
+| 2.42 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 Final Unexpected-Error Handling and Diagnostic Safety status. |
 
 ---
 
@@ -644,7 +644,7 @@ invocation without establishing readiness. Version 1.0 remains pre-release.
 **IMPLEMENTED.** Application/Run Slice 8 was merged in PR #141 (implementation commit `378e2b1`,
 merge `8560a89`), following contract PR #139 and approval PR #140. Slices 1–9 are implemented.
 S8-D1, S8-D2 and S8-D3 below remain the approved, implemented owner decisions. The Slice-8 status-sync
-revision 2.39 is Approved Baseline; revision 2.42 is Draft pending review and separate approval-only promotion.
+revision 2.39 is Approved Baseline; revision 2.42 is Approved Baseline.
 
 **S8-D1 — Lifecycle boundary and exact events.** Slice 8 shall add exactly two fixed-message lifecycle
 events at the configured application-run boundary:
@@ -779,8 +779,8 @@ later-run recovery is not equivalent to Operational Recovery / DR. No new recove
 ### Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety
 
 **IMPLEMENTED — APPROVED CONTRACT.** UE-D1–UE-D10 below remain owner-approved and are implemented.
-Application/Run Slices 1–9 are implemented. Architecture revision 2.42 is Draft pending review and
-separate approval-only promotion; the approved contract remains authoritative and unchanged.
+Application/Run Slices 1–9 are implemented. Architecture revision 2.42 is Approved Baseline;
+the approved contract remains authoritative and unchanged.
 
 Slice 9 was implemented in PR #148 (implementation commit `738fdc3`, merge `4549eee`). Contract
 provenance remains PR #144 (commit `2070425`, merge `4d80b58`) and approval PR #145 (commit `e3e190f`,
@@ -929,7 +929,7 @@ readiness but does not establish Operational Readiness, a Gate-3 checklist, inte
 live Azure validation or RC readiness. Operational Recovery / DR scope and Gate-3 placement remain
 future/unsettled; no recovery requirements are defined. UE-D1–UE-D10 leave no unresolved owner decision
 for this bounded Slice-9 capability; implementation is complete under the approved contract. Revision 2.42
-remains Draft pending review and separate approval-only promotion.
+is Approved Baseline.
 
 Testing Section 8 records merged Slice-9 evidence: 84/84 combined focused application/package tests
 (73 in `tests/test_main.py`, 11 in `tests/test___main__.py`), Ruff passed, 764/764 full pytest and

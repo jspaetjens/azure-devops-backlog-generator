@@ -6,7 +6,7 @@
 
 **Version:** 1.31
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -54,7 +54,7 @@
 | 1.28 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining pre-release limitations. |
 | 1.29 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Recorded the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract and remaining pre-release limitations. |
 | 1.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved but unimplemented Final Unexpected-Error Handling and Diagnostic Safety capability as Application/Run Slice 9. |
-| 1.31 | 2026-09-11 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and remaining pre-release limitations. |
+| 1.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and remaining pre-release limitations. |
 
 ---
 
@@ -209,7 +209,7 @@ readiness, Gate 3 completion and final Version 1.0 approval are not claimed.
 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging is **IMPLEMENTED**
 in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following contract PR #139 and approval
 PR #140. Architecture Section 7.1.8 defines implemented, approved owner decisions S8-D1–D3. The
-Slice-8 status-sync revision 1.28 is Approved Baseline; revision 1.31 is Draft pending review and separate approval-only promotion.
+Slice-8 status-sync revision 1.28 is Approved Baseline; revision 1.31 is Approved Baseline.
 
 Slice 8 adds only two process-neutral INFO file lifecycle messages: `Application run started.`
 after successful configuration validation/logging initialisation and immediately before configured
@@ -251,7 +251,7 @@ Version 1.0.
 Architecture's
 [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
 section defines authoritative owner-approved decisions UE-D1–UE-D10. Those decisions remain approved
-and are implemented. Release revision 1.31 is Draft pending review and separate approval-only promotion.
+and are implemented. Release revision 1.31 is Approved Baseline.
 Slices 1–9 are implemented. No Slice 10 has been allocated; future capability ordering beyond Slice 9
 remains undefined.
 

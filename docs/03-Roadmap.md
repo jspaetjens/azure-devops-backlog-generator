@@ -6,7 +6,7 @@
 
 **Version:** 1.37
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -60,7 +60,7 @@
 | 1.34 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining readiness work. |
 | 1.35 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Recorded the owner-approved final unexpected-error handling and diagnostic-safety capability and remaining readiness work. |
 | 1.36 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated Final Unexpected-Error Handling and Diagnostic Safety as Application/Run Slice 9 and preserved remaining capability ordering as undefined. |
-| 1.37 | 2026-09-11 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and preserved remaining capability ordering as undefined. |
+| 1.37 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and preserved remaining capability ordering as undefined. |
 
 ---
 
@@ -289,7 +289,7 @@ COMPLETION follows only normal application return. Delivery remains current-owne
 
 Slices 1–9 are implemented under their approved contracts. No Slice 10 has been allocated and no
 future capability order beyond Slice 9 is defined. The Slice-8 status-sync revision 1.34 is Approved
-Baseline; revision 1.37 is Draft pending review and separate approval-only promotion.
+Baseline; revision 1.37 is Approved Baseline.
 
 Slice 8 covers only configured-run START and successful COMPLETION. Existing controlled-failure logging
 remains Slice 6; other broader logging requirements remain future where not already implemented.
@@ -315,7 +315,7 @@ Operational Recovery / DR. No new recovery requirement is defined.
 The technical authority is Architecture's
 [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
 contract, UE-D1–UE-D10. These decisions remain approved and are implemented. Roadmap revision 1.37
-is Draft pending review and separate approval-only promotion. Future capability ordering beyond
+is Approved Baseline. Future capability ordering beyond
 Slice 9 remains undefined. No Slice 10 has been allocated.
 
 Implementation provenance is PR #148 (commit `738fdc3`, merge `4549eee`). Contract provenance remains

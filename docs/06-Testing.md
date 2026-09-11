@@ -6,7 +6,7 @@
 
 **Version:** 2.32
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -65,7 +65,7 @@
 | 2.29 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging coverage and measured validation evidence. |
 | 2.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined required/planned validation for final unexpected-error handling and diagnostic safety while preserving current evidence. |
 | 2.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved planned validation contract to Application/Run Slice 9 without changing validation requirements or evidence. |
-| 2.32 | 2026-09-11 | Draft | Jack Spaetjens | Synchronized implemented Slice-9 validation coverage and measured quality evidence. |
+| 2.32 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Slice-9 validation coverage and measured quality evidence. |
 
 ---
 
@@ -532,7 +532,7 @@ Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness c
 The implementation was merged in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following
 contract PR #139 and approval PR #140. Architecture Section 7.1.8 remains authoritative for implemented,
 approved S8-D1–D3. The Slice-8 status-sync revision 2.29 is Approved Baseline; the implementation is complete within its approved scope.
-Revision 2.32 is Draft pending review and separate approval-only promotion.
+Revision 2.32 is Approved Baseline.
 
 The recorded Slice-7 evidence above is the PRE-SLICE-8 implementation quality baseline: focused 8/8,
 full pytest 723/723 and `pytest -W error` 723/723, each with zero failed, skipped, warnings, xfail
@@ -609,7 +609,7 @@ Review Gate 3 and final Version-1.0 readiness remain future.
 Architecture's
 [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
 section is authoritative for UE-D1–UE-D10. Those decisions remain approved and are implemented.
-Testing revision 2.32 is Draft pending review and separate approval-only promotion.
+Testing revision 2.32 is Approved Baseline.
 
 Implementation provenance is PR #148 (commit `738fdc3`, merge `4549eee`). Contract provenance remains
 PR #144 (commit `2070425`, merge `4d80b58`) and approval PR #145 (commit `e3e190f`, merge `fa158d9`);
