@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.39
+**Version:** 2.40
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-08
+**Last Updated:** 2026-09-11
 
 **Target Release:** v1.0.0
 
@@ -73,6 +73,7 @@
 | 2.37 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 package execution status and preserved interim limitations. |
 | 2.38 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 8 lifecycle file-logging contract. |
 | 2.39 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 Process-Neutral Application Lifecycle File Logging status. |
+| 2.40 | 2026-09-11 | Draft | Jack Spaetjens | Defined the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract. |
 
 ---
 
@@ -98,6 +99,7 @@
     - [7.1.6 Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events](#716-applicationrun-slice-6--runtime-file-logging-and-controlled-failure-events)
     - [7.1.7 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination](#717-applicationrun-slice-7--package-execution-adapter-with-controlled-process-termination)
     - [7.1.8 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging](#718-applicationrun-slice-8--process-neutral-application-lifecycle-file-logging)
+    - [Final Unexpected-Error Handling and Diagnostic Safety](#final-unexpected-error-handling-and-diagnostic-safety)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -641,8 +643,8 @@ invocation without establishing readiness. Version 1.0 remains pre-release.
 
 **IMPLEMENTED.** Application/Run Slice 8 was merged in PR #141 (implementation commit `378e2b1`,
 merge `8560a89`), following contract PR #139 and approval PR #140. Slices 1–8 are implemented.
-S8-D1, S8-D2 and S8-D3 below remain the approved, implemented owner decisions. This status-sync
-document revision is Approved Baseline.
+S8-D1, S8-D2 and S8-D3 below remain the approved, implemented owner decisions. The Slice-8 status-sync
+revision 2.39 is Approved Baseline; revision 2.40 remains Draft pending review and separate approval-only promotion.
 
 **S8-D1 — Lifecycle boundary and exact events.** Slice 8 shall add exactly two fixed-message lifecycle
 events at the configured application-run boundary:
@@ -772,6 +774,154 @@ execution evidence without completing Gate-3 prerequisites. Known pre-existing A
 drift requires separate reconciliation before Review Gate 3; this contract does not edit the API.
 Operational Recovery / DR scope and exact Gate-3 placement remain future/unsettled; existing Generator
 later-run recovery is not equivalent to Operational Recovery / DR. No new recovery requirements are defined.
+
+---
+
+### Final Unexpected-Error Handling and Diagnostic Safety
+
+**OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.** UE-D1–UE-D10 below are owner-approved
+decisions. This document revision remains Draft pending review and separate approval-only promotion.
+Application/Run Slices 1–8 remain implemented and approved. No numbered implementation slice is
+allocated to this capability. Later allocation may follow contract review and document approval.
+
+This section is authoritative for the bounded final process-facing unexpected-error contract.
+The preceding slice sections describe implemented behaviour, including current same-object unexpected
+propagation through `run_process()` and the interim native-traceback limitation. This contract defines
+their future process-facing replacement only; it does not claim that replacement or its safety is implemented.
+
+**UE-D1 — Final catch boundary.** Only `run_process()` shall introduce the generic process-facing
+catch for otherwise-unclassified `Exception` instances. It shall catch `Exception`, not `BaseException`,
+after existing controlled exception handling. Direct calls to `main()`,
+`coordinate_application_bootstrap(...)` and `coordinate_application_run(...)` shall retain normal,
+same-object unexpected-exception propagation to their callers. The shared Application Core,
+Generator, REST Client, DocumentationProcessor and `__main__.py` shall not gain this generic conversion.
+This preserves lower-level reuse by alternate adapters without changing their contracts.
+
+**UE-D2 — Process outcome.** An otherwise-unclassified `Exception` handled by `run_process()` shall
+produce exactly integer `1`. The public model remains `0` for success and `1` for failure; no exit code
+`2` or additional process-result code is introduced. The existing package adapter shall continue to
+use the returned integer unchanged as its `SystemExit` code, yielding `SystemExit(1)` for this path.
+`__main__.py` remains the sole application-owned `SystemExit` owner and requires no change.
+
+**UE-D3 — User-facing stderr.** The handled unexpected failure shall produce exactly one fixed stderr
+line, `Unexpected application error.`, followed by the normal newline. Stdout shall remain empty.
+The message shall contain no dynamic interpolation: no exception type, message, string/repr, cause,
+context, traceback, stack, path, source content, configuration value, PAT, Authorization, organisation,
+project, URL, document/work-item title or arbitrary user input.
+
+**UE-D4 — File logging.** If runtime logging has successfully initialised for the current invocation
+before the unexpected failure, `run_process()` shall attempt exactly one `CRITICAL` logfile event
+whose message is exactly `Unexpected application error.`. A successful write produces one record.
+Delivery shall use only the active current-invocation application-owned handler. Root, unrelated and
+same-named non-owned handlers shall receive nothing. No console fallback, new destination or alternate
+logfile is authorised. If current-invocation logging has not successfully initialised, no unexpected-error
+logfile event shall be attempted; UE-D3 remains the process-facing report. The existing configured
+threshold applies; CRITICAL remains eligible at every supported logging level.
+
+**UE-D5 — Native traceback policy.** An unexpected `Exception` handled by `run_process()` on the
+supported package execution path shall not escape to produce native Python traceback output.
+Neither stderr nor the application logfile shall contain its traceback. The observable failure shall
+be the fixed stderr line, integer result `1` and, when runtime logging is active, the best-effort
+CRITICAL event in UE-D4. The existing adapter then produces `SystemExit(1)`.
+This contract replaces the interim native-traceback behaviour only for the supported process-facing
+handled-Exception path. Direct lower-level callers still receive exceptions under UE-D1; no guarantee
+of traceback suppression is made for arbitrary Python invocation paths. Implementation and validation
+are still required before claiming that the current exposure is resolved.
+
+**UE-D6 — Diagnostic content and secret safety.** For the final Version-1.0 process-facing generic
+unexpected fallback, the fixed category message `Unexpected application error.` is the approved safe
+operational diagnostic and fulfils the sufficient-diagnostic-information requirement in Section 11
+for this bounded fallback. Arbitrary exception detail and tracebacks are intentionally excluded because
+the repository does not define a safe redaction contract. No claim is made that such detail is safe.
+
+Neither reporting nor logging shall include `str(exc)`, `repr(exc)`, exception class name, arguments,
+cause/context, `exc_info`, traceback, stackframes, filesystem paths, configuration values, response
+or request bodies, URLs, source identities, titles, user data or credentials, including PAT and
+Authorization. The existing logfile timestamp, severity and logger-name fields remain unchanged;
+the message contains no dynamic exception diagnostics. This capability defines no redaction algorithm,
+sanitised traceback, debug-mode exception detail, diagnostic configuration option or second diagnostic channel.
+It intends to prevent arbitrary unexpected exception content and native traceback data from being
+emitted by the supported process-facing handled-Exception path; this is not yet an implemented or proven guarantee.
+
+**UE-D7 — Unexpected log-event write failure.** The unexpected application failure is primary.
+If its owned logfile emission raises an ordinary `Exception`, the primary unexpected classification
+shall remain intact. The application shall still attempt the fixed stderr line and return integer `1`
+when stderr delivery remains available. It shall not retry, fall back, use root or console logging,
+emit a replacement logfile event, expose the logging exception or traceback, raise
+`ApplicationLoggingError`, or create another controlled category. This best-effort rule applies only
+to unexpected-error logfile emission and does not redefine Slice-6 controlled-event semantics.
+
+No new stderr-sink recovery semantics are defined. If stderr itself cannot be written, existing
+process-environment behaviour remains; no stderr retry or fallback is introduced. The fixed-line/result
+guarantee does not authorise suppression or conversion of a separate stderr-delivery failure.
+
+**UE-D8 — Process-control exceptions.** The generic fallback shall catch only `Exception`.
+`KeyboardInterrupt`, `SystemExit`, `GeneratorExit` and other `BaseException` subclasses outside
+`Exception` shall not be caught or converted. The ordinary-Exception best-effort boundary in UE-D7
+does not absorb those process-control exceptions either.
+
+**UE-D9 — Controlled taxonomy and precedence.** Exactly seven controlled process categories remain:
+
+| Controlled category | Unchanged fixed message |
+|---------------------|-------------------------|
+| `ConfigurationError` | `Configuration error.` |
+| `DocumentationProcessingError` | `Documentation processing error.` |
+| `AzureDevOpsRestClientError` | `Azure DevOps error.` |
+| `SourceIdentityValidationError` | `Source identity validation error.` |
+| `ExistingWorkItemResolutionError` | `Existing work item resolution error.` |
+| `ConflictingReusedChildRelationshipError` | `Conflicting reused child relationship error.` |
+| `ApplicationLoggingError` | `Application logging error.` |
+
+Their existing classification precedence, reporting and integer `1` outcomes shall remain unchanged.
+The generic `Exception` fallback shall follow the existing specific controlled handling and shall not
+absorb any of these categories. It is a process-facing fallback for otherwise-unclassified exceptions,
+not an eighth controlled/domain exception category or a new shared exception hierarchy.
+
+**UE-D10 — Scope and exclusions.** This capability requires no changes to Generator orchestration,
+traversal or relationship lifecycle; REST contracts; configuration model or `AZDO_PAT` sourcing;
+CLI arguments; DocumentationProcessor; result models; execution summaries; counters or aggregation;
+retries or rollback; package launcher; console-script packaging; GUI or alternate adapters.
+No created, reused, repaired, skipped or total counts, dependency, configuration field or environment
+variable is introduced. The sole approved executable surface remains
+`python -m azure_devops_backlog_generator`; no `[project.scripts]`, console script, installed launcher,
+`main.py` execution guard or second executable surface is added.
+
+**Composition and existing contracts.** The existing package → `run_process()` → `main()` → bootstrap
+→ configuration validation → runtime logging initialisation → eligible START → configured application
+run → COMPLETION on normal return → process result → adapter `SystemExit(result)` structure remains.
+Only the `run_process()` unexpected-failure boundary gains generic process conversion.
+
+| Condition | Required future process-facing behaviour |
+|-----------|-----------------------------------------|
+| Controlled configuration failure | `Configuration error.` plus newline; result `1`; no pre-initialisation file event or generic reclassification. |
+| Controlled logging-initialisation failure | Initialisation-only `ApplicationLoggingError`; `Application logging error.` plus newline; result `1`; no unexpected logfile event or generic reclassification. |
+| Otherwise-unclassified Exception before logging becomes active | No unexpected logfile attempt; fixed unexpected stderr line; result `1`; adapter `SystemExit(1)`; no native traceback from the handled exception. |
+| Otherwise-unclassified application Exception after logging becomes active | Eligible START may exist; no COMPLETION; one best-effort CRITICAL unexpected-event attempt, then fixed unexpected stderr line, result `1` and adapter `SystemExit(1)`; no native traceback from the handled exception. |
+| Direct lower-level unexpected failure | Same exception object propagates to the caller; no generic process-facing conversion is added to that boundary. |
+
+Slice 8 remains unchanged: `Application run started.` and
+`Application run completed successfully.` are INFO, eligible at DEBUG/INFO and filtered at
+WARNING/ERROR/CRITICAL, owned-handler-only and best effort. START follows successful configuration
+validation and logger initialisation immediately before configured application execution; COMPLETION
+follows only normal configured application return. A configured application failure does not imply COMPLETION.
+
+Slice-6 D1–D5 remain authoritative: standard-library file logging, UTF-8 append mode, validated directory,
+existing filename and formatter/date format, configured thresholds, `propagate=False`, owned-handler
+isolation, stale-handler cleanup, controlled CRITICAL events, initialisation-only `ApplicationLoggingError`
+and existing secondary-write precedence. No global logging setting or existing controlled message changes.
+
+Broader Section-12 logging and the required but undefined execution summary remain separate work.
+The unexpected message is not a summary. No documentation-processing or Azure communication lifecycle
+events, work-item creation events, warning taxonomy, richer authentication/authorisation or rate-limit
+reporting, summary logging, timings or correlation IDs are defined. API Section 6.1 status reconciliation
+remains separate and required before Gate 3; unresolved API reporting requirements remain future contract work.
+
+Review Gates 1 and 2 remain PASS; Review Gates 3 and 4 remain future. Wider Application/Run remains
+incomplete and Version 1.0 remains pre-release. This capability is required before final Version-1.0
+readiness but does not establish Operational Readiness, a Gate-3 checklist, integration/E2E completion,
+live Azure validation or RC readiness. Operational Recovery / DR scope and Gate-3 placement remain
+future/unsettled; no recovery requirements are defined. UE-D1–UE-D10 leave no unresolved owner decision
+for this bounded capability; document review, separate approval-only promotion and implementation remain pending.
 
 ---
 
@@ -1000,6 +1150,12 @@ The application shall:
 - Terminate gracefully when recovery is not possible.
 
 Unexpected exceptions shall be handled in a controlled manner to prevent application crashes and to provide sufficient diagnostic information.
+
+For the final Version-1.0 process-facing generic unexpected fallback, the owner-approved
+[Final Unexpected-Error Handling and Diagnostic Safety](#final-unexpected-error-handling-and-diagnostic-safety)
+contract defines the fixed safe category message as the sufficient operational diagnostic. Dynamic
+exception detail and tracebacks are intentionally excluded without a safe redaction contract.
+This bounded policy is not yet implemented and does not change direct lower-level exception propagation.
 
 ---
 
