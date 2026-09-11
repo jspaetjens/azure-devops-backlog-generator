@@ -6,7 +6,7 @@
 
 **Version:** 1.35
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -58,7 +58,7 @@
 | 1.32 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slices 1–7 status and remaining readiness work. |
 | 1.33 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging capability and remaining readiness work. |
 | 1.34 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining readiness work. |
-| 1.35 | 2026-09-11 | Draft | Jack Spaetjens | Recorded the owner-approved final unexpected-error handling and diagnostic-safety capability and remaining readiness work. |
+| 1.35 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Recorded the owner-approved final unexpected-error handling and diagnostic-safety capability and remaining readiness work. |
 
 ---
 
@@ -285,7 +285,7 @@ COMPLETION follows only normal application return. Delivery remains current-owne
 
 Slices 1–8 are implemented; the Slice-8 contract remains approved. No Slice 9,
 one-slice-per-capability allocation or future capability order is defined. The Slice-8 status-sync
-revision 1.34 is Approved Baseline; revision 1.35 remains Draft pending review and separate approval-only promotion.
+revision 1.34 is Approved Baseline; revision 1.35 is Approved Baseline.
 
 Slice 8 covers only configured-run START and successful COMPLETION. Existing controlled-failure logging
 remains Slice 6; other broader logging requirements remain future where not already implemented.
@@ -310,8 +310,7 @@ Operational Recovery / DR. No new recovery requirement is defined.
 **Final Unexpected-Error Handling and Diagnostic Safety — OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.**
 The technical authority is Architecture's
 [Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#final-unexpected-error-handling-and-diagnostic-safety)
-contract, UE-D1–UE-D10. The owner decisions are approved; this document revision remains Draft pending
-review and separate approval-only promotion. No numbered Application/Run implementation slice is allocated.
+contract, UE-D1–UE-D10. The owner decisions are approved; this document revision is Approved Baseline. No numbered Application/Run implementation slice is allocated.
 Later allocation may follow contract review and document approval; no ordering of other capabilities is established.
 
 The bounded capability shall add only the final generic `Exception` fallback at `run_process()`, after

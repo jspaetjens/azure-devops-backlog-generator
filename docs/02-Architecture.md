@@ -6,7 +6,7 @@
 
 **Version:** 2.40
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -73,7 +73,7 @@
 | 2.37 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 package execution status and preserved interim limitations. |
 | 2.38 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 8 lifecycle file-logging contract. |
 | 2.39 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 Process-Neutral Application Lifecycle File Logging status. |
-| 2.40 | 2026-09-11 | Draft | Jack Spaetjens | Defined the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract. |
+| 2.40 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract. |
 
 ---
 
@@ -644,7 +644,7 @@ invocation without establishing readiness. Version 1.0 remains pre-release.
 **IMPLEMENTED.** Application/Run Slice 8 was merged in PR #141 (implementation commit `378e2b1`,
 merge `8560a89`), following contract PR #139 and approval PR #140. Slices 1–8 are implemented.
 S8-D1, S8-D2 and S8-D3 below remain the approved, implemented owner decisions. The Slice-8 status-sync
-revision 2.39 is Approved Baseline; revision 2.40 remains Draft pending review and separate approval-only promotion.
+revision 2.39 is Approved Baseline; revision 2.40 is Approved Baseline.
 
 **S8-D1 — Lifecycle boundary and exact events.** Slice 8 shall add exactly two fixed-message lifecycle
 events at the configured application-run boundary:
@@ -780,7 +780,7 @@ later-run recovery is not equivalent to Operational Recovery / DR. No new recove
 ### Final Unexpected-Error Handling and Diagnostic Safety
 
 **OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.** UE-D1–UE-D10 below are owner-approved
-decisions. This document revision remains Draft pending review and separate approval-only promotion.
+decisions. This document revision is Approved Baseline.
 Application/Run Slices 1–8 remain implemented and approved. No numbered implementation slice is
 allocated to this capability. Later allocation may follow contract review and document approval.
 
@@ -921,7 +921,7 @@ incomplete and Version 1.0 remains pre-release. This capability is required befo
 readiness but does not establish Operational Readiness, a Gate-3 checklist, integration/E2E completion,
 live Azure validation or RC readiness. Operational Recovery / DR scope and Gate-3 placement remain
 future/unsettled; no recovery requirements are defined. UE-D1–UE-D10 leave no unresolved owner decision
-for this bounded capability; document review, separate approval-only promotion and implementation remain pending.
+for this bounded capability; this document revision is Approved Baseline; implementation remains pending.
 
 ---
 

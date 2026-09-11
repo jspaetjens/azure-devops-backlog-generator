@@ -6,7 +6,7 @@
 
 **Version:** 1.29
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -52,7 +52,7 @@
 | 1.26 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 executable outcomes and pre-release limitations. |
 | 1.27 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging contract and pre-release exclusions. |
 | 1.28 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining pre-release limitations. |
-| 1.29 | 2026-09-11 | Draft | Jack Spaetjens | Recorded the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract and remaining pre-release limitations. |
+| 1.29 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Recorded the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract and remaining pre-release limitations. |
 
 ---
 
@@ -208,7 +208,7 @@ readiness, Gate 3 completion and final Version 1.0 approval are not claimed.
 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging is **IMPLEMENTED**
 in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following contract PR #139 and approval
 PR #140. Architecture Section 7.1.8 defines implemented, approved owner decisions S8-D1–D3. The
-Slice-8 status-sync revision 1.28 is Approved Baseline; revision 1.29 remains Draft pending review and separate approval-only promotion.
+Slice-8 status-sync revision 1.28 is Approved Baseline; revision 1.29 is Approved Baseline.
 
 Slice 8 adds only two process-neutral INFO file lifecycle messages: `Application run started.`
 after successful configuration validation/logging initialisation and immediately before configured
@@ -249,8 +249,8 @@ Version 1.0.
 **Final Unexpected-Error Handling and Diagnostic Safety — OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.**
 Architecture's
 [Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#final-unexpected-error-handling-and-diagnostic-safety)
-section defines authoritative owner-approved decisions UE-D1–UE-D10. This document revision remains
-Draft pending review and separate approval-only promotion. No numbered Application/Run implementation
+section defines authoritative owner-approved decisions UE-D1–UE-D10. This document revision is
+Approved Baseline. No numbered Application/Run implementation
 slice has been allocated. Slices 1–8 remain implemented and approved.
 
 The contract requires the otherwise-unclassified `Exception` fallback only at `run_process()`, after
@@ -264,7 +264,7 @@ diagnostic feature is approved. Direct lower-level propagation, process-control 
 
 Implementation and planned validation in Testing Section 8 are required before final Version-1.0
 readiness. The current interim native-traceback limitation remains unresolved in production code;
-this Draft contract does not claim implemented or proven traceback/secret safety, Operational Readiness,
+this Approved Baseline contract does not claim implemented or proven traceback/secret safety, Operational Readiness,
 integration/E2E completion, live Azure validation, Gate-3 completion, Gate-4 completion or RC readiness.
 
 Version 1.0 remains pre-release and wider Application/Run remains incomplete. Gates 1 and 2 remain

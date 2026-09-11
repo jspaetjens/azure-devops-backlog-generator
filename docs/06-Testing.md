@@ -6,7 +6,7 @@
 
 **Version:** 2.30
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -63,7 +63,7 @@
 | 2.27 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 test coverage and measured validation evidence. |
 | 2.28 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined planned Application/Run Slice 8 lifecycle logging validation and preserved pre-Slice-8 evidence. |
 | 2.29 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging coverage and measured validation evidence. |
-| 2.30 | 2026-09-11 | Draft | Jack Spaetjens | Defined required/planned validation for final unexpected-error handling and diagnostic safety while preserving current evidence. |
+| 2.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined required/planned validation for final unexpected-error handling and diagnostic safety while preserving current evidence. |
 
 ---
 
@@ -529,7 +529,7 @@ Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness c
 The implementation was merged in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following
 contract PR #139 and approval PR #140. Architecture Section 7.1.8 remains authoritative for implemented,
 approved S8-D1–D3. The Slice-8 status-sync revision 2.29 is Approved Baseline; the implementation is complete within its approved scope.
-Revision 2.30 remains Draft pending review and separate approval-only promotion.
+Revision 2.30 is Approved Baseline.
 
 The recorded Slice-7 evidence above is the PRE-SLICE-8 implementation quality baseline: focused 8/8,
 full pytest 723/723 and `pytest -W error` 723/723, each with zero failed, skipped, warnings, xfail
@@ -606,7 +606,7 @@ Review Gate 3 and final Version-1.0 readiness remain future.
 Architecture's
 [Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#final-unexpected-error-handling-and-diagnostic-safety)
 section is authoritative for UE-D1–UE-D10. Those owner decisions are approved; this document revision
-remains Draft pending review and separate approval-only promotion. No numbered implementation slice is allocated.
+is Approved Baseline. No numbered implementation slice is allocated.
 
 The following is required/planned validation, not implemented tests or executed evidence:
 
