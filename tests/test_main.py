@@ -34,6 +34,32 @@ class _SentinelError(Exception):
     pass
 
 
+_UNEXPECTED_SENTINELS = (
+    "SYNTHETIC_SLICE9_PAT",
+    "Authorization: SYNTHETIC_SLICE9_AUTH",
+    "C:\\SYNTHETIC_PRIVATE\\source.md",
+    "SYNTHETIC_ORGANISATION/SYNTHETIC_PROJECT",
+    "https://example.invalid/SYNTHETIC_URL",
+    "SYNTHETIC_SOURCE_IDENTITY_AND_USER_CONTENT",
+    "SYNTHETIC_EXCEPTION_MESSAGE",
+    "SYNTHETIC_CONFIG_VALUE",
+    "SYNTHETIC_REQUEST_BODY",
+    "SYNTHETIC_RESPONSE_BODY",
+    "SYNTHETIC_TITLE",
+    "SYNTHETIC_CAUSE",
+    "SYNTHETIC_CONTEXT",
+    "SYNTHETIC_REPR",
+)
+
+
+class _UnexpectedDiagnosticSentinelError(Exception):
+    def __str__(self) -> str:
+        pytest.fail("Unexpected exception must not be stringified")
+
+    def __repr__(self) -> str:
+        pytest.fail("Unexpected exception must not be represented")
+
+
 @pytest.fixture(autouse=True)
 def _reset_runtime_logging() -> None:
     main_module._deactivate_runtime_logging()
@@ -76,6 +102,7 @@ def test_run_process_returns_zero_after_one_successful_main_invocation(
             "Source identity validation error.\n",
         ),
         (ExistingWorkItemResolutionError(), "Existing work item resolution error.\n"),
+        (main_module.ApplicationLoggingError(), "Application logging error.\n"),
         (
             ConflictingReusedChildRelationshipError(
                 2,
@@ -92,6 +119,7 @@ def test_run_process_returns_zero_after_one_successful_main_invocation(
         "azure-devops-rest-client",
         "source-identity",
         "existing-work-item-resolution",
+        "application-logging",
         "conflicting-reused-child-relationship",
     ],
 )
@@ -150,7 +178,7 @@ def test_run_process_does_not_render_controlled_failure_detail(
     assert caplog.records == []
 
 
-def test_run_process_propagates_the_exact_unexpected_exception(
+def test_run_process_handles_unexpected_exception_after_exactly_one_main_call(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     caplog: pytest.LogCaptureFixture,
@@ -165,14 +193,14 @@ def test_run_process_propagates_the_exact_unexpected_exception(
 
     monkeypatch.setattr(main_module, "main", failing_main)
 
-    with pytest.raises(_SentinelError) as raised:
-        main_module.run_process()
+    result = main_module.run_process()
 
-    assert raised.value is error
+    assert type(result) is int
+    assert result == 1
     assert calls == 1
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert captured.err == ""
+    assert captured.err == "Unexpected application error.\n"
     assert caplog.records == []
 
 
@@ -903,7 +931,7 @@ def test_repeated_invocations_replace_only_owned_handlers_and_do_not_duplicate_r
     unrelated_logger.removeHandler(unrelated)
 
 
-def test_unexpected_exception_after_start_propagates_without_completion_or_diagnostics(
+def test_unexpected_exception_after_start_reports_failure_without_completion_or_detail(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
@@ -925,17 +953,17 @@ def test_unexpected_exception_after_start_propagates_without_completion_or_diagn
     monkeypatch.setattr(main_module, "coordinate_application_run", run)
     monkeypatch.setattr(main_module._ApplicationFileHandler, "handle", handle)
 
-    with pytest.raises(_SentinelError) as raised:
-        main_module.run_process()
-
-    assert raised.value is error
+    assert main_module.run_process() == 1
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert captured.err == ""
-    assert events == ["Application run started.", "application raises"]
+    assert captured.err == "Unexpected application error.\n"
+    assert events == [
+        "Application run started.", "application raises", "Unexpected application error."
+    ]
     contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
     assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
-        "INFO azure_devops_backlog_generator Application run started."
+        "INFO azure_devops_backlog_generator Application run started.",
+        "CRITICAL azure_devops_backlog_generator Unexpected application error.",
     ]
 
 
@@ -1028,25 +1056,17 @@ def test_failed_start_does_not_change_a_later_application_failure(
     monkeypatch.setattr(main_module, "coordinate_application_run", run)
     monkeypatch.setattr(main_module._ApplicationFileHandler, "handle", handle)
 
-    if controlled:
-        assert main_module.run_process() == 1
-    else:
-        with pytest.raises(_SentinelError) as raised:
-            main_module.run_process()
-        assert raised.value is error
+    assert main_module.run_process() == 1
 
-    assert events == ["Application run started.", "application raises"] + (
-        ["Documentation processing error."] if controlled else []
-    )
+    message = "Documentation processing error." if controlled else "Unexpected application error."
+    assert events == ["Application run started.", "application raises", message]
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert captured.err == ("Documentation processing error.\n" if controlled else "")
+    assert captured.err == f"{message}\n"
     contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
-    assert [line.split(" ", 1)[1] for line in contents.splitlines()] == (
-        ["CRITICAL azure_devops_backlog_generator Documentation processing error."]
-        if controlled
-        else []
-    )
+    assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+        f"CRITICAL azure_devops_backlog_generator {message}"
+    ]
 
 
 @pytest.mark.parametrize("error", [KeyboardInterrupt(), SystemExit(7)])
@@ -1084,3 +1104,284 @@ def test_lifecycle_best_effort_does_not_swallow_process_control_exceptions(
         if failed_message == "Application run started."
         else ["Application run started.", "run", "Application run completed successfully."]
     )
+
+
+@pytest.mark.parametrize("level", ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+def test_unexpected_events_are_secret_safe_owned_and_not_duplicated_across_invocations(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    level: str,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    configuration = Configuration(
+        azure_devops=configuration.azure_devops,
+        documentation=configuration.documentation,
+        logging=LoggingConfig(level=level, log_directory=tmp_path),
+        personal_access_token=configuration.personal_access_token,
+    )
+    error = _UnexpectedDiagnosticSentinelError(*_UNEXPECTED_SENTINELS)
+    error.__cause__ = RuntimeError("SYNTHETIC_CAUSE")
+    error.__context__ = RuntimeError("SYNTHETIC_CONTEXT")
+    records: list[logging.LogRecord] = []
+    owned_handlers: list[logging.Handler] = []
+    original_handle = main_module._ApplicationFileHandler.handle
+    raise_exceptions = logging.raiseExceptions
+
+    def handle(handler: logging.Handler, record: logging.LogRecord) -> bool:
+        assert handler is main_module._ACTIVE_LOG_HANDLER
+        records.append(record)
+        return original_handle(handler, record)
+
+    def run(_: Configuration) -> None:
+        assert main_module._ACTIVE_LOG_HANDLER is not None
+        owned_handlers.append(main_module._ACTIVE_LOG_HANDLER)
+        raise error
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    monkeypatch.setattr(main_module._ApplicationFileHandler, "handle", handle)
+    other_loggers = (
+        main_module._LOGGER, logging.getLogger(), logging.getLogger("unrelated.application.logger")
+    )
+    other_handlers = [logging.StreamHandler(StringIO()) for _ in other_loggers]
+    for logger, handler in zip(other_loggers, other_handlers, strict=True):
+        logger.addHandler(handler)
+    try:
+        for _ in range(2):
+            result = main_module.run_process()
+            assert type(result) is int
+            assert result == 1
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err == "Unexpected application error.\n" * 2
+        assert caplog.records == []
+        for logger, handler in zip(other_loggers, other_handlers, strict=True):
+            assert handler in logger.handlers
+            assert handler.stream.getvalue() == ""
+        assert owned_handlers[0] is not owned_handlers[1]
+        assert owned_handlers[0].stream is None
+        assert main_module._LOGGER.propagate is False
+        assert logging.raiseExceptions is raise_exceptions
+        expected = (
+            [(logging.INFO, "Application run started.")]
+            if level in ("DEBUG", "INFO") else []
+        ) + [(logging.CRITICAL, "Unexpected application error.")]
+        assert [(record.levelno, record.getMessage()) for record in records] == expected * 2
+        for record in records:
+            assert record.name == "azure_devops_backlog_generator"
+            assert record.args == ()
+            assert record.exc_info is None
+            assert record.exc_text is None
+            assert record.stack_info is None
+            assert record.pathname == ""
+            assert record.lineno == 0
+        log_file = tmp_path / "azure-devops-backlog-generator.log"
+        assert list(tmp_path.iterdir()) == [log_file]
+        contents = log_file.read_text(encoding="utf-8")
+        assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+            f"{logging.getLevelName(severity)} azure_devops_backlog_generator {message}"
+            for severity, message in expected * 2
+        ]
+        for sentinel in (*_UNEXPECTED_SENTINELS, "_UnexpectedDiagnosticSentinelError", "Traceback"):
+            assert sentinel not in captured.err + contents
+    finally:
+        for logger, handler in zip(other_loggers, other_handlers, strict=True):
+            logger.removeHandler(handler)
+            handler.close()
+
+
+@pytest.mark.parametrize("failure_stage", ["configuration", "logging-initialisation"])
+def test_pre_initialisation_unexpected_failure_does_not_use_a_stale_handler(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    failure_stage: str,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", lambda _: None)
+    assert main_module.run_process() == 0
+    stale_handler = main_module._ACTIVE_LOG_HANDLER
+    assert stale_handler is not None
+    log_file = tmp_path / "azure-devops-backlog-generator.log"
+    previous_contents = log_file.read_text(encoding="utf-8")
+
+    def fail(*args: object, **kwargs: object) -> None:
+        raise _UnexpectedDiagnosticSentinelError(*_UNEXPECTED_SENTINELS)
+
+    def forbidden_record(*args: object, **kwargs: object) -> None:
+        pytest.fail("No event may be attempted before current logging initialises")
+
+    collaborator = (
+        "load_configuration_from_cli" if failure_stage == "configuration"
+        else "_ApplicationFileHandler"
+    )
+    monkeypatch.setattr(main_module, collaborator, fail)
+    monkeypatch.setattr(main_module._LOGGER, "makeRecord", forbidden_record)
+
+    result = main_module.run_process()
+
+    assert type(result) is int
+    assert result == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Unexpected application error.\n"
+    assert caplog.records == []
+    assert main_module._ACTIVE_LOG_HANDLER is None
+    assert stale_handler.stream is None
+    assert log_file.read_text(encoding="utf-8") == previous_contents
+
+
+@pytest.mark.parametrize("delivery_method", ["handle", "emit", "stream"])
+def test_unexpected_log_failure_is_secondary_without_retry_or_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    delivery_method: str,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    events: list[str] = []
+    raise_exceptions = logging.raiseExceptions
+
+    def fail_delivery(*args: object) -> None:
+        events.append("unexpected event attempt")
+        raise _SentinelError("SYNTHETIC_SECONDARY_AUTH_AND_MESSAGE")
+
+    class FailingStream:
+        write = staticmethod(fail_delivery)
+
+        def flush(self) -> None:
+            pass
+
+        def close(self) -> None:
+            pass
+
+    def run(_: Configuration) -> None:
+        handler = main_module._ACTIVE_LOG_HANDLER
+        assert handler is not None
+        if delivery_method == "stream":
+            handler.stream.close()
+            handler.stream = FailingStream()
+        else:
+            monkeypatch.setattr(handler, delivery_method, fail_delivery)
+        events.append("application raises")
+        raise _UnexpectedDiagnosticSentinelError(*_UNEXPECTED_SENTINELS)
+
+    class Stderr(StringIO):
+        def write(self, value: str) -> int:
+            events.append(f"stderr: {value}")
+            return super().write(value)
+
+    stderr = Stderr()
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    other_logger = logging.getLogger("unrelated.application.logger")
+    other_handlers = [logging.StreamHandler(StringIO()) for _ in range(3)]
+    loggers = [main_module._LOGGER, logging.getLogger(), other_logger]
+    for logger, handler in zip(loggers, other_handlers, strict=True):
+        logger.addHandler(handler)
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(main_module.sys, "stderr", stderr)
+            result = main_module.run_process()
+        assert type(result) is int
+        assert result == 1
+        assert events == [
+            "application raises", "unexpected event attempt",
+            "stderr: Unexpected application error.", "stderr: \n",
+        ]
+        assert stderr.getvalue() == "Unexpected application error.\n"
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err == ""
+        assert caplog.records == []
+        assert all(handler.stream.getvalue() == "" for handler in other_handlers)
+        assert logging.raiseExceptions is raise_exceptions
+        log_file = tmp_path / "azure-devops-backlog-generator.log"
+        assert list(tmp_path.iterdir()) == [log_file]
+        contents = log_file.read_text(encoding="utf-8")
+        assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+            "INFO azure_devops_backlog_generator Application run started."
+        ]
+    finally:
+        for logger, handler in zip(loggers, other_handlers, strict=True):
+            logger.removeHandler(handler)
+            handler.close()
+
+
+@pytest.mark.parametrize("error", [KeyboardInterrupt(), SystemExit(7), GeneratorExit()])
+@pytest.mark.parametrize("failure_stage", ["application", "unexpected-event"])
+def test_unexpected_boundaries_preserve_process_control_exceptions(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+    error: BaseException,
+    failure_stage: str,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    attempts: list[str] = []
+
+    def fail_delivery(record: logging.LogRecord) -> None:
+        attempts.append(record.getMessage())
+        raise error
+
+    def run(_: Configuration) -> None:
+        if failure_stage == "application":
+            raise error
+        assert main_module._ACTIVE_LOG_HANDLER is not None
+        monkeypatch.setattr(main_module._ACTIVE_LOG_HANDLER, "handle", fail_delivery)
+        raise _SentinelError("SYNTHETIC_PRIMARY")
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+
+    with pytest.raises(type(error)) as raised:
+        main_module.run_process()
+
+    assert raised.value is error
+    assert attempts == ([] if failure_stage == "application" else ["Unexpected application error."])
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+
+def test_unexpected_stderr_delivery_failure_propagates_without_retry_or_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    error = OSError("SYNTHETIC_STDERR_FAILURE")
+    writes: list[str] = []
+
+    class FailingStderr:
+        def write(self, value: str) -> int:
+            writes.append(value)
+            raise error
+
+    def run(_: Configuration) -> None:
+        raise _SentinelError("SYNTHETIC_PRIMARY")
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    with monkeypatch.context() as patch:
+        patch.setattr(main_module.sys, "stderr", FailingStderr())
+        with pytest.raises(OSError) as raised:
+            main_module.run_process()
+
+    assert raised.value is error
+    assert writes == ["Unexpected application error."]
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+    assert caplog.records == []
+    contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+    assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+        "INFO azure_devops_backlog_generator Application run started.",
+        "CRITICAL azure_devops_backlog_generator Unexpected application error.",
+    ]

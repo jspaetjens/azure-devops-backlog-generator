@@ -202,3 +202,80 @@ def test_adapter_boundary_unexpected_exception_subprocess(
     assert result.returncode != 0
     assert result.stdout == ""
     assert result.stderr != ""
+
+
+def test_package_maps_real_unexpected_fallback_to_system_exit_one(
+    isolated_adapter_cache: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    loader = Mock(side_effect=RuntimeError("SYNTHETIC_PRIVATE_EXCEPTION"))
+    isolated_adapter_cache.setattr(main_module, "load_configuration_from_cli", loader)
+
+    with pytest.raises(SystemExit) as raised:
+        runpy.run_module(_PACKAGE_NAME, run_name="__main__")
+
+    assert type(raised.value.code) is int
+    assert raised.value.code == 1
+    loader.assert_called_once()
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Unexpected application error.\n"
+
+
+@pytest.mark.parametrize("logging_active", [False, True], ids=["pre-init", "post-init"])
+def test_package_subprocess_real_fallback_suppresses_unexpected_details_and_traceback(
+    tmp_path: Path,
+    child_environment: dict[str, str],
+    logging_active: bool,
+) -> None:
+    """Run the real package adapter and fallback with isolated lower collaborators."""
+    sentinels = (
+        "SYNTHETIC_PAT", "Authorization: SYNTHETIC_AUTH",
+        "C:\\SYNTHETIC_PRIVATE\\config.toml", "SYNTHETIC_ORG/SYNTHETIC_PROJECT",
+        "https://example.invalid/SYNTHETIC_URL", "SYNTHETIC_SOURCE_USER_CONTENT",
+        "SYNTHETIC_EXCEPTION_MESSAGE", "SYNTHETIC_CAUSE", "SYNTHETIC_CONTEXT",
+    )
+    script = (
+        "import runpy\n"
+        "from pathlib import Path\n"
+        "from azure_devops_backlog_generator.config.models import (\n"
+        "    Configuration, AzureDevOpsConfig, DocumentationConfig, LoggingConfig\n"
+        ")\n"
+        "import azure_devops_backlog_generator.main as main_module\n"
+        f"error = RuntimeError({sentinels!r})\n"
+        "error.__cause__ = ValueError('SYNTHETIC_CAUSE')\n"
+        "error.__context__ = ValueError('SYNTHETIC_CONTEXT')\n"
+        "def fail(_):\n"
+        "    raise error\n"
+        "def configuration(_):\n"
+        "    return Configuration(\n"
+        "        azure_devops=AzureDevOpsConfig(organization='SYNTHETIC_ORG',\n"
+        "                                     project='SYNTHETIC_PROJECT'),\n"
+        "        documentation=DocumentationConfig(source_directory=Path('.')),\n"
+        "        logging=LoggingConfig(level='INFO', log_directory=Path('.')),\n"
+        "        personal_access_token='SYNTHETIC_PAT',\n"
+        "    )\n"
+        "main_module.load_configuration_from_cli = "
+        f"{'configuration' if logging_active else 'fail'}\n"
+        "main_module.coordinate_application_run = fail\n"
+        'runpy.run_module("azure_devops_backlog_generator", run_name="__main__")\n'
+    )
+
+    result = _run_child(["-c", script], tmp_path, child_environment)
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert result.stderr == "Unexpected application error.\n"
+    log_file = tmp_path / "azure-devops-backlog-generator.log"
+    if logging_active:
+        contents = log_file.read_text(encoding="utf-8")
+        assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+            "INFO azure_devops_backlog_generator Application run started.",
+            "CRITICAL azure_devops_backlog_generator Unexpected application error.",
+        ]
+        assert list(tmp_path.iterdir()) == [log_file]
+    else:
+        contents = ""
+        assert list(tmp_path.iterdir()) == []
+    for sentinel in (*sentinels, "RuntimeError", "ValueError", "Traceback"):
+        assert sentinel not in result.stderr + contents
