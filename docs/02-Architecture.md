@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.40
+**Version:** 2.41
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-11
 
@@ -74,6 +74,7 @@
 | 2.38 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined the approved but unimplemented Application/Run Slice 8 lifecycle file-logging contract. |
 | 2.39 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 Process-Neutral Application Lifecycle File Logging status. |
 | 2.40 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract. |
+| 2.41 | 2026-09-11 | Draft | Jack Spaetjens | Allocated the approved Final Unexpected-Error Handling and Diagnostic Safety contract as Application/Run Slice 9 without changing UE-D1–UE-D10. |
 
 ---
 
@@ -99,7 +100,7 @@
     - [7.1.6 Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events](#716-applicationrun-slice-6--runtime-file-logging-and-controlled-failure-events)
     - [7.1.7 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination](#717-applicationrun-slice-7--package-execution-adapter-with-controlled-process-termination)
     - [7.1.8 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging](#718-applicationrun-slice-8--process-neutral-application-lifecycle-file-logging)
-    - [Final Unexpected-Error Handling and Diagnostic Safety](#final-unexpected-error-handling-and-diagnostic-safety)
+    - [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -644,7 +645,7 @@ invocation without establishing readiness. Version 1.0 remains pre-release.
 **IMPLEMENTED.** Application/Run Slice 8 was merged in PR #141 (implementation commit `378e2b1`,
 merge `8560a89`), following contract PR #139 and approval PR #140. Slices 1–8 are implemented.
 S8-D1, S8-D2 and S8-D3 below remain the approved, implemented owner decisions. The Slice-8 status-sync
-revision 2.39 is Approved Baseline; revision 2.40 is Approved Baseline.
+revision 2.39 is Approved Baseline; revision 2.41 is Draft pending review and separate approval-only promotion.
 
 **S8-D1 — Lifecycle boundary and exact events.** Slice 8 shall add exactly two fixed-message lifecycle
 events at the configured application-run boundary:
@@ -777,12 +778,12 @@ later-run recovery is not equivalent to Operational Recovery / DR. No new recove
 
 ---
 
-### Final Unexpected-Error Handling and Diagnostic Safety
+### Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety
 
-**OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.** UE-D1–UE-D10 below are owner-approved
-decisions. This document revision is Approved Baseline.
-Application/Run Slices 1–8 remain implemented and approved. No numbered implementation slice is
-allocated to this capability. Later allocation may follow contract review and document approval.
+**APPROVED CONTRACT — NOT YET IMPLEMENTED.** UE-D1–UE-D10 below remain owner-approved
+Approved Baseline decisions governing Slice 9. Architecture revision 2.41 is Draft pending review
+and separate approval-only promotion. Application/Run Slices 1–8 remain implemented and approved.
+The owner has allocated this capability as Application/Run Slice 9; implementation remains pending.
 
 This section is authoritative for the bounded final process-facing unexpected-error contract.
 The preceding slice sections describe implemented behaviour, including current same-object unexpected
@@ -921,7 +922,8 @@ incomplete and Version 1.0 remains pre-release. This capability is required befo
 readiness but does not establish Operational Readiness, a Gate-3 checklist, integration/E2E completion,
 live Azure validation or RC readiness. Operational Recovery / DR scope and Gate-3 placement remain
 future/unsettled; no recovery requirements are defined. UE-D1–UE-D10 leave no unresolved owner decision
-for this bounded capability; this document revision is Approved Baseline; implementation remains pending.
+for this bounded Slice-9 capability; revision 2.41 is Draft pending review and separate approval-only
+promotion; the contract remains approved and implementation remains pending.
 
 ---
 
@@ -1152,7 +1154,7 @@ The application shall:
 Unexpected exceptions shall be handled in a controlled manner to prevent application crashes and to provide sufficient diagnostic information.
 
 For the final Version-1.0 process-facing generic unexpected fallback, the owner-approved
-[Final Unexpected-Error Handling and Diagnostic Safety](#final-unexpected-error-handling-and-diagnostic-safety)
+[Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
 contract defines the fixed safe category message as the sufficient operational diagnostic. Dynamic
 exception detail and tracebacks are intentionally excluded without a safe redaction contract.
 This bounded policy is not yet implemented and does not change direct lower-level exception propagation.

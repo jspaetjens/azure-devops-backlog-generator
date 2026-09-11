@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.30
+**Version:** 2.31
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-11
 
@@ -64,6 +64,7 @@
 | 2.28 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined planned Application/Run Slice 8 lifecycle logging validation and preserved pre-Slice-8 evidence. |
 | 2.29 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging coverage and measured validation evidence. |
 | 2.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined required/planned validation for final unexpected-error handling and diagnostic safety while preserving current evidence. |
+| 2.31 | 2026-09-11 | Draft | Jack Spaetjens | Allocated the approved planned validation contract to Application/Run Slice 9 without changing validation requirements or evidence. |
 
 ---
 
@@ -529,7 +530,7 @@ Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness c
 The implementation was merged in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following
 contract PR #139 and approval PR #140. Architecture Section 7.1.8 remains authoritative for implemented,
 approved S8-D1–D3. The Slice-8 status-sync revision 2.29 is Approved Baseline; the implementation is complete within its approved scope.
-Revision 2.30 is Approved Baseline.
+Revision 2.31 is Draft pending review and separate approval-only promotion.
 
 The recorded Slice-7 evidence above is the PRE-SLICE-8 implementation quality baseline: focused 8/8,
 full pytest 723/723 and `pytest -W error` 723/723, each with zero failed, skipped, warnings, xfail
@@ -602,11 +603,12 @@ Operational Readiness, unsettled
 Operational Recovery / DR scope/Gate-3 placement, API Section 6.1 reconciliation before Gate 3,
 Review Gate 3 and final Version-1.0 readiness remain future.
 
-**Final Unexpected-Error Handling and Diagnostic Safety — OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.**
+**Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety — APPROVED CONTRACT — NOT YET IMPLEMENTED.**
 Architecture's
-[Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#final-unexpected-error-handling-and-diagnostic-safety)
-section is authoritative for UE-D1–UE-D10. Those owner decisions are approved; this document revision
-is Approved Baseline. No numbered implementation slice is allocated.
+[Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
+section is authoritative for UE-D1–UE-D10. Those decisions remain Approved Baseline and govern
+Slice 9; implementation and its planned validation remain pending. Testing revision 2.31 is Draft
+pending review and separate approval-only promotion.
 
 The following is required/planned validation, not implemented tests or executed evidence:
 
@@ -637,10 +639,10 @@ their separate boundary; direct lower-level propagation remains intentional. No 
 real PAT or live environment is required for this capability's validation. Broader integration/E2E and
 live Services release validation remain separate and incomplete.
 
-The merged Slice-8 results above remain the current pre-capability baseline: focused `tests/test_main.py`
+The merged Slice-8 results above remain the current pre-Slice-9 implementation baseline: focused `tests/test_main.py`
 55/55, full pytest 743/743, `pytest -W error` 743/743, Ruff passed, 95% coverage across 1,381 statements
 with 64 missed; `main.py` 97/0/100% and `__main__.py` 3/0/100%. No future counts are specified.
-No tests were added or changed, and neither Ruff nor pytest was executed for this contract-definition revision.
+No tests were added or changed, and neither Ruff nor pytest was executed for this capability-allocation revision.
 Implementation and validation of final unexpected handling and secret safety remain pending; Slices 1–8
 remain implemented and approved. Gates 3 and 4 remain future, Version 1.0 remains pre-release, and no
 Operational Readiness or Recovery/DR acceptance criteria are added.
