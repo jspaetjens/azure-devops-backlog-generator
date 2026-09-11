@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.31
+**Version:** 2.32
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-11
 
@@ -65,6 +65,7 @@
 | 2.29 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging coverage and measured validation evidence. |
 | 2.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined required/planned validation for final unexpected-error handling and diagnostic safety while preserving current evidence. |
 | 2.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved planned validation contract to Application/Run Slice 9 without changing validation requirements or evidence. |
+| 2.32 | 2026-09-11 | Draft | Jack Spaetjens | Synchronized implemented Slice-9 validation coverage and measured quality evidence. |
 
 ---
 
@@ -399,9 +400,9 @@ parameterisation where appropriate, and prove exact integer return `1` for the `
 second invocation, no re-raise of the controlled exception, no stdout, no stderr, no logging and no
 `SystemExit`.
 
-An unexpected-failure test makes `main()` raise one sentinel exception outside that approved controlled set
-and proves that the exact object propagates unchanged; `run_process()` does not return `1`, catch it
-generically, retry, fall back or invoke `main()` again, and produces no stdout, stderr, logging or
+At the Slice-4 baseline, an unexpected-failure test made `main()` raise one sentinel exception outside that approved controlled set
+and proved that the exact object propagated unchanged; `run_process()` did not return `1`, catch it
+generically, retry, fall back or invoke `main()` again, and produced no stdout, stderr, logging or
 `SystemExit`. Slice-4 tests do not duplicate configuration parsing or PAT validation; document parsing; Azure
 DevOps transport, HTTP `401`/`403` or malformed-response semantics; Generator lifecycle or relationship
 behaviour; or Slice-1, Slice-2 or Slice-3 composition. No subprocess coverage is required because Slice 4
@@ -430,8 +431,8 @@ used where useful.
 A secret-safety test uses synthetic PAT-like detail, a synthetic configuration path and a synthetic URL in an
 existing controlled exception, and proves that stderr contains only the applicable fixed category message, that all
 synthetic detail is absent, that stdout is empty and that the result is `1`. No exception classes were changed merely
-to facilitate this test. An unexpected-failure test makes `main()` raise one sentinel exception outside the approved
-controlled set and proves that the exact object propagates unchanged after one invocation, with empty stdout and
+to facilitate this test. At the Slice-5 baseline, an unexpected-failure test made `main()` raise one sentinel exception outside the approved
+controlled set and proved that the exact object propagated unchanged after one invocation, with empty stdout and
 stderr, no controlled message, no logging, no `SystemExit`, retry, fallback or second invocation. The tests require
 no dynamic exception rendering, generic exception catching or executable adapter.
 
@@ -454,8 +455,9 @@ and integer `1`, without retry, fallback, alternate destination, duplicate event
 substitution, logging traceback or secondary exception propagation. The tests prove `logging.raiseExceptions` remains
 unchanged. Full post-initialisation secret-safety coverage supplies `SYNTHETIC_PAT_DO_NOT_RENDER`,
 `C:\\secret\\config.toml` and `https://example.invalid/private` in underlying detail and proves they are absent from
-stdout, stderr beyond the fixed line and the runtime logfile. Unexpected-exception coverage preserves the exact
-exception object with no controlled event or traceback logging.
+stdout, stderr beyond the fixed line and the runtime logfile. Historical Slice-6 unexpected-exception coverage
+preserved the exact exception object with no controlled event or traceback logging. Slice-9 coverage below
+supersedes the earlier process-facing propagation assertions while preserving direct lower-level propagation.
 
 The focused `tests/test_main.py` suite recorded 35 passed. The full suite and `pytest -W error` each recorded 715
 passed, with 0 failed, skipped, warnings, xfail or xpass. Ruff passed. Coverage was 95% across 1,367 statements with
@@ -465,7 +467,7 @@ statements were covered. These are pre-Slice-7 baseline results. Slice 6 require
 
 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination is implemented.
 The focused `tests/test___main__.py` module provides executed coverage of the approved S7-D1/S7-D2
-boundary in Architecture Section 7.1.7. Slices 1–8 are implemented; wider Application/Run remains incomplete.
+boundary in Architecture Section 7.1.7. Slices 1–9 are implemented; wider Application/Run remains incomplete.
 
 Implemented coverage includes:
 
@@ -473,7 +475,7 @@ Implemented coverage includes:
    `main()` or bootstrap call, `SystemExit`, stdout/stderr or adapter-controlled logging.
 2. Exact one-call delegation to `run_process()`, without direct `main()` or bootstrap invocation;
    exact integer `0` and `1` become `SystemExit(0)` and `SystemExit(1)` without adapter output or logging.
-3. Same-object unexpected-exception propagation in-process: no controlled translation, generic catch,
+3. Adapter-only same-object unexpected-exception propagation when substituted `run_process()` raises: no controlled translation, generic catch,
    `SystemExit(1)`, stdout/stderr or application-generated traceback logging.
 4. Real package controlled-failure subprocess invocation:
    `python -m azure_devops_backlog_generator --config-file <explicit missing temp file>`.
@@ -493,8 +495,8 @@ are absolute repository `src` `PYTHONPATH`, `PYTHONNOUSERSITE=1`, `PYTHONDONTWRI
 proxy variables, developer `PYTHONPATH`, `PYTHONHOME`, `PYTHONSTARTUP`, `PYTHONWARNINGS`, coverage
 subprocess activation or broader developer environment credentials/configuration. These are test-isolation
 settings, not new application configuration. This isolation does not establish secret-safety for arbitrary
-native unexpected traceback output. Native traceback behaviour remains an interim pre-Version-1.0 limitation;
-final unexpected-error handling, user-facing reporting and diagnostic/traceback and secret-safety policy remain future.
+native unexpected traceback output. Slice-9 evidence below resolves the previous limitation only for
+the supported handled-Exception `run_process()`/package path; direct lower-level propagation remains intentional.
 
 Historical Slice-7 implementation validation evidence from PR #136 (commit `468d98d`, merge `009ef71`):
 
@@ -521,7 +523,7 @@ performed during this documentation status sync.
 
 Existing Slice-5/6 evidence remains authoritative for all seven controlled categories, exact reporting,
 owned-handler logging, D1–D5 and controlled secret-safety; Slice 7 changes none of those contracts.
-Remaining logging beyond Slice 8, execution-summary content and presentation, broader integration/E2E,
+Broader logging beyond the implemented slices, execution-summary content and presentation, broader integration/E2E,
 live Azure DevOps Services validation, Operational Readiness, Operational Recovery / DR, API Section 6.1
 status-drift reconciliation before Review Gate 3, Gate 3 and final Version 1.0 readiness remain future.
 Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness claim is made.
@@ -530,15 +532,15 @@ Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness c
 The implementation was merged in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following
 contract PR #139 and approval PR #140. Architecture Section 7.1.8 remains authoritative for implemented,
 approved S8-D1–D3. The Slice-8 status-sync revision 2.29 is Approved Baseline; the implementation is complete within its approved scope.
-Revision 2.31 is Approved Baseline.
+Revision 2.32 is Draft pending review and separate approval-only promotion.
 
 The recorded Slice-7 evidence above is the PRE-SLICE-8 implementation quality baseline: focused 8/8,
 full pytest 723/723 and `pytest -W error` 723/723, each with zero failed, skipped, warnings, xfail
 or xpass; Ruff passed. Coverage remains historical evidence of 95%, 1,370 statements and 64 missed,
 with `__main__.py` 3/0/100% and `main.py` 86/0/100%. These figures are not Slice-8 results.
 
-Implemented validation extends `tests/test_main.py`, covering bootstrap composition, logging,
-isolation and failure handling without a new test module. Existing empty-log assertions were updated:
+The merged Slice-8 validation extended `tests/test_main.py`, covering bootstrap composition, logging,
+isolation and failure handling without a new test module. At that baseline, empty-log assertions were updated:
 successful eligible runs record START and COMPLETION; unexpected application failure records START
 only; configuration failure after prior success leaves earlier lifecycle records unchanged. Silence
 and unexpected-diagnostic exclusions remain intact. Existing Slice-5/6/7 coverage remains authoritative
@@ -553,7 +555,7 @@ for its behaviour, with lifecycle assertions added to controlled, isolation and 
 | Configuration failure | No lifecycle event or logfile attempt; existing configuration outcome remains unchanged. |
 | Logger initialisation failure | Neither lifecycle event occurs; existing initialisation-only `ApplicationLoggingError` behaviour remains unchanged. |
 | Controlled failure after START | One eligible START, no COMPLETION, existing controlled CRITICAL event exactly once, unchanged exact stderr and result `1`. |
-| Unexpected failure after START | One eligible START, no COMPLETION, exact same exception object propagates; no Slice-8 diagnostic event or adapter/process contract change. |
+| Unexpected failure after START | One eligible START and no COMPLETION; direct bootstrap calls retain same-object propagation. Slice 9 now supplies the process-facing unexpected event and report; Slice-8 lifecycle behaviour remains unchanged. |
 | Repeated invocation | Only current-invocation owned-handler behaviour; no stale or duplicate lifecycle records. |
 | Same-named non-owned isolation | Non-owned handlers on the named logger receive no lifecycle records and remain untouched. |
 | Root/unrelated isolation | No lifecycle propagation/delivery to root or unrelated handlers; those handlers remain untouched. |
@@ -587,7 +589,7 @@ Recorded merged Slice-8 validation evidence:
 | Full pytest | 743 | 743 | 0 | 0 | 0 | 0 | 0 |
 | `pytest -W error` | 743 | 743 | 0 | 0 | 0 | 0 | 0 |
 
-Ruff passed. Current overall coverage is 95% across 1,381 statements with 64 missed.
+Ruff passed. Historical Slice-8 overall coverage was 95% across 1,381 statements with 64 missed.
 
 | Module | Statements | Missed | Coverage |
 |--------|------------|--------|----------|
@@ -598,28 +600,35 @@ Compared with the pre-Slice-8 baseline, full tests increased from 723 to 743 (+2
 1,370 to 1,381 (+11), missed statements remained 64 (+0) and coverage remained 95%. These measured
 results establish no known failures in the executed checks, not mathematical proof of defect freedom.
 They are merged implementation evidence; Ruff and pytest were not rerun for this documentation-only
-status sync. Summary, remaining logging, unexpected diagnostics/safety, integration/E2E, live validation,
+status sync. Summary, remaining logging, integration/E2E, live validation,
 Operational Readiness, unsettled
 Operational Recovery / DR scope/Gate-3 placement, API Section 6.1 reconciliation before Gate 3,
 Review Gate 3 and final Version-1.0 readiness remain future.
 
-**Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety — APPROVED CONTRACT — NOT YET IMPLEMENTED.**
+**Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety — IMPLEMENTED — APPROVED CONTRACT.**
 Architecture's
 [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
-section is authoritative for UE-D1–UE-D10. Those decisions remain Approved Baseline and govern
-Slice 9; implementation and its planned validation remain pending. Testing revision 2.31 is Approved Baseline.
+section is authoritative for UE-D1–UE-D10. Those decisions remain approved and are implemented.
+Testing revision 2.32 is Draft pending review and separate approval-only promotion.
 
-The following is required/planned validation, not implemented tests or executed evidence:
+Implementation provenance is PR #148 (commit `738fdc3`, merge `4549eee`). Contract provenance remains
+PR #144 (commit `2070425`, merge `4d80b58`) and approval PR #145 (commit `e3e190f`, merge `fa158d9`);
+allocation remains PR #146 (commit `720bb68`, merge `e332c69`) and allocation approval PR #147
+(commit `1174bcb`, merge `ea37478`). Production changes are confined to
+`src/azure_devops_backlog_generator/main.py`; implemented validation is in `tests/test_main.py` and
+`tests/test___main__.py`. Production `__main__.py` remains unchanged.
 
-| Planned boundary | Required observation |
+The following records implemented validation of the approved contract:
+
+| Implemented boundary | Verified observation |
 |------------------|----------------------|
-| Generic process fallback | An otherwise-unclassified `Exception` from the application is handled by `run_process()` after one application invocation; result is exactly `int` `1`. |
+| Generic process fallback | An otherwise-unclassified `Exception` from the application is handled by `run_process()` after exactly one `main()` invocation; result is exactly `int` `1`. |
 | Exact presentation | Stderr is exactly `Unexpected application error.\n`; stdout is empty, with no duplicate reporting. |
-| Diagnostic exclusion | Synthetic exception type/message/string/repr/args/cause/context, PAT, Authorization, paths, configuration, organisation/project, URLs, source/user content and request/response sentinels are absent from output and logfile content. No `exc_info`, traceback or stack data is emitted. |
+| Diagnostic exclusion | Synthetic exception type/message/string/repr/args/cause/context, PAT, Authorization, paths, configuration, organisation/project, URLs, titles, source/user content and request/response sentinels are absent from output and logfile content. No `exc_info`, traceback or stack data is emitted. |
 | Active runtime logging | Exactly one CRITICAL `Unexpected application error.` emission attempt uses only the current-invocation owned handler; a successful write produces one record at every supported configured threshold. |
-| Handler isolation | Root, unrelated and same-named non-owned handlers receive nothing; there is no fallback destination or duplicate event. |
+| Handler isolation and repeated invocation | Root, unrelated and same-named non-owned handlers receive nothing; only the current owned handler is used, stale handlers are replaced, and repeated invocations produce no duplicate event or fallback destination. |
 | Unexpected logfile emission failure | An ordinary `Exception` during the owned emission preserves the primary unexpected classification, fixed stderr and result `1` when stderr remains writable; no retry, fallback, replacement event, logging diagnostic/traceback or `ApplicationLoggingError` substitution occurs. |
-| Stderr boundary | Existing behaviour when stderr cannot be written remains outside any new recovery contract; no stderr retry or fallback is introduced. |
+| Stderr boundary | A stderr-delivery failure propagates unchanged; no suppression, retry or fallback is introduced. |
 | Pre-initialisation unexpected failure | No unexpected logfile event is attempted and no stale handler receives it; fixed stderr and result `1` remain the process report. |
 | Post-initialisation application failure | Eligible START may exist; COMPLETION is absent; the best-effort unexpected event precedes fixed stderr and result `1`. |
 | Direct lower-level calls | `main()`, `coordinate_application_bootstrap(...)` and `coordinate_application_run(...)` retain same-object unexpected-exception propagation without generic process conversion. |
@@ -631,20 +640,54 @@ The following is required/planned validation, not implemented tests or executed 
 | Native traceback suppression | An isolated subprocess reaching the real `run_process()` fallback through package execution returns OS status `1`, exact fixed stderr and empty stdout, without native traceback from the handled exception. |
 | Existing behaviour | Slice-6 D1–D5, stale-handler cleanup, configured logging, owned-handler isolation, seven controlled categories, Slice-8 exact INFO messages/filtering/best effort and sole package execution surface remain unchanged. |
 
-Planned subprocess evidence shall exercise the actual fallback, with isolated collaborators only where
-needed to induce failure without network access. Substituting `run_process()` itself does not prove its
+Implemented subprocess evidence exercises the actual fallback before and after logging initialisation,
+with isolated lower-level collaborators inducing failure without network access. Substituting `run_process()` itself does not prove its
 catch or traceback-suppression behaviour. Existing adapter-only unexpected-propagation tests describe
 their separate boundary; direct lower-level propagation remains intentional. No live Azure operation,
 real PAT or live environment is required for this capability's validation. Broader integration/E2E and
 live Services release validation remain separate and incomplete.
 
-The merged Slice-8 results above remain the current pre-Slice-9 implementation baseline: focused `tests/test_main.py`
-55/55, full pytest 743/743, `pytest -W error` 743/743, Ruff passed, 95% coverage across 1,381 statements
-with 64 missed; `main.py` 97/0/100% and `__main__.py` 3/0/100%. No future counts are specified.
-No tests were added or changed, and neither Ruff nor pytest was executed for this capability-allocation revision.
-Implementation and validation of final unexpected handling and secret safety remain pending; Slices 1–8
-remain implemented and approved. Gates 3 and 4 remain future, Version 1.0 remains pre-release, and no
-Operational Readiness or Recovery/DR acceptance criteria are added.
+Recorded merged Slice-9 implementation validation evidence:
+
+| Validation | Collected | Passed | Failed | Skipped | Warnings | Xfail | Xpass |
+|------------|-----------|--------|--------|---------|----------|-------|-------|
+| Combined focused `tests/test_main.py` and `tests/test___main__.py` | 84 | 84 | — | — | — | — | — |
+| Full pytest | 764 | 764 | 0 | 0 | 0 | 0 | 0 |
+| `pytest -W error` | 764 | 764 | 0 | 0 | 0 | 0 | 0 |
+
+The combined focused run comprises 73 tests in `tests/test_main.py` and 11 in `tests/test___main__.py`.
+Ruff passed. Overall coverage is 95% across 1,394 statements with 64 missed.
+
+| Module | Statements | Missed | Coverage |
+|--------|------------|--------|----------|
+| `src/azure_devops_backlog_generator/main.py` | 110 | 0 | 100% |
+| `src/azure_devops_backlog_generator/__main__.py` | 3 | 0 | 100% |
+
+| Measure | Pre-Slice-9 | Post-Slice-9 | Delta |
+|---------|-------------|--------------|-------|
+| Full-suite tests | 743 | 764 | +21 |
+| `tests/test_main.py` tests | 55 | 73 | +18 |
+| Statements | 1,381 | 1,394 | +13 |
+| Missed statements | 64 | 64 | +0 |
+| Overall coverage | 95% | 95% | Unchanged |
+| `main.py` statements / missed / coverage | 97 / 0 / 100% | 110 / 0 / 100% | +13 statements; +0 missed |
+| `__main__.py` statements / missed / coverage | 3 / 0 / 100% | 3 / 0 / 100% | Unchanged |
+
+These are merged implementation results, not new test runs for this documentation-only status sync.
+No tests were added or changed, and neither Ruff nor pytest was executed for this revision. No live
+Azure DevOps operations occurred. Slice-6, Slice-8 and package import/adapter regressions remain covered.
+The previous native traceback limitation is resolved only on the supported handled-Exception
+`run_process()`/package path. Direct lower-level callers still receive exceptions; no generic redaction
+framework, sanitised traceback or debug diagnostic feature was added.
+
+Slices 1–9 are implemented under approved contracts; wider Application/Run remains incomplete.
+No Slice 10 has been allocated; future capability ordering beyond Slice 9 remains undefined.
+The execution summary remains required, undefined and not implemented; no result/count model exists.
+Broader Architecture Section-12 logging and HTTP/API reporting contracts remain separate work.
+API Section 6.1 status reconciliation remains separate documentation work required before Gate 3.
+Broader integration/E2E and live validation remain incomplete. Operational Readiness definition/evidence
+remains future, with no complete normative Gate-3 checklist; Operational Recovery / DR scope and final
+Gate-3 placement remain future/unsettled. Gates 3 and 4 remain future and Version 1.0 remains pre-release.
 
 Work Item Create Payload validation shall additionally cover:
 

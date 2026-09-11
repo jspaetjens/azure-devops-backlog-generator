@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.41
+**Version:** 2.42
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-11
 
@@ -75,6 +75,7 @@
 | 2.39 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 Process-Neutral Application Lifecycle File Logging status. |
 | 2.40 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract. |
 | 2.41 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved Final Unexpected-Error Handling and Diagnostic Safety contract as Application/Run Slice 9 without changing UE-D1–UE-D10. |
+| 2.42 | 2026-09-11 | Draft | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 Final Unexpected-Error Handling and Diagnostic Safety status. |
 
 ---
 
@@ -374,7 +375,7 @@ Generator/domain classes `SourceIdentityValidationError`, `ExistingWorkItemResol
 `AzureDevOpsRestClientError` hierarchy. Slice 4 introduces no shared exception base and changes no existing
 exception inheritance.
 
-An exception outside that explicit set, including arbitrary `ValueError`, `TypeError`, untranslated `OSError`
+At the Slice-4 baseline, an exception outside that explicit set, including arbitrary `ValueError`, `TypeError`, untranslated `OSError`
 or another arbitrary `Exception` subclass, propagates unchanged. Slice 4 does not catch `Exception`
 generically, translate an unexpected exception to `1`, retry, fall back or invoke `main()` a second time.
 
@@ -382,8 +383,8 @@ Slice 4 maps callable outcomes only. It produces no stdout or stderr output, use
 formatting, sanitisation or traceback policy; does not initialise or call logging; does not raise or call
 `SystemExit` or `sys.exit`; does not add a direct-execution guard, `__main__.py`, `[project.scripts]`,
 console-script registration or executable packaging; and does not implement an execution summary. Generic direct
-rendering of every current exception message is not yet approved as sufficiently secret-safe. Future reporting
-shall define an explicit safe rendering policy.
+rendering of arbitrary exception messages remains unapproved. Implemented Slice 9 supplies the approved
+fixed-message policy and supersedes Slice 4's unexpected propagation only at `run_process()`.
 
 `main()` remains responsible only for acquiring `sys.argv[1:]` and delegating to
 `coordinate_application_bootstrap(...)`; it does not map outcomes or terminate the process. CLI/process-specific
@@ -394,8 +395,8 @@ stdout/stderr behaviour or CLI-specific error formatting. This preserves archite
 does not approve a GUI feature, implementation, framework or Version 1.0 scope.
 
 The wider Application/Run phase remains incomplete. Slices 5–7 implement controlled-failure reporting,
-logging and executable termination as described below. Remaining logging beyond Slice 8, execution-summary
-content and presentation, final unexpected-error handling and diagnostic safety, broader integration/E2E,
+logging and executable termination as described below; Slice 9 implements final unexpected handling and
+bounded diagnostic safety. Broader logging, execution-summary content and presentation, broader integration/E2E,
 Operational Readiness, Operational Recovery / DR, Review Gate 3 and final release readiness remain future.
 Console-script packaging remains conditional on separate approval.
 
@@ -429,11 +430,11 @@ REST-client subclasses retain their lower-layer semantics. Slice 5 introduces no
 no lower-layer or REST contract. The private renderer selects and writes fixed messages by approved exception type
 only; no public reporting API or application-wide abstraction exists.
 
-Successful execution remains silent: after one successful `main()` invocation, `run_process()` returns the exact
+At the Slice-5 baseline, successful execution remains silent: after one successful `main()` invocation, `run_process()` returns the exact
 integer `0` with no `stdout`, no `stderr`, no logging, no retry, no fallback and no process termination. An
 unexpected exception remains outside the approved controlled set and propagates as the exact same object, unchanged
 and without Slice-5 output, generic `Exception` catching, conversion to `1`, logging, retry, fallback or second
-invocation. Slice 5 does not implement unexpected-exception reporting.
+invocation. Slice 5 does not implement unexpected-exception reporting; implemented Slice 9 now owns that process-facing fallback.
 
 `main() -> None` remains responsible only for `sys.argv`, `sys.argv[1:]` and one
 `coordinate_application_bootstrap(...)` invocation; it shall not catch failures, render `stderr`, log or terminate.
@@ -475,7 +476,7 @@ failure events shall use `CRITICAL`, so they remain visible for every permitted 
 expresses process-termination severity for this slice only and does not alter lower-layer exception semantics.
 
 The process-facing `run_process() -> int` remains the owner of controlled classification, category-only stderr
-rendering, integer outcome mapping and unexpected-exception propagation. For each controlled failure that reaches it
+rendering and integer outcome mapping. Slice 9 adds its generic unexpected fallback. For each controlled failure that reaches it
 after logging has initialised for the current invocation, it makes exactly one application-owned `CRITICAL`
 controlled-failure event-emission attempt. It creates a `LogRecord` using the named application logger and dispatches
 it directly only to `_ACTIVE_LOG_HANDLER`; non-owned handlers attached to that same named logger receive no controlled
@@ -516,9 +517,9 @@ later invocation. Partial initialisation is cleaned up. The application-owned ha
 logging-internal error diagnostics for secondary write failures; it does not change `logging.raiseExceptions` or
 globally reconfigure logging.
 
-Successful execution remains silent and produces no Slice-6 success or lifecycle event. An unexpected exception
-continues to propagate as the exact same object, without a generic `Exception` catch, user-facing message,
-traceback logging or controlled-failure event. Slice 6 does not add an execution summary, `sys.exit`, `SystemExit`,
+Successful execution produces no Slice-6 success or lifecycle event. Slice 6 originally preserved same-object
+unexpected propagation without reporting; implemented Slice 9 supersedes that process-facing behaviour
+while direct lower-level propagation remains unchanged. Slice 6 does not add an execution summary, `sys.exit`, `SystemExit`,
 direct-execution guard, `__main__.py`, console-script packaging, subprocess contract, new CLI option, retry,
 fallback, rollback, compensation or GUI implementation. File logging is operational infrastructure, not a
 presentation adapter; stdout, stderr, process outcomes and termination remain outside the presentation-neutral
@@ -530,7 +531,7 @@ shared Application Core so a future GUI may reuse the typed application/core bou
 
 Application/Run Slice 7 is implemented in PR #136 (implementation commit `468d98d`, merge `009ef71`),
 following the contract in PR #134 and approval in PR #135. S7-D1 and S7-D2 remain approved owner decisions.
-Application/Run Slices 1–8 are implemented; the wider Application/Run phase remains incomplete.
+Application/Run Slices 1–9 are implemented; the wider Application/Run phase remains incomplete.
 
 **S7-D1 — Executable invocation surface.** Slice 7 implements exactly one executable package surface:
 
@@ -603,14 +604,12 @@ introduce a generic `Exception` catch, classify it as controlled, render a fixed
 sanitise or rewrite it, log a traceback, or manufacture a result. No integer has returned, so the adapter
 does not construct controlled `SystemExit(0)` or `SystemExit(1)`.
 
-Application-generated Slice-7 output for unexpected exceptions is absent. Interpreter-generated output
-is a separate boundary: real Python execution may terminate nonzero and render its native traceback to
-stderr. Slice 7 does not promise empty whole-process stderr, an exact unexpected numeric exit code beyond
-nonzero, or exact native traceback text, formatting, paths or line numbers. Arbitrary native unexpected
-traceback output is not guaranteed category-only or secret-safe. This remains an interim pre-Version-1.0
-limitation, not final unexpected-error handling or an approved final diagnostic solution. Final controlled
-unexpected-error handling, user-facing reporting and diagnostic/traceback and secret-safety policy remain
-mandatory future work before final Version 1.0 readiness; Slice 7 adds no sanitisation policy.
+The adapter's same-object propagation remains unchanged if `run_process()` itself raises. Slice 9 now
+handles otherwise-unclassified application `Exception` instances inside `run_process()`, returning `1`
+with fixed stderr and no native traceback on the supported handled-Exception package path. This resolves
+that path's interim traceback limitation. Direct lower-level calls and adapter-only tests substituting
+`run_process()` retain their separate propagation boundary; arbitrary Python invocation paths have no
+traceback-suppression guarantee. Slice 7 adds no sanitisation policy.
 
 Existing setuptools src-layout/package discovery includes `__main__.py`. Slice 7 changes no packaging
 metadata, dependency or package version and adds no `[project.scripts]`, console script, installed launcher,
@@ -643,9 +642,9 @@ invocation without establishing readiness. Version 1.0 remains pre-release.
 ### 7.1.8 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging
 
 **IMPLEMENTED.** Application/Run Slice 8 was merged in PR #141 (implementation commit `378e2b1`,
-merge `8560a89`), following contract PR #139 and approval PR #140. Slices 1–8 are implemented.
+merge `8560a89`), following contract PR #139 and approval PR #140. Slices 1–9 are implemented.
 S8-D1, S8-D2 and S8-D3 below remain the approved, implemented owner decisions. The Slice-8 status-sync
-revision 2.39 is Approved Baseline; revision 2.41 is Approved Baseline.
+revision 2.39 is Approved Baseline; revision 2.42 is Draft pending review and separate approval-only promotion.
 
 **S8-D1 — Lifecycle boundary and exact events.** Slice 8 shall add exactly two fixed-message lifecycle
 events at the configured application-run boundary:
@@ -714,7 +713,7 @@ produce duplicate lifecycle records.
 | Configuration load/validation fails | No START, COMPLETION or lifecycle logfile attempt. | Existing `ConfigurationError` process behaviour; no fallback logger. |
 | Runtime logging initialisation fails | No START or COMPLETION. | Existing initialisation-only `ApplicationLoggingError` behaviour; no fallback. |
 | Controlled application failure after START | START may have been written if INFO was eligible; COMPLETION is absent. | Exactly the existing controlled CRITICAL attempt, fixed category-only stderr line, result `1` and adapter `SystemExit(1)`; no duplicate controlled event. |
-| Unexpected application failure after START | START may have been written if INFO was eligible; COMPLETION is absent. | The exact same exception object propagates, with no generic catch, controlled conversion, generic stderr, application-generated traceback logging, sanitisation or controlled `SystemExit` construction. |
+| Unexpected application failure after START | START may have been written if INFO was eligible; COMPLETION is absent. | The exact same exception object propagates through bootstrap to its caller. At `run_process()`, implemented Slice 9 adds the best-effort CRITICAL unexpected event, fixed stderr and result `1`; the unchanged adapter produces `SystemExit(1)`. |
 
 All Slice-6 D1–D5 semantics in Section 7.1.6 remain unchanged: standard-library logging only, logger
 `azure_devops_backlog_generator`, file
@@ -737,10 +736,9 @@ executable adapter and exclusive `SystemExit` owner; the only supported executab
 `[project.scripts]`, console script, installed launcher, `main.py` execution guard or second surface is added.
 
 Successful stdout/stderr remain empty; controlled failures retain empty stdout and exactly the existing
-category-only stderr line. Slice 8 adds no user-facing output. For unexpected failures, Slice 8 generates
-no stdout/stderr or diagnostic event; real interpreter execution may still emit a native traceback.
-Arbitrary native unexpected traceback output remains not guaranteed secret-safe. Final unexpected
-handling and diagnostic/traceback safety remain future Version-1.0 work.
+category-only stderr line. Slice 8 adds no user-facing output or unexpected diagnostic event. Slice 9
+now supplies the fixed unexpected report and suppresses native traceback output on the supported
+handled-Exception `run_process()`/package path. Direct lower-level unexpected propagation remains unchanged.
 
 The two lifecycle message strings shall contain no PAT, Authorization value, configuration value, path,
 filename, document/work-item title, source identity, URL, Azure DevOps organisation/project, exception
@@ -768,7 +766,7 @@ No unexpected-exception catch, generic stderr/category, exception/traceback logg
 diagnostic allowlist/model, incident ID or correlation ID is introduced.
 
 Wider Application/Run remains incomplete and Version 1.0 remains pre-release. Remaining summary/logging,
-final unexpected handling, diagnostic safety, broader integration/E2E, live Azure DevOps Services validation,
+broader integration/E2E, live Azure DevOps Services validation,
 Operational Readiness checklist/evidence, Review Gate 3 and final release readiness remain future.
 No complete normative Gate-3 acceptance checklist has been established; Slice 8 contributes operational
 execution evidence without completing Gate-3 prerequisites. Known pre-existing API Section 6.1 status
@@ -780,14 +778,22 @@ later-run recovery is not equivalent to Operational Recovery / DR. No new recove
 
 ### Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety
 
-**APPROVED CONTRACT — NOT YET IMPLEMENTED.** UE-D1–UE-D10 below remain owner-approved
-Approved Baseline decisions governing Slice 9. Architecture revision 2.41 is Approved Baseline. Application/Run Slices 1–8 remain implemented and approved.
-The owner has allocated this capability as Application/Run Slice 9; implementation remains pending.
+**IMPLEMENTED — APPROVED CONTRACT.** UE-D1–UE-D10 below remain owner-approved and are implemented.
+Application/Run Slices 1–9 are implemented. Architecture revision 2.42 is Draft pending review and
+separate approval-only promotion; the approved contract remains authoritative and unchanged.
+
+Slice 9 was implemented in PR #148 (implementation commit `738fdc3`, merge `4549eee`). Contract
+provenance remains PR #144 (commit `2070425`, merge `4d80b58`) and approval PR #145 (commit `e3e190f`,
+merge `fa158d9`); allocation remains PR #146 (commit `720bb68`, merge `e332c69`) and allocation approval
+PR #147 (commit `1174bcb`, merge `ea37478`). Production changes are confined to
+`src/azure_devops_backlog_generator/main.py`; validation is in `tests/test_main.py` and
+`tests/test___main__.py`. Production `__main__.py` remains unchanged.
 
 This section is authoritative for the bounded final process-facing unexpected-error contract.
-The preceding slice sections describe implemented behaviour, including current same-object unexpected
-propagation through `run_process()` and the interim native-traceback limitation. This contract defines
-their future process-facing replacement only; it does not claim that replacement or its safety is implemented.
+The merged implementation replaces the earlier process-facing unexpected propagation and native-traceback
+limitation only on the supported handled-Exception `run_process()`/package path. Direct lower-level
+same-object exception propagation remains unchanged. No Slice 10 has been allocated; future capability
+ordering beyond Slice 9 remains undefined.
 
 **UE-D1 — Final catch boundary.** Only `run_process()` shall introduce the generic process-facing
 catch for otherwise-unclassified `Exception` instances. It shall catch `Exception`, not `BaseException`,
@@ -825,8 +831,8 @@ be the fixed stderr line, integer result `1` and, when runtime logging is active
 CRITICAL event in UE-D4. The existing adapter then produces `SystemExit(1)`.
 This contract replaces the interim native-traceback behaviour only for the supported process-facing
 handled-Exception path. Direct lower-level callers still receive exceptions under UE-D1; no guarantee
-of traceback suppression is made for arbitrary Python invocation paths. Implementation and validation
-are still required before claiming that the current exposure is resolved.
+of traceback suppression is made for arbitrary Python invocation paths. Merged implementation and
+validation resolve the previous exposure for the supported handled-Exception path only.
 
 **UE-D6 — Diagnostic content and secret safety.** For the final Version-1.0 process-facing generic
 unexpected fallback, the fixed category message `Unexpected application error.` is the approved safe
@@ -840,8 +846,9 @@ or request bodies, URLs, source identities, titles, user data or credentials, in
 Authorization. The existing logfile timestamp, severity and logger-name fields remain unchanged;
 the message contains no dynamic exception diagnostics. This capability defines no redaction algorithm,
 sanitised traceback, debug-mode exception detail, diagnostic configuration option or second diagnostic channel.
-It intends to prevent arbitrary unexpected exception content and native traceback data from being
-emitted by the supported process-facing handled-Exception path; this is not yet an implemented or proven guarantee.
+The implemented fallback excludes arbitrary unexpected exception content and native traceback data
+from the supported process-facing handled-Exception path; Testing Section 8 records synthetic
+secret-safety and real package-fallback subprocess evidence for this bounded behaviour.
 
 **UE-D7 — Unexpected log-event write failure.** The unexpected application failure is primary.
 If its owned logfile emission raises an ordinary `Exception`, the primary unexpected classification
@@ -891,7 +898,7 @@ variable is introduced. The sole approved executable surface remains
 run → COMPLETION on normal return → process result → adapter `SystemExit(result)` structure remains.
 Only the `run_process()` unexpected-failure boundary gains generic process conversion.
 
-| Condition | Required future process-facing behaviour |
+| Condition | Implemented process-facing behaviour |
 |-----------|-----------------------------------------|
 | Controlled configuration failure | `Configuration error.` plus newline; result `1`; no pre-initialisation file event or generic reclassification. |
 | Controlled logging-initialisation failure | Initialisation-only `ApplicationLoggingError`; `Application logging error.` plus newline; result `1`; no unexpected logfile event or generic reclassification. |
@@ -910,7 +917,7 @@ existing filename and formatter/date format, configured thresholds, `propagate=F
 isolation, stale-handler cleanup, controlled CRITICAL events, initialisation-only `ApplicationLoggingError`
 and existing secondary-write precedence. No global logging setting or existing controlled message changes.
 
-Broader Section-12 logging and the required but undefined execution summary remain separate work.
+Broader Section-12 logging remains incomplete and separate. The execution summary remains required, undefined and not implemented; no result/count model exists.
 The unexpected message is not a summary. No documentation-processing or Azure communication lifecycle
 events, work-item creation events, warning taxonomy, richer authentication/authorisation or rate-limit
 reporting, summary logging, timings or correlation IDs are defined. API Section 6.1 status reconciliation
@@ -921,7 +928,15 @@ incomplete and Version 1.0 remains pre-release. This capability is required befo
 readiness but does not establish Operational Readiness, a Gate-3 checklist, integration/E2E completion,
 live Azure validation or RC readiness. Operational Recovery / DR scope and Gate-3 placement remain
 future/unsettled; no recovery requirements are defined. UE-D1–UE-D10 leave no unresolved owner decision
-for this bounded Slice-9 capability; revision 2.41 is Approved Baseline; the contract remains approved and implementation remains pending.
+for this bounded Slice-9 capability; implementation is complete under the approved contract. Revision 2.42
+remains Draft pending review and separate approval-only promotion.
+
+Testing Section 8 records merged Slice-9 evidence: 84/84 combined focused application/package tests
+(73 in `tests/test_main.py`, 11 in `tests/test___main__.py`), Ruff passed, 764/764 full pytest and
+764/764 `pytest -W error`, each full run with zero failed, skipped, warnings, xfail or xpass. Coverage
+is 95% across 1,394 statements with 64 missed; `main.py` is 110/0/100% and `__main__.py` is 3/0/100%.
+No live Azure DevOps operations occurred. These are recorded implementation results, not new runs for
+this documentation status sync.
 
 ---
 
@@ -1155,7 +1170,7 @@ For the final Version-1.0 process-facing generic unexpected fallback, the owner-
 [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
 contract defines the fixed safe category message as the sufficient operational diagnostic. Dynamic
 exception detail and tracebacks are intentionally excluded without a safe redaction contract.
-This bounded policy is not yet implemented and does not change direct lower-level exception propagation.
+This bounded policy is implemented for the supported handled-Exception `run_process()`/package path and does not change direct lower-level exception propagation.
 
 ---
 
