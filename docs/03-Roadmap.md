@@ -6,7 +6,7 @@
 
 **Version:** 1.36
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-11
 
@@ -59,7 +59,7 @@
 | 1.33 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging capability and remaining readiness work. |
 | 1.34 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining readiness work. |
 | 1.35 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Recorded the owner-approved final unexpected-error handling and diagnostic-safety capability and remaining readiness work. |
-| 1.36 | 2026-09-11 | Draft | Jack Spaetjens | Allocated Final Unexpected-Error Handling and Diagnostic Safety as Application/Run Slice 9 and preserved remaining capability ordering as undefined. |
+| 1.36 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated Final Unexpected-Error Handling and Diagnostic Safety as Application/Run Slice 9 and preserved remaining capability ordering as undefined. |
 
 ---
 
@@ -287,8 +287,7 @@ COMPLETION follows only normal application return. Delivery remains current-owne
 
 Slices 1–8 remain implemented and approved. Slice 9 is allocated with an approved contract and is
 not yet implemented. No one-slice-per-capability allocation or future capability order beyond Slice 9
-is defined. The Slice-8 status-sync revision 1.34 is Approved Baseline; revision 1.36 is Draft
-pending review and separate approval-only promotion.
+is defined. The Slice-8 status-sync revision 1.34 is Approved Baseline; revision 1.36 is Approved Baseline.
 
 Slice 8 covers only configured-run START and successful COMPLETION. Existing controlled-failure logging
 remains Slice 6; other broader logging requirements remain future where not already implemented.
@@ -314,8 +313,7 @@ Operational Recovery / DR. No new recovery requirement is defined.
 The technical authority is Architecture's
 [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
 contract, UE-D1–UE-D10. These decisions remain Approved Baseline and govern the owner-approved
-Slice-9 allocation; implementation remains pending. Roadmap revision 1.36 is Draft pending review
-and separate approval-only promotion. Future capability ordering beyond Slice 9 remains undefined.
+Slice-9 allocation; implementation remains pending. Roadmap revision 1.36 is Approved Baseline. Future capability ordering beyond Slice 9 remains undefined.
 
 The bounded capability shall add only the final generic `Exception` fallback at `run_process()`, after
 the existing seven controlled categories. It shall return integer `1`, emit exactly
