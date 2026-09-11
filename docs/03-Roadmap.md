@@ -4,11 +4,11 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.34
+**Version:** 1.35
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-08
+**Last Updated:** 2026-09-11
 
 **Target Release:** v1.0.0
 
@@ -58,6 +58,7 @@
 | 1.32 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slices 1–7 status and remaining readiness work. |
 | 1.33 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Recorded the approved but unimplemented Application/Run Slice 8 lifecycle logging capability and remaining readiness work. |
 | 1.34 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging status and remaining readiness work. |
+| 1.35 | 2026-09-11 | Draft | Jack Spaetjens | Recorded the owner-approved final unexpected-error handling and diagnostic-safety capability and remaining readiness work. |
 
 ---
 
@@ -283,8 +284,8 @@ START after configuration validation/logging initialisation and immediately befo
 COMPLETION follows only normal application return. Delivery remains current-owned-handler-only.
 
 Slices 1–8 are implemented; the Slice-8 contract remains approved. No Slice 9,
-one-slice-per-capability allocation or future capability order is defined. This status-sync document
-revision is Approved Baseline.
+one-slice-per-capability allocation or future capability order is defined. The Slice-8 status-sync
+revision 1.34 is Approved Baseline; revision 1.35 remains Draft pending review and separate approval-only promotion.
 
 Slice 8 covers only configured-run START and successful COMPLETION. Existing controlled-failure logging
 remains Slice 6; other broader logging requirements remain future where not already implemented.
@@ -303,6 +304,36 @@ established, and Slice 8 does not complete its prerequisites. API Section 6.1 re
 separate future documentation work required before Gate 3. Operational Recovery / DR scope and exact
 Gate-3 placement remain future/unsettled; Generator later-run recovery does not settle them or constitute
 Operational Recovery / DR. No new recovery requirement is defined.
+
+---
+
+**Final Unexpected-Error Handling and Diagnostic Safety — OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.**
+The technical authority is Architecture's
+[Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#final-unexpected-error-handling-and-diagnostic-safety)
+contract, UE-D1–UE-D10. The owner decisions are approved; this document revision remains Draft pending
+review and separate approval-only promotion. No numbered Application/Run implementation slice is allocated.
+Later allocation may follow contract review and document approval; no ordering of other capabilities is established.
+
+The bounded capability shall add only the final generic `Exception` fallback at `run_process()`, after
+the existing seven controlled categories. It shall return integer `1`, emit exactly
+`Unexpected application error.` plus newline to stderr, leave stdout empty, and attempt one fixed
+CRITICAL event only through an already-active current-invocation owned runtime handler. Dynamic
+exception detail and native traceback output shall be excluded from the supported handled-Exception
+process path. Unexpected logfile emission is best effort; no new stderr-delivery recovery is defined.
+Direct lower-level same-object propagation and process-control exceptions outside `Exception` remain preserved.
+
+Slices 1–8 remain implemented and approved. Their logging/lifecycle contracts, seven controlled categories,
+package adapter and Generator/core responsibilities remain unchanged. Current native traceback exposure
+remains an interim implementation limitation until this contract is implemented and validated; its final
+process-facing policy is now owner-approved rather than an unresolved capability decision.
+
+Wider Application/Run remains incomplete and Version 1.0 remains pre-release. Separate remaining work
+includes broader logging and API reporting contracts; execution-summary content/presentation and only
+conditionally required result aggregation/counts; API Section 6.1 status reconciliation before Gate 3;
+broader integration/E2E; live Azure DevOps Services validation; Operational Readiness definition/evidence;
+Operational Recovery / DR; Review Gate 3; Review Gate 4; and final release readiness. No Gate-3 checklist,
+Recovery/DR scope or final Gate-3 placement is defined here. Gates 1 and 2 remain PASS; Gates 3 and 4
+remain future. This capability is required before final Version-1.0 readiness but completes none of those gates.
 
 ---
 

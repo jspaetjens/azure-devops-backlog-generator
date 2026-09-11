@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.29
+**Version:** 2.30
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-08
+**Last Updated:** 2026-09-11
 
 **Target Release:** v1.0.0
 
@@ -63,6 +63,7 @@
 | 2.27 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 7 test coverage and measured validation evidence. |
 | 2.28 | 2026-09-06 | Approved Baseline | Jack Spaetjens | Defined planned Application/Run Slice 8 lifecycle logging validation and preserved pre-Slice-8 evidence. |
 | 2.29 | 2026-09-08 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 8 lifecycle logging coverage and measured validation evidence. |
+| 2.30 | 2026-09-11 | Draft | Jack Spaetjens | Defined required/planned validation for final unexpected-error handling and diagnostic safety while preserving current evidence. |
 
 ---
 
@@ -527,7 +528,8 @@ Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness c
 **Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging: IMPLEMENTED.**
 The implementation was merged in PR #141 (implementation commit `378e2b1`, merge `8560a89`), following
 contract PR #139 and approval PR #140. Architecture Section 7.1.8 remains authoritative for implemented,
-approved S8-D1–D3. This status-sync document revision is Approved Baseline; the implementation is complete within its approved scope.
+approved S8-D1–D3. The Slice-8 status-sync revision 2.29 is Approved Baseline; the implementation is complete within its approved scope.
+Revision 2.30 remains Draft pending review and separate approval-only promotion.
 
 The recorded Slice-7 evidence above is the PRE-SLICE-8 implementation quality baseline: focused 8/8,
 full pytest 723/723 and `pytest -W error` 723/723, each with zero failed, skipped, warnings, xfail
@@ -599,6 +601,49 @@ status sync. Summary, remaining logging, unexpected diagnostics/safety, integrat
 Operational Readiness, unsettled
 Operational Recovery / DR scope/Gate-3 placement, API Section 6.1 reconciliation before Gate 3,
 Review Gate 3 and final Version-1.0 readiness remain future.
+
+**Final Unexpected-Error Handling and Diagnostic Safety — OWNER-APPROVED CONTRACT — NOT YET IMPLEMENTED.**
+Architecture's
+[Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#final-unexpected-error-handling-and-diagnostic-safety)
+section is authoritative for UE-D1–UE-D10. Those owner decisions are approved; this document revision
+remains Draft pending review and separate approval-only promotion. No numbered implementation slice is allocated.
+
+The following is required/planned validation, not implemented tests or executed evidence:
+
+| Planned boundary | Required observation |
+|------------------|----------------------|
+| Generic process fallback | An otherwise-unclassified `Exception` from the application is handled by `run_process()` after one application invocation; result is exactly `int` `1`. |
+| Exact presentation | Stderr is exactly `Unexpected application error.\n`; stdout is empty, with no duplicate reporting. |
+| Diagnostic exclusion | Synthetic exception type/message/string/repr/args/cause/context, PAT, Authorization, paths, configuration, organisation/project, URLs, source/user content and request/response sentinels are absent from output and logfile content. No `exc_info`, traceback or stack data is emitted. |
+| Active runtime logging | Exactly one CRITICAL `Unexpected application error.` emission attempt uses only the current-invocation owned handler; a successful write produces one record at every supported configured threshold. |
+| Handler isolation | Root, unrelated and same-named non-owned handlers receive nothing; there is no fallback destination or duplicate event. |
+| Unexpected logfile emission failure | An ordinary `Exception` during the owned emission preserves the primary unexpected classification, fixed stderr and result `1` when stderr remains writable; no retry, fallback, replacement event, logging diagnostic/traceback or `ApplicationLoggingError` substitution occurs. |
+| Stderr boundary | Existing behaviour when stderr cannot be written remains outside any new recovery contract; no stderr retry or fallback is introduced. |
+| Pre-initialisation unexpected failure | No unexpected logfile event is attempted and no stale handler receives it; fixed stderr and result `1` remain the process report. |
+| Post-initialisation application failure | Eligible START may exist; COMPLETION is absent; the best-effort unexpected event precedes fixed stderr and result `1`. |
+| Direct lower-level calls | `main()`, `coordinate_application_bootstrap(...)` and `coordinate_application_run(...)` retain same-object unexpected-exception propagation without generic process conversion. |
+| Controlled precedence | All seven controlled categories retain their exact existing messages, result `1` and logging contracts; the generic fallback does not absorb them or become an eighth category. |
+| Configuration failure | `ConfigurationError` retains `Configuration error.\n`, result `1` and no pre-initialisation file event. |
+| Logger initialisation failure | Initialisation-only `ApplicationLoggingError` retains `Application logging error.\n`, result `1` and no unexpected logfile event. |
+| Process-control exceptions | `KeyboardInterrupt`, `SystemExit` and `GeneratorExit` propagate unchanged; the generic fallback and unexpected-event best-effort handling do not catch `BaseException` subclasses outside `Exception`. |
+| Package composition | The existing adapter maps the handled unexpected result to `SystemExit(1)` without its own catch, diagnostic output or duplicate reporting. |
+| Native traceback suppression | An isolated subprocess reaching the real `run_process()` fallback through package execution returns OS status `1`, exact fixed stderr and empty stdout, without native traceback from the handled exception. |
+| Existing behaviour | Slice-6 D1–D5, stale-handler cleanup, configured logging, owned-handler isolation, seven controlled categories, Slice-8 exact INFO messages/filtering/best effort and sole package execution surface remain unchanged. |
+
+Planned subprocess evidence shall exercise the actual fallback, with isolated collaborators only where
+needed to induce failure without network access. Substituting `run_process()` itself does not prove its
+catch or traceback-suppression behaviour. Existing adapter-only unexpected-propagation tests describe
+their separate boundary; direct lower-level propagation remains intentional. No live Azure operation,
+real PAT or live environment is required for this capability's validation. Broader integration/E2E and
+live Services release validation remain separate and incomplete.
+
+The merged Slice-8 results above remain the current pre-capability baseline: focused `tests/test_main.py`
+55/55, full pytest 743/743, `pytest -W error` 743/743, Ruff passed, 95% coverage across 1,381 statements
+with 64 missed; `main.py` 97/0/100% and `__main__.py` 3/0/100%. No future counts are specified.
+No tests were added or changed, and neither Ruff nor pytest was executed for this contract-definition revision.
+Implementation and validation of final unexpected handling and secret safety remain pending; Slices 1–8
+remain implemented and approved. Gates 3 and 4 remain future, Version 1.0 remains pre-release, and no
+Operational Readiness or Recovery/DR acceptance criteria are added.
 
 Work Item Create Payload validation shall additionally cover:
 
