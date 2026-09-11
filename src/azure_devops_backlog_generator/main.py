@@ -145,8 +145,32 @@ def _emit_lifecycle_event(message: str) -> None:
         pass
 
 
+def _emit_unexpected_failure() -> None:
+    """Attempt one owned unexpected-failure event without replacing the failure."""
+    try:
+        handler = _ACTIVE_LOG_HANDLER
+        if (
+            handler is None
+            or not _LOGGER.isEnabledFor(logging.CRITICAL)
+            or handler.level > logging.CRITICAL
+        ):
+            return
+        record = _LOGGER.makeRecord(
+            _LOGGER.name,
+            logging.CRITICAL,
+            "",
+            0,
+            "Unexpected application error.",
+            (),
+            None,
+        )
+        handler.handle(record)
+    except Exception:
+        pass
+
+
 def run_process() -> int:
-    """Run the application and map controlled failures to a process outcome."""
+    """Run the application and map controlled and unexpected failures to an outcome."""
     try:
         main()
     except (
@@ -161,6 +185,10 @@ def run_process() -> int:
         message = _controlled_failure_message(error)
         _emit_controlled_failure(message)
         _render_controlled_failure(message)
+        return 1
+    except Exception:
+        _emit_unexpected_failure()
+        print("Unexpected application error.", file=sys.stderr)
         return 1
     return 0
 
