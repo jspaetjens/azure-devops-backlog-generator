@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.33
+**Version:** 2.34
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-12
 
@@ -16,9 +16,15 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** Revision 2.33 proposes the Gate-3 acceptance framework for owner review.
-References below to revision 2.32 as Approved Baseline identify the preceding implementation
-baseline, not approval of this Draft. Existing slice contracts and recorded results remain unchanged.
+**Revision scope:** This Draft records owner-approved G3-SUM-D1 to G3-SUM-D9.
+The execution-summary behavioural decisions are approved; their implementation and validation
+remain pending. The approved starting baseline is main at `cff3397`. Historical slice contracts,
+`None` returns, summary exclusions and recorded test results below describe their original
+implementation boundaries; they do not override the current summary contract in
+[Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
+Historical references to pending API Section 6.1 status reconciliation describe the earlier
+baseline; this Draft reconciles that status only. HTTP reporting decisions remain separate.
+Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 10 is allocated.
 
 ---
 
@@ -71,6 +77,7 @@ baseline, not approval of this Draft. Existing slice contracts and recorded resu
 | 2.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved planned validation contract to Application/Run Slice 9 without changing validation requirements or evidence. |
 | 2.32 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Slice-9 validation coverage and measured quality evidence. |
 | 2.33 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 integration, live-validation allocation, evidence recording and findings criteria. |
+| 2.34 | 2026-09-12 | Draft | Jack Spaetjens | Defined prospective validation for the owner-approved execution-summary contract while preserving historical implementation evidence. |
 
 ---
 
@@ -94,6 +101,7 @@ baseline, not approval of this Draft. Existing slice contracts and recorded resu
 - [8. Validation Strategy](#8-validation-strategy)
 - [9. Acceptance Criteria](#9-acceptance-criteria)
   - [9.1 Review Gate 3 evidence requirements](#91-review-gate-3-evidence-requirements)
+  - [9.2 Execution-summary validation](#92-execution-summary-validation)
 - [10. Defect Management](#10-defect-management)
 - [11. Traceability](#11-traceability)
 - [12. Approval](#12-approval)
@@ -687,9 +695,11 @@ framework, sanitised traceback or debug diagnostic feature was added.
 
 Slices 1–9 are implemented under approved contracts; wider Application/Run remains incomplete.
 No Slice 10 has been allocated; future capability ordering beyond Slice 9 remains undefined.
-The execution summary remains required, undefined and not implemented; no result/count model exists.
+The execution-summary behavioural contract is owner-approved in Architecture Section 13.4.
+Its implementation and validation remain pending; Section 9.2 defines prospective coverage.
+The preceding Slice-9 results remain historical and do not validate the new count returns or SUMMARY.
 Broader Architecture Section-12 logging and HTTP/API reporting contracts remain separate work.
-API Section 6.1 status reconciliation remains separate documentation work required before Gate 3.
+API Section 6.1 implementation status is reconciled in this Draft; HTTP reporting decisions remain separate.
 Broader integration/E2E and live validation remain incomplete. Operational Readiness definition/evidence
 remains incomplete; Section 9.1 applies the resolved owner placements to Gate-3 evidence. Broader
 Operational Recovery / DR is outside V1.0 under G3-D3. Gates 3 and 4 remain future and Version 1.0 remains pre-release.
@@ -855,9 +865,9 @@ Before Gate-3 PASS, the following application-level evidence is proposed as mand
   integration record shall identify which connections to the runtime path are additionally proven.
 - Approved logging/reporting acceptance, including configuration success interpretation, event ownership,
   thresholds, duplicate prevention, delivery-failure precedence, `401`/`403` distinctions and rate-limit
-  reporting for `429` without sleep/retry. Under G3-D1, the separately defined summary contract,
-  implementation, validation and recorded evidence shall be complete before Gate-3 PASS; content,
-  destination, timing, failure/partial-result and delivery-failure semantics still require definition.
+  reporting for `429` without sleep/retry. Under G3-D1, the owner-approved summary contract in
+  Architecture Section 13.4 requires implementation, validation and recorded evidence before Gate-3
+  PASS. Section 9.2 defines prospective summary validation; those results do not yet exist.
 - Regression and secret-safety evidence for all changed behaviour and the preserved Slice-1-9 boundaries.
   A successful full suite and Ruff result tied to the assessed implementation shall be recorded; evidence
   reuse shall identify the unchanged implementation and why earlier results remain applicable.
@@ -920,6 +930,58 @@ explicit disposition under the Release deferral rule.
 
 No live operations, new tests, Ruff or pytest runs are performed by this contract-definition revision.
 Final RC regression/live repetition and final release evidence remain subject to Gate 4.
+
+---
+
+## 9.2 Execution-summary validation
+
+**PROSPECTIVE REQUIREMENTS — NO IMPLEMENTATION OR EXECUTION EVIDENCE CLAIMED.**
+[Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract) is
+authoritative for owner-approved G3-SUM-D1 to G3-SUM-D9. Tests shall validate the following observable
+behaviour after implementation; this section does not claim that those tests currently exist.
+
+- **D1 — Count semantics:** exact non-negative integer count across Epic, Feature, Product Backlog Item
+  and Task; new, reused and mixed paths; repaired relationships without double counting; multiple
+  documents/roots; and a permitted zero-item success where applicable. Each source item counts once;
+  validation-only/other HTTP requests and relationships shall not inflate the count. No action
+  breakdown or item inventory shall be added.
+- **D2 — Applicability:** summary only after successful configured execution; none on controlled,
+  unexpected, configuration, logger-initialisation, pre-application, partial-persistence or
+  conflicting/global-stop failure. Include child Create followed by relationship failure and a later
+  successful rerun reporting only its own count. Summary absence shall not imply absence of remote mutation.
+- **D3 — Ownership and forwarding:** Generator count becomes available only after successful full
+  preflight and traversal; configured application execution forwards it unchanged to bootstrap.
+  Count values shall not become process exit codes. Preserve exact exception propagation, mutation
+  barrier, global stop and the unchanged interfaces listed in Architecture Section 13.4.
+- **D4 — Destination/filtering:** exactly one eligible INFO summary attempt at DEBUG/INFO; no delivery
+  at WARNING/ERROR/CRITICAL. Verify both logger and handler filtering, current-owned-handler-only
+  delivery, root/unrelated/same-named non-owned handler isolation, repeated invocations without stale
+  reuse or duplication, and silent stdout/stderr success.
+- **D5/D8 — Order and representation:** eligible START, successful application execution, SUMMARY,
+  independently eligible COMPLETION, normal return and existing process termination in that order.
+  Assert the exact logical message, field order, punctuation and ASCII decimal substitution, including
+  zero and multiple-digit values without signs/grouping/leading zeroes. Preserve the logfile envelope,
+  timestamp behaviour and record termination; do not require identical timestamps across runs.
+- **D6 — Delivery failure:** inject ordinary exceptions in summary formatting and delivery; prove
+  unchanged domain success, process outcome and subsequent COMPLETION eligibility, with no retry,
+  fallback, replacement diagnostic or `ApplicationLoggingError`. Best effort shall cover summary work
+  only. Process-control failures outside `Exception` shall propagate unchanged. Existing lifecycle and
+  failure-report delivery boundaries shall retain regression coverage.
+- **D7 — Safety:** synthetic sensitive values in source, configuration, remote evidence and delivery
+  exceptions shall not enter the summary or secondary diagnostics. Assert the exact summary allowlist
+  and absence of titles, IDs, hierarchy, source identities/digests, paths, URLs, organisation/project/
+  configuration values, request/response content, exception details, tracebacks, PAT and Authorization.
+- **D9 — Complete application evidence:** execute a supported package success with real argument/
+  configuration loading, non-secret temporary configuration and Markdown, documentation processing,
+  Generator preflight/traversal, runtime logging, exact SUMMARY/COMPLETION and process status 0.
+  A controlled transport substitute is permitted; successful no-op application/parser/Generator
+  substitutes are insufficient. Preserve the failure/rerun integration obligations in Section 9.1.
+
+Historical Slice-9 764/764 full-suite and warnings-as-errors results, Ruff pass and 95% coverage remain
+historical implementation evidence only. Record new implementation-revision-specific results under
+Section 9.1 after the summary changes; neither this contract nor existing adapter-only success proves
+summary validation. Minimum live Services proof remains separately required under G3-D2. No tests,
+Ruff, pytest or live Azure DevOps operations are executed by this documentation-contract change.
 
 ---
 
