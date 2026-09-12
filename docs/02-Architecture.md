@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.43
+**Version:** 2.44
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-12
 
@@ -16,9 +16,15 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** Revision 2.43 proposes the Gate-3 acceptance framework for owner review.
-References below to revision 2.42 as Approved Baseline identify the preceding implementation
-baseline, not approval of this Draft. Existing slice contracts and recorded results remain unchanged.
+**Revision scope:** This Draft records owner-approved G3-SUM-D1 to G3-SUM-D9.
+The execution-summary behavioural decisions are approved; their implementation and validation
+remain pending. The approved starting baseline is main at `cff3397`. Historical slice contracts,
+`None` returns, summary exclusions and recorded test results below describe their original
+implementation boundaries; they do not override the current summary contract in
+[Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
+Historical references to pending API Section 6.1 status reconciliation describe the earlier
+baseline; this Draft reconciles that status only. HTTP reporting decisions remain separate.
+Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 10 is allocated.
 
 ---
 
@@ -81,6 +87,7 @@ baseline, not approval of this Draft. Existing slice contracts and recorded resu
 | 2.41 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved Final Unexpected-Error Handling and Diagnostic Safety contract as Application/Run Slice 9 without changing UE-D1–UE-D10. |
 | 2.42 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 Final Unexpected-Error Handling and Diagnostic Safety status. |
 | 2.43 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 operational boundaries and dependencies on unresolved behavioural contracts. |
+| 2.44 | 2026-09-12 | Draft | Jack Spaetjens | Recorded owner-approved G3-SUM-D1 to G3-SUM-D9 execution-summary behaviour and prospective interface changes; implementation and validation remain pending. |
 
 ---
 
@@ -122,6 +129,7 @@ baseline, not approval of this Draft. Existing slice contracts and recorded resu
   - [13.1 Logging acceptance boundary](#131-logging-acceptance-boundary)
   - [13.2 HTTP reporting and execution-summary dependencies](#132-http-reporting-and-execution-summary-dependencies)
   - [13.3 Runtime, safety and recovery boundaries](#133-runtime-safety-and-recovery-boundaries)
+  - [13.4 Execution-summary behavioural contract](#134-execution-summary-behavioural-contract)
 - [14. Extensibility](#14-extensibility)
 - [15. Architecture Traceability](#15-architecture-traceability)
 - [16. Approval](#16-approval)
@@ -226,7 +234,10 @@ Its responsibilities include:
 
 ### 7.1.1 Application/Run Slice 1
 
-Application/Run Slice 1 is an implemented callable composition layer located in `main.py`. It exposes exactly:
+Application/Run Slice 1 is an implemented callable composition layer located in `main.py`. The
+signature below records the implemented Slice-1 behaviour. Section 13.4 approves its replacement
+with a processed-source-item integer return; that replacement is not implemented or validated.
+The implemented slice exposes exactly:
 
 ```python
 coordinate_application_run(configuration: Configuration) -> None
@@ -928,11 +939,12 @@ existing filename and formatter/date format, configured thresholds, `propagate=F
 isolation, stale-handler cleanup, controlled CRITICAL events, initialisation-only `ApplicationLoggingError`
 and existing secondary-write precedence. No global logging setting or existing controlled message changes.
 
-Broader Section-12 logging remains incomplete and separate. The execution summary remains required, undefined and not implemented; no result/count model exists.
-The unexpected message is not a summary. No documentation-processing or Azure communication lifecycle
-events, work-item creation events, warning taxonomy, richer authentication/authorisation or rate-limit
-reporting, summary logging, timings or correlation IDs are defined. API Section 6.1 status reconciliation
-remains separate and required before Gate 3; unresolved API reporting requirements remain future contract work.
+Broader Section-12 logging remains incomplete and separate. Section 13.4 now records the approved
+execution-summary contract; implementation and validation remain pending. The unexpected message is
+not a summary. Slice 9 defines no summary or other new lifecycle observations. Documentation-processing
+and Azure communication observability, work-item creation events, warnings and HTTP reporting decisions
+remain separate. API Section 6.1 implementation status is reconciled in this Draft; its unresolved
+HTTP reporting requirements remain separate contract work.
 
 Review Gates 1 and 2 remain PASS; Review Gates 3 and 4 remain future. Wider Application/Run remains
 incomplete and Version 1.0 remains pre-release. This capability is required before final Version-1.0
@@ -1018,7 +1030,7 @@ Responsibilities include:
 - Providing implemented root existing/new Work Item lifecycle coordination. The root-only coordinator invokes existing/new resolution once; for NEW it passes the exact supplied candidate and PAT to persistent Create once and returns the Create response ID, while for REUSED it returns the validated existing ID without Create. It returns no revision and performs no relationship-state GET, classification, gate, Parent-Child Relationship PATCH, descendant processing, validation-only Create or compatibility orchestration. Resolution and Create failures propagate without retry, fallback, reread, rollback, deletion compensation or other compensation. Application/Run Slice 1 composes this coordinator without changing its responsibilities.
 - Preventing duplicate work item creation.
 - Providing implemented full preflight coordination through the mutation barrier. `coordinate_full_preflight` first validates run-wide source identities, then constructs every candidate in deterministic source order, retrieves and retains canonical project evidence, retrieves required work-item-type and field metadata, evaluates structural Scrum compatibility, and submits every exact candidate through validation-only Create in that order. It returns immutable, slotted `PreflightState` evidence containing the original `DocumentationHierarchy`, the canonical `AzureDevOpsProject` and the exact candidate tuple. Source-identity failure occurs before REST activity; later preflight failures propagate unchanged, stop subsequent preflight operations and introduce no retry, fallback, rollback, compensation, credential switching or continuation. The final successful validation-only Create reaches the mutation barrier; no WIQL lookup, Work Item GET, persistent Create, relationship-state GET, relationship PATCH, lifecycle invocation or persistent hierarchy traversal occurs in this coordinator.
-- Providing implemented deterministic hierarchy traversal and Generator composition. `coordinate_deterministic_hierarchy_traversal` first validates that the semantic-item sequence and retained `PreflightState` candidate tuple have equal cardinality and positionally matching source identities, before any persistent REST operation. It then processes documents, roots and descendants in deterministic depth-first preorder, using the exact validation-only checked candidates without reconstruction. Roots delegate exactly once to the root lifecycle coordinator; each non-root resolves exactly once and delegates to the non-root lifecycle coordinator with its eligible direct parent ID. Descendants begin only after eligibility. Failures propagate globally without retry, rollback, compensation or continuation; existing lower-level lifecycle behaviour composes later-run MISSING recovery, CORRECT continuation and CONFLICTING stop. Preflight project, metadata, compatibility and validation-only operations are not repeated. `coordinate_generator_orchestration` is the implemented final Generator-owned entry coordinator: it passes the exact `DocumentationHierarchy`, REST client and PAT to full preflight once, passes the exact returned `PreflightState`, REST client and PAT to traversal once, and returns `None`. Successful full preflight is the required mutation barrier before traversal; a preflight failure prevents traversal and persistence. Implemented full-orchestration coverage proves malformed-response, HTTP `401` and HTTP `403` propagation with no retry, alternate credential, PAT event leakage or later descendant, sibling, root, document or persistence operation. Generator Orchestration implementation and required pre-Review-Gate-2 composition coverage are complete. Review Gate 2 completed with PASS, zero findings and no required remediation. Application/Run Slice 1 is implemented and does not own this Generator-internal sequencing; the wider Application/Run phase remains incomplete and Review Gate 3 remains future.
+- Providing implemented deterministic hierarchy traversal and Generator composition. `coordinate_deterministic_hierarchy_traversal` first validates that the semantic-item sequence and retained `PreflightState` candidate tuple have equal cardinality and positionally matching source identities, before any persistent REST operation. It then processes documents, roots and descendants in deterministic depth-first preorder, using the exact validation-only checked candidates without reconstruction. Roots delegate exactly once to the root lifecycle coordinator; each non-root resolves exactly once and delegates to the non-root lifecycle coordinator with its eligible direct parent ID. Descendants begin only after eligibility. Failures propagate globally without retry, rollback, compensation or continuation; existing lower-level lifecycle behaviour composes later-run MISSING recovery, CORRECT continuation and CONFLICTING stop. Preflight project, metadata, compatibility and validation-only operations are not repeated. `coordinate_generator_orchestration` is the implemented final Generator-owned entry coordinator: it passes the exact `DocumentationHierarchy`, REST client and PAT to full preflight once, passes the exact returned `PreflightState`, REST client and PAT to traversal once, and currently returns `None`. Section 13.4 approves a processed-source-item integer return after successful traversal; implementation and validation of that replacement remain pending. Successful full preflight is the required mutation barrier before traversal; a preflight failure prevents traversal and persistence. Implemented full-orchestration coverage proves malformed-response, HTTP `401` and HTTP `403` propagation with no retry, alternate credential, PAT event leakage or later descendant, sibling, root, document or persistence operation. Generator Orchestration implementation and required pre-Review-Gate-2 composition coverage are complete. Review Gate 2 completed with PASS, zero findings and no required remediation. Application/Run Slice 1 is implemented and does not own this Generator-internal sequencing; the wider Application/Run phase remains incomplete and Review Gate 3 remains future.
 
 ---
 
@@ -1109,8 +1121,8 @@ The application follows the logical execution sequence below.
 16. Descendants become eligible for persistent processing only after a newly created child's relationship PATCH succeeds, a reused child is observed as CORRECT or a reused child's MISSING relationship is successfully repaired.
 17. Root Epic items require neither relationship-state retrieval nor a parent relationship PATCH.
 18. Any controlled or uncontrolled failure causes a global stop: no later document, root, sibling, descendant, candidate or Azure DevOps generator operation begins. No retry, rollback, deletion, compensation or alternate credential is attempted.
-19. Results are logged.
-20. Execution summary is presented.
+19. Results are logged under the applicable approved logging contracts.
+20. After normal configured application return, the eligible success-only INFO SUMMARY file event is attempted under Section 13.4, followed by the independently eligible COMPLETION lifecycle event. SUMMARY is filtered and best effort, with no console presentation. Its implementation and validation remain pending.
 
 This flow permits deterministic recovery when an earlier execution created a child but its immediate relationship PATCH failed: the later execution resolves the parent and child, observes MISSING using a fresh relationship-state GET, repairs the relationship using the fresh revision and continues only after success.
 
@@ -1238,7 +1250,7 @@ the complete summary contract, implementation, validation and evidence before Ga
 | Controlled errors | Preserve the seven approved categories, exact current reports and eligible owned-handler CRITICAL events until an approved reporting revision applies. | SATISFIED for Slice 6; HTTP reconciliation remains separate. |
 | Unexpected errors | Preserve UE-D1 to UE-D10, fixed fallback and owned-handler best-effort CRITICAL event. | SATISFIED: Slice 9, including handled-Exception traceback suppression. |
 | Successful completion | Preserve normal-return-only INFO COMPLETION and configured filtering. | SATISFIED: Slice 8; this is not an execution summary. |
-| Execution summary | Complete the separately approved summary contract, implementation, validation and evidence before Gate-3 PASS under owner-approved G3-D1. | NOT SATISFIED: behaviour remains undefined and unimplemented; CONTRACT, IMPLEMENTATION and VALIDATION remain required. |
+| Execution summary | Complete the separately approved summary contract, implementation, validation and evidence before Gate-3 PASS under owner-approved G3-D1. | NOT SATISFIED: Section 13.4 records approved behaviour; implementation, validation and evidence remain pending. |
 | Authentication/authorisation | Meet the reconciled API reporting contract in Section 13.2. | PARTIALLY SATISFIED: status retained, current terminal reporting generic. |
 | Rate limiting | Meet API Section 11 through approved identifiable rate-limit logging, preserving fail/no-sleep/no-retry behaviour. | PARTIALLY SATISFIED: generic failure exists; reporting contract and event remain outstanding. |
 | Diagnostic safety | Preserve safe existing messages and prove secret safety for every newly approved event. | PARTIALLY SATISFIED: existing fixed events evidenced; future content requires validation. |
@@ -1260,16 +1272,16 @@ shall be merged and its evidence recorded. Exact messages, channels, levels and 
 reports require separate approval; this gate contract does not select them. HTTP status retention and
 no-retry behaviour already exist. No new exception taxonomy is proven necessary. Optional safe
 `Retry-After` diagnostics do not authorise sleep or retry. API Section 6.1 implementation-status
-reconciliation remains mandatory separate documentation work before PASS; the API is not edited here.
+reconciliation is recorded in API Section 6.1 by this Draft; required HTTP reporting contract,
+implementation and evidence remain pending before PASS.
 
 The execution summary remains mandatory under Sections 8 and 12. G3-D1 is RESOLVED / OWNER APPROVED:
 its contract, implementation, validation and evidence shall be complete before Gate-3 PASS. Unfinished
-summary functionality shall not be deferred to Gate 4; final RC regression may repeat its validation. Its separate
-contract shall settle content, destination, timing, success/failure applicability, partial-result
-semantics, safety and delivery-failure behaviour. It shall decide whether counts and Generator outcome
-information are necessary. No created/reused/repaired/skipped/total counts, typed result model or interface
-change is mandated here. API Section 7.1's summary/completion wording shall be reconciled with the
-mandatory summary requirement; Slice-8 COMPLETION shall not silently substitute for a summary.
+summary functionality shall not be deferred to Gate 4; final RC regression may repeat its validation.
+Section 13.4 records owner-approved G3-SUM-D1 to G3-SUM-D9, including one processed-source-item count
+and two prospective integer-return changes. Implementation and validation remain pending. API Section
+7.1 now distinguishes SUMMARY from the separate COMPLETION lifecycle event; neither substitutes for
+the other. Other logging topics and HTTP reporting decisions remain unresolved by this contract.
 
 ## 13.3 Runtime, safety and recovery boundaries
 
@@ -1295,10 +1307,135 @@ rerun recovery remains unchanged and is not equivalent to operational DR. Operat
 explain the bounded failure/rerun model under Release row L; row J retains its validation obligations.
 The scope decision does not establish completion of either row.
 
-This proposal introduces no new configuration, environment variable, dependency, launcher, public
-exception or result interface. It requires neither architectural refactoring nor test reorganisation.
+The gate framework itself introduces no new configuration, environment variable, dependency, launcher,
+public exception or result interface. Section 13.4 separately records the two approved count-return
+changes. The framework requires neither architectural refactoring nor test reorganisation.
 No Slice 10 has been allocated. Broader behavioural definitions and gate acceptance remain separate
 from the implemented, approved Slices 1-9.
+
+---
+
+## 13.4 Execution-summary behavioural contract
+
+**OWNER-APPROVED BEHAVIOURAL DECISIONS — IMPLEMENTATION AND VALIDATION PENDING.**
+G3-SUM-D1 to G3-SUM-D9 were explicitly approved by the owner on 2026-09-12. This Draft records
+those decisions; it does not claim merged implementation, executed validation or Gate-3 PASS.
+This section is authoritative for execution-summary behaviour and explicitly supersedes only the
+affected earlier return and summary contracts. Historical Slice-1–9 implementation and test evidence
+remain historical. No Application/Run Slice 10 is allocated.
+
+**G3-SUM-D1 — Purpose and content.** SUMMARY shall report successful completion of the configured
+backlog-generation operation and the number of semantic source items whose approved Generator
+processing completed. Every Epic, Feature, Product Backlog Item and Task counts exactly once,
+whether newly created or reused. Relationship repair does not count as another item; validation-only
+requests and other HTTP operations do not count as items. The count covers the entire successful
+invocation across documents and roots. A permitted zero-item successful invocation reports zero;
+this contract changes no source-input acceptance rule.
+
+No created/reused/repaired/conflicting/skipped/failed breakdown, hierarchy detail or remote-state
+inventory is required. START means configured execution is about to begin; COMPLETION means normal
+application return; SUMMARY additionally reports the processed-source-item count. Existing failure
+reports retain their separate meanings. The count shall not be interpreted as a mutation count or
+as proof of an independently inspected remote-state inventory.
+
+**G3-SUM-D2 — Applicability.** SUMMARY shall be emitted only after normal return from configured
+application execution, subject to G3-SUM-D4 and G3-SUM-D6. No summary shall be emitted for controlled,
+unexpected, configuration or logger-initialisation failure; failure before application-run execution;
+partial persistence failure; or conflicting/global-stop failure. No partial summary shall be emitted.
+Absence of a summary shall never be interpreted as proof that no remote mutation occurred.
+A later successful rerun reports only its own processed-item count. Existing failure reports,
+accepted partial state and bounded later-run recovery remain unchanged.
+
+**G3-SUM-D3 — Data ownership and interfaces.** The Generator owns the processed-source-item count.
+After successful full preflight and traversal, the approved entry contract shall be:
+
+```python
+coordinate_generator_orchestration(...) -> int
+coordinate_application_run(configuration: Configuration) -> int
+```
+
+The Generator shall return the non-negative exact integer processed-source-item count only after
+success. Configured application execution shall forward that count unchanged to bootstrap. The count
+is domain information, not a process exit code. Failure propagation remains unchanged; no success
+count is returned on failure. The existing implementation still returns `None` at both boundaries;
+implementing and validating these two approved replacements remains pending.
+
+No `ExecutionSummary` class, result DTO, callback, global counter, extra REST operation or partial-result
+exception payload shall be introduced. The following interfaces and responsibilities remain unchanged:
+
+- `coordinate_full_preflight(...) -> PreflightState`.
+- `coordinate_deterministic_hierarchy_traversal(...) -> None`.
+- Lifecycle, resolution and relationship contracts.
+- REST, configuration and documentation-processing interfaces.
+- `coordinate_application_bootstrap(...) -> None` and `main() -> None`.
+- `run_process() -> int` with the existing `0` success and `1` failure meanings.
+- Exclusive `__main__.py` termination ownership and existing exception taxonomy/propagation.
+
+Bootstrap owns summary emission. Generator and configured application execution supply domain
+information without acquiring stdout/stderr presentation or process-termination responsibilities.
+
+**G3-SUM-D4 — Destination, level and filtering.** SUMMARY shall use only the existing configured
+logfile and active current-invocation owned handler, at INFO. Normal logger and handler filtering
+shall apply before delivery. At DEBUG and INFO thresholds, exactly one eligible delivery attempt
+shall occur; at WARNING, ERROR and CRITICAL thresholds, the INFO summary is filtered and no delivery
+attempt is required. Root, unrelated and same-named non-owned handlers shall receive no summary.
+Repeated invocations shall retain current-invocation ownership without stale-handler reuse or duplication.
+No stdout/stderr output, alternate destination, configuration option or threshold bypass is added.
+Successful console behaviour remains silent.
+
+**G3-SUM-D5 — Timing and ordering.** After `coordinate_application_run()` returns the successful
+count, bootstrap shall attempt eligible SUMMARY delivery, then attempt the independently eligible
+existing COMPLETION lifecycle event, then return normally. The success sequence is:
+
+```text
+configuration
+→ logger initialisation
+→ START
+→ configured application / Generator success
+→ SUMMARY
+→ COMPLETION
+→ bootstrap/main return
+→ run_process returns 0
+→ SystemExit(0)
+```
+
+The observations remain subject to their filtering and delivery contracts. START and COMPLETION retain
+their exact messages, `Application run started.` and `Application run completed successfully.`,
+and existing meanings. SUMMARY causes no Azure DevOps operation.
+
+**G3-SUM-D6 — Delivery failure.** Summary formatting and delivery shall be best effort for ordinary
+`Exception` failures. A summary-work failure shall not change successful domain execution or process
+outcome, suppress an otherwise eligible COMPLETION attempt, be retried, use a fallback destination,
+produce a replacement diagnostic or raise `ApplicationLoggingError`. It shall expose no formatting or
+delivery exception details. The best-effort protection applies only to summary work; it shall not
+absorb application or Generator failures. `KeyboardInterrupt`, `SystemExit`, `GeneratorExit` and other
+non-`Exception` process-control failures shall propagate unchanged. Existing START/COMPLETION,
+controlled/unexpected event-delivery and stderr-delivery contracts remain unchanged.
+
+**G3-SUM-D7 — Safety.** The summary allowlist consists only of fixed approved summary text, the
+literal success outcome, the Generator-owned non-negative processed-item count and the existing
+normal logfile envelope (timestamp, level and logger). It shall exclude titles, work-item IDs,
+hierarchy details, source identities/digests, paths, URLs, organisation/project/configuration values,
+request/response content, exception details, tracebacks, PAT values and Authorization material.
+This summary-specific allowlist shall not redefine diagnostic contracts elsewhere.
+
+**G3-SUM-D8 — Exact logical message.** The logical message shall be exactly:
+
+```text
+Execution summary: outcome=success; source_items_processed=N.
+```
+
+`N` shall be replaced by ungrouped ASCII decimal digits, with no sign and no leading zeroes except
+the single value `0`. Existing logfile formatting, timestamp behaviour and record termination remain
+unchanged. This is not a new machine-readable CLI protocol.
+
+**G3-SUM-D9 — Documentation authority and reconciliation.** Architecture owns this behavioural
+contract. [Testing Section 9.2](06-Testing.md#92-execution-summary-validation) defines prospective
+validation. API Section 7.1 separates success-only, filtered, best-effort SUMMARY from COMPLETION.
+Historical implementation and test evidence shall not be rewritten as if these changes already existed.
+Behavioural approval does not establish implementation, validation or Gate-3 PASS. Required HTTP
+`401`/`403`/`429` reporting and other unresolved logging topics remain separate Gate-3 work.
+G3-D2 and G3-D3 remain unchanged; Gate 4 remains FUTURE and Version 1.0 PRE-RELEASE.
 
 ---
 

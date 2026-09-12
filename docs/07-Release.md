@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.32
+**Version:** 1.33
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-12
 
@@ -16,9 +16,15 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** Revision 1.32 proposes the Gate-3 acceptance framework for owner review.
-References below to revision 1.31 as Approved Baseline identify the preceding implementation
-baseline, not approval of this Draft. Existing slice contracts and recorded results remain unchanged.
+**Revision scope:** This Draft records owner-approved G3-SUM-D1 to G3-SUM-D9.
+The execution-summary behavioural decisions are approved; their implementation and validation
+remain pending. The approved starting baseline is main at `cff3397`. Historical slice contracts,
+`None` returns, summary exclusions and recorded test results below describe their original
+implementation boundaries; they do not override the current summary contract in
+[Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
+Historical references to pending API Section 6.1 status reconciliation describe the earlier
+baseline; this Draft reconciles that status only. HTTP reporting decisions remain separate.
+Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 10 is allocated.
 
 ---
 
@@ -60,6 +66,7 @@ baseline, not approval of this Draft. Existing slice contracts and recorded resu
 | 1.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved but unimplemented Final Unexpected-Error Handling and Diagnostic Safety capability as Application/Run Slice 9. |
 | 1.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and remaining pre-release limitations. |
 | 1.32 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 acceptance matrix, owner decisions, PASS and deferral rules and Gate-4 boundary. |
+| 1.33 | 2026-09-12 | Draft | Jack Spaetjens | Recorded approved execution-summary decisions with implementation and validation pending; Gate 3 remains not passed. |
 
 ---
 
@@ -292,9 +299,10 @@ Readiness, integration/E2E completion, live Azure validation, Gate-3 completion,
 
 Version 1.0 remains pre-release and wider Application/Run remains incomplete. Gates 1 and 2 remain
 PASS; Gates 3 and 4 remain future. Broader Architecture Section-12 logging and unresolved HTTP/API
-reporting remain separate capability work. The execution summary remains required, undefined and not
-implemented; no result/count model exists, and any aggregation remains conditional on later requirements.
-API Section 6.1 status reconciliation remains separate documentation work required before Gate 3.
+reporting remain separate capability work. Architecture Section 13.4 records owner-approved
+G3-SUM-D1 to G3-SUM-D9; execution-summary implementation and validation remain pending. No result DTO
+is approved. API Section 6.1 implementation status is reconciled in this Draft; separate HTTP
+reporting decisions remain unresolved.
 Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness definition/evidence,
 and final release approval remain outstanding. Section 8.1 records the Draft Gate-3 framework and
 resolved placement decisions; broader Operational Recovery / DR is outside V1.0 under G3-D3.
@@ -374,23 +382,24 @@ Only approved releases shall be published.
 
 ## 8.1 Review Gate 3 Operational Readiness Acceptance
 
-**DRAFT PROPOSAL - pending owner review. Gate 3 is FUTURE / NOT YET PASSED and currently NOT READY.**
+**Gate 3 is FUTURE / NOT YET PASSED and currently NOT READY.**
+This Draft records approved summary decisions within the approved Gate-3 framework.
 Gate 3 answers: "Is the application operationally complete and sufficiently evidenced to enter final
 release-candidate validation?" Gate 4 remains the Release Candidate / final pre-release gate. Neither
 approval of this contract nor a later Gate-3 PASS constitutes RC acceptance or final Version-1.0 approval.
 
-Existing normative requirements are identified in the matrix's source column. Their Gate-3 assignments,
-the PASS rule, operator-documentation minimum and critical/high gate threshold are newly proposed unless
-already expressly assigned, notably API Section 6.1 status reconciliation, or now owner-approved in
-G3-D1 to G3-D3. These three decisions are RESOLVED / OWNER APPROVED on 2026-09-12 and are recorded
-below. They settle placement/applicability only; the overall framework remains Draft pending owner
-review and Approved Baseline governance, and no Gate-3 PASS or behavioural-contract approval is implied.
+Existing normative requirements are identified in the matrix's source column. The gate framework,
+including its assignments and PASS rule, forms part of the approved starting baseline at main `cff3397`.
+G3-D1 to G3-D3 remain RESOLVED / OWNER APPROVED on 2026-09-12 and settle placement/applicability.
+This Draft records the separately owner-approved summary contract in Architecture Section 13.4;
+summary implementation and validation remain pending, and no Gate-3 PASS is implied.
 
 [Architecture Section 13](02-Architecture.md#13-review-gate-3-operational-readiness-boundaries) defines
 operational boundaries and logging/reporting dependencies; [Testing Section 9.1](06-Testing.md#91-review-gate-3-evidence-requirements)
 defines evidence. [Roadmap Section 5.1](03-Roadmap.md#51-review-gate-3-next-governance-milestone) records
-the governance milestone. The current statuses below describe evidence at implementation HEAD `751c928`,
-not evidence produced by writing this Draft.
+the governance milestone. Existing implementation evidence below was recorded at `751c928`; source
+and tests remain unchanged at starting baseline `cff3397`. Row F now records approved summary
+behaviour with implementation and validation pending; writing this Draft produces no execution evidence.
 
 ### Status and closure model
 
@@ -414,7 +423,7 @@ remaining release-scenario allocation must be explicit under the deferral rule.
 | C. Runtime/configuration | Architecture Sections 7.1.1-7.1.7 and Slice 9; Configuration Sections 5-8 | Supported package invocation, default/explicit configuration, PAT acquisition, outcomes and termination ownership retain their approved contracts. | Existing configuration, application and package/subprocess evidence; integrated success is separately required by G. | SATISFIED | - |
 | D. Observability/logging | PRD FR-009; Architecture Sections 12 and 13.1; Configuration Section 6.4 | All applicable logging topics have approved minimum interpretations and validated implementation; summary placement follows F. | Event acceptance mapping, tests for content/timing/levels/delivery and applicable operational records. | PARTIALLY SATISFIED | CONTRACT, OWNER DECISION, IMPLEMENTATION, VALIDATION |
 | E. HTTP/API reporting | API Sections 6.1, 6.2 and 9-11; Architecture Section 13.2 | Approved reconciliation of 401/403 reporting, rate-limit logging and current generic presentation is implemented and evidenced; status preservation and no retry remain. | Reconciled behavioural baseline and status-specific reporting/safety/global-stop tests. | PARTIALLY SATISFIED | CONTRACT, OWNER DECISION, IMPLEMENTATION, VALIDATION |
-| F. Execution summary | Architecture Sections 8 and 12; API Section 7.1; owner-approved G3-D1 | The V1.0 summary is fully contract-defined, implemented, validated and evidenced before Gate-3 PASS; unfinished functionality cannot be deferred to Gate 4. | Separate approved behavioural specification, merged implementation and recorded validation evidence. | NOT SATISFIED | CONTRACT, IMPLEMENTATION, VALIDATION, DOCUMENTATION |
+| F. Execution summary | Architecture Sections 8, 12 and 13.4; API Section 7.1; owner-approved G3-D1 and G3-SUM-D1 to G3-SUM-D9 | The V1.0 summary is fully contract-defined, implemented, validated and evidenced before Gate-3 PASS; unfinished functionality cannot be deferred to Gate 4. | Owner-approved behaviour in Architecture Section 13.4; merged implementation and Testing Section 9.2 validation evidence remain required. | NOT SATISFIED: behavioural decisions approved; implementation and validation pending. | IMPLEMENTATION, VALIDATION, DOCUMENTATION |
 | G. Integration/system validation | Testing Sections 5 and 9 | Complete successful application-level execution and integrated failure/rerun evidence meet Testing Section 9.1; adapter-only success is insufficient. | Traceable application integration results with real configuration/parser/Generator and declared transport boundary. | PARTIALLY SATISFIED | VALIDATION, IMPLEMENTATION |
 | H. Azure DevOps Services validation | Testing Sections 6 and 9; Release Sections 8 and 10; owner-approved G3-D2 | Complete the minimum real Services operational proof in Testing Section 9.1 before Gate-3 PASS; mock-only evidence is insufficient. | Prepared controlled procedure/environment and executed live records; final RC repetition and explicitly assigned remaining scenarios retained for Gate 4. | NOT SATISFIED | VALIDATION, GOVERNANCE, DOCUMENTATION |
 | I. Security/secret safety | PRD NFR-005; Architecture Section 10 and Slice 9; API Sections 5-6.2; Configuration Section 8 | Existing credential/transport/reporting protections remain; newly approved output and live evidence expose no credentials or prohibited diagnostics. | Existing safety tests plus new behaviour and live-procedure safety evidence. | PARTIALLY SATISFIED | VALIDATION |
@@ -434,19 +443,21 @@ for the current operational gate. Runtime documentation can be completed separat
 ### Owner decision register
 
 Owner decisions below were explicitly approved on 2026-09-12. They resolve gate placement and
-scope only; the document and the overall acceptance framework remain Draft.
+scope only. The framework is part of the approved starting baseline; this summary-contract revision
+remains Draft.
 
 | Decision | Status | Owner-approved decision | Remaining boundary |
 |----------|--------|-------------------------|--------------------|
-| G3-D1 - Summary placement | RESOLVED / OWNER APPROVED | The summary shall be fully contract-defined, implemented, validated and evidenced before Gate-3 PASS. It shall not be deferred as unfinished runtime functionality; Gate 4 may repeat/verify it in final RC regression. | Exact content, destination, timing, success/failure/partial-result semantics, safety and delivery-failure behaviour need a separate summary contract. Counts, a typed result model and Generator interface changes are not automatically required. |
+| G3-D1 - Summary placement | RESOLVED / OWNER APPROVED | The summary shall be fully contract-defined, implemented, validated and evidenced before Gate-3 PASS. It shall not be deferred as unfinished runtime functionality; Gate 4 may repeat/verify it in final RC regression. | G3-SUM-D1 to G3-SUM-D9 are owner-approved and recorded in Architecture Section 13.4: one processed-source-item count, two prospective integer-return changes and success-only INFO summary delivery. Implementation and validation remain pending; no result DTO is approved. |
 | G3-D2 - Live validation placement | RESOLVED / OWNER APPROVED | Minimum real Azure DevOps Services operational proof is required before Gate-3 PASS; mock-only evidence is insufficient. Final RC repetition and explicitly assigned remaining release scenarios remain at Gate 4. | Exact isolated project configuration, permissions, cleanup authorisation and controlled procedure still need definition. A repeatable manual procedure with recorded evidence is acceptable; no dedicated automated live harness is mandated. |
 | G3-D3 - Recovery/DR applicability | RESOLVED / OWNER APPROVED | Broader Operational Recovery / Disaster Recovery is OUTSIDE V1.0, not deferred to Gate 4. No new backup/restore or DR infrastructure, automatic retry/rollback/compensation, generic recovery subsystem, logfile recovery/rotation or dedicated DR platform/service is required. | Existing global fail-fast, legitimate partial state, later-run identity rediscovery/reuse and fresh MISSING repair, CORRECT continuation and CONFLICTING stop remain. Bounded operator guidance remains required under L; failure/rerun evidence remains under J. |
 
-Separate behavioural owner decisions remain for the unresolved logging interpretations in Architecture
-Section 13.1, HTTP reporting channels/messages/event interaction, and summary content/destination/timing,
-success/failure and partial-result semantics, safety and delivery failure. The gate requires closure of
-those decisions where applicable; this Draft does not decide them by inference. No counts, typed result
-model, exception taxonomy, new configuration or implementation slice is mandated.
+Separate behavioural owner decisions remain for unresolved logging interpretations in Architecture
+Section 13.1 and HTTP reporting channels/messages/event interaction. G3-SUM-D1 to G3-SUM-D9 settle
+summary behaviour only, including one processed-source-item count and two prospective return changes;
+they do not resolve other logging or HTTP decisions. Architecture Section 13.4 owns that contract and
+Testing Section 9.2 owns prospective validation. No result DTO, new exception taxonomy, configuration
+or implementation slice is introduced. Summary approval does not satisfy row F or establish Gate-3 PASS.
 
 ### Entry, PASS and NOT-READY rules
 
