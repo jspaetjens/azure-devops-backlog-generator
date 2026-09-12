@@ -6,7 +6,7 @@
 
 **Version:** 2.43
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-12
 
@@ -80,7 +80,7 @@ baseline, not approval of this Draft. Existing slice contracts and recorded resu
 | 2.40 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract. |
 | 2.41 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved Final Unexpected-Error Handling and Diagnostic Safety contract as Application/Run Slice 9 without changing UE-D1–UE-D10. |
 | 2.42 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 Final Unexpected-Error Handling and Diagnostic Safety status. |
-| 2.43 | 2026-09-12 | Draft | Jack Spaetjens | Proposed Review Gate 3 operational boundaries and dependencies on unresolved behavioural contracts. |
+| 2.43 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 operational boundaries and dependencies on unresolved behavioural contracts. |
 
 ---
 

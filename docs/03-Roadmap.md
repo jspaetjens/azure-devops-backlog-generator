@@ -6,7 +6,7 @@
 
 **Version:** 1.38
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-12
 
@@ -65,7 +65,7 @@ baseline, not approval of this Draft. Existing slice contracts and recorded resu
 | 1.35 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Recorded the owner-approved final unexpected-error handling and diagnostic-safety capability and remaining readiness work. |
 | 1.36 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated Final Unexpected-Error Handling and Diagnostic Safety as Application/Run Slice 9 and preserved remaining capability ordering as undefined. |
 | 1.37 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and preserved remaining capability ordering as undefined. |
-| 1.38 | 2026-09-12 | Draft | Jack Spaetjens | Recorded Review Gate 3 contract definition as the next governance milestone without allocating implementation slices. |
+| 1.38 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 3 contract definition as the next governance milestone without allocating implementation slices. |
 
 ---
 
