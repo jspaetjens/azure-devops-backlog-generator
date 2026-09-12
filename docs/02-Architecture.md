@@ -4,17 +4,21 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.42
+**Version:** 2.43
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-11
+**Last Updated:** 2026-09-12
 
 **Target Release:** v1.0.0
 
 **License:** MIT
 
 **Author:** Jack Spaetjens
+
+**Revision scope:** Revision 2.43 proposes the Gate-3 acceptance framework for owner review.
+References below to revision 2.42 as Approved Baseline identify the preceding implementation
+baseline, not approval of this Draft. Existing slice contracts and recorded results remain unchanged.
 
 ---
 
@@ -76,6 +80,7 @@
 | 2.40 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined the owner-approved but unimplemented final unexpected-error handling and diagnostic-safety contract. |
 | 2.41 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved Final Unexpected-Error Handling and Diagnostic Safety contract as Application/Run Slice 9 without changing UE-D1–UE-D10. |
 | 2.42 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 Final Unexpected-Error Handling and Diagnostic Safety status. |
+| 2.43 | 2026-09-12 | Draft | Jack Spaetjens | Proposed Review Gate 3 operational boundaries and dependencies on unresolved behavioural contracts. |
 
 ---
 
@@ -113,9 +118,13 @@
 - [10. Security Architecture](#10-security-architecture)
 - [11. Error Handling](#11-error-handling)
 - [12. Logging Strategy](#12-logging-strategy)
-- [13. Extensibility](#13-extensibility)
-- [14. Architecture Traceability](#14-architecture-traceability)
-- [15. Approval](#15-approval)
+- [13. Review Gate 3 Operational Readiness Boundaries](#13-review-gate-3-operational-readiness-boundaries)
+  - [13.1 Logging acceptance boundary](#131-logging-acceptance-boundary)
+  - [13.2 HTTP reporting and execution-summary dependencies](#132-http-reporting-and-execution-summary-dependencies)
+  - [13.3 Runtime, safety and recovery boundaries](#133-runtime-safety-and-recovery-boundaries)
+- [14. Extensibility](#14-extensibility)
+- [15. Architecture Traceability](#15-architecture-traceability)
+- [16. Approval](#16-approval)
 
 ---
 
@@ -397,7 +406,7 @@ does not approve a GUI feature, implementation, framework or Version 1.0 scope.
 The wider Application/Run phase remains incomplete. Slices 5–7 implement controlled-failure reporting,
 logging and executable termination as described below; Slice 9 implements final unexpected handling and
 bounded diagnostic safety. Broader logging, execution-summary content and presentation, broader integration/E2E,
-Operational Readiness, Operational Recovery / DR, Review Gate 3 and final release readiness remain future.
+Operational Readiness, Review Gate 3 and final release readiness remain future.
 Console-script packaging remains conditional on separate approval.
 
 ---
@@ -449,7 +458,7 @@ tracebacks, `sys.exit`, `SystemExit`, a direct-execution guard, `__main__.py`, `
 packaging, an executable adapter, retries, fallback, new CLI options, dependencies or GUI implementation.
 Slices 6–7 implement runtime controlled-failure logging and the executable boundary as described below.
 Remaining logging beyond Slice 8, execution summaries, final unexpected-error handling and diagnostic safety,
-broader integration/E2E, Operational Readiness, Operational Recovery / DR, Review Gate 3 and final
+broader integration/E2E, Operational Readiness, Review Gate 3 and final
 release-readiness work remain future. The wider Application/Run phase remains incomplete.
 
 ---
@@ -631,7 +640,7 @@ new CLI frameworks/options, retry, fallback, rollback, compensation, continuatio
 credentials, PAT in CLI/TOML, dry-run, Generator toggles, dependencies and REST changes.
 Execution-summary content and presentation remain future; typed execution-result/aggregation and
 created/reused/repaired counts remain conditional on later summary requirements.
-Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness, Operational Recovery / DR,
+Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness,
 API Section 6.1 status-drift reconciliation before Review Gate 3, Gate 3 and final Version 1.0 release
 readiness remain future. Console-script packaging requires separate approval; GUI implementation remains future.
 The implemented package surface and controlled OS exit statuses support subprocess validation and operator
@@ -768,11 +777,13 @@ diagnostic allowlist/model, incident ID or correlation ID is introduced.
 Wider Application/Run remains incomplete and Version 1.0 remains pre-release. Remaining summary/logging,
 broader integration/E2E, live Azure DevOps Services validation,
 Operational Readiness checklist/evidence, Review Gate 3 and final release readiness remain future.
-No complete normative Gate-3 acceptance checklist has been established; Slice 8 contributes operational
-execution evidence without completing Gate-3 prerequisites. Known pre-existing API Section 6.1 status
+The preceding Approved Baseline did not contain a complete normative Gate-3 acceptance checklist;
+Section 13 of this revision defines the Gate-3 framework. Gate 3 remains FUTURE / NOT YET PASSED.
+Slice 8 contributes operational execution evidence without completing Gate-3 prerequisites.
+Known pre-existing API Section 6.1 status
 drift requires separate reconciliation before Review Gate 3; this contract does not edit the API.
-Operational Recovery / DR scope and exact Gate-3 placement remain future/unsettled; existing Generator
-later-run recovery is not equivalent to Operational Recovery / DR. No new recovery requirements are defined.
+Owner-approved G3-D3 places broader Operational Recovery / DR outside V1.0; existing Generator
+later-run recovery remains unchanged and is not equivalent to Operational Recovery / DR.
 
 ---
 
@@ -926,8 +937,8 @@ remains separate and required before Gate 3; unresolved API reporting requiremen
 Review Gates 1 and 2 remain PASS; Review Gates 3 and 4 remain future. Wider Application/Run remains
 incomplete and Version 1.0 remains pre-release. This capability is required before final Version-1.0
 readiness but does not establish Operational Readiness, a Gate-3 checklist, integration/E2E completion,
-live Azure validation or RC readiness. Operational Recovery / DR scope and Gate-3 placement remain
-future/unsettled; no recovery requirements are defined. UE-D1–UE-D10 leave no unresolved owner decision
+live Azure validation or RC readiness. Owner-approved G3-D3 places broader Operational Recovery / DR
+outside V1.0; existing Generator recovery requirements remain unchanged. UE-D1–UE-D10 leave no unresolved owner decision
 for this bounded Slice-9 capability; implementation is complete under the approved contract. Revision 2.42
 is Approved Baseline.
 
@@ -1193,7 +1204,105 @@ Logging shall provide sufficient information to diagnose issues without exposing
 
 ---
 
-# 13. Extensibility
+# 13. Review Gate 3 Operational Readiness Boundaries
+
+**DRAFT PROPOSAL - pending owner review; Gate 3 has not passed.** This section proposes
+operational acceptance assignments for existing Version-1.0 requirements. It does not approve
+new behavioural contracts. The authoritative acceptance matrix, decision register and PASS rules
+are in [Release Section 8.1](07-Release.md#81-review-gate-3-operational-readiness-acceptance).
+[Testing Section 9.1](06-Testing.md#91-review-gate-3-evidence-requirements) owns evidence requirements.
+
+Gate 3 asks whether the application is operationally complete and sufficiently evidenced to enter
+final release-candidate validation. It is not final Version-1.0 approval. Existing normative sources
+remain PRD FR-001 to FR-010 and NFR-001 to NFR-007, this Architecture, API Sections 5 to 11,
+Configuration Sections 5 to 8 and Testing Sections 5 to 9. Their assignment to Gate 3 is newly proposed
+unless already explicit, notably API Section 6.1 status reconciliation before Gate 3. Owner-approved
+G3-D1 to G3-D3 now settle summary/live-proof placement and broader DR exclusion; this document remains Draft.
+
+## 13.1 Logging acceptance boundary
+
+Before PASS, each applicable Section-12 topic shall have an approved interpretation and evidence
+against that interpretation. Existing Slice-6/8/9 behaviour shall be credited without reimplementation.
+Unresolved topics require separate behavioural contracts followed by any required implementation
+and validation. No event is required merely because it is imaginable. Owner-approved G3-D1 requires
+the complete summary contract, implementation, validation and evidence before Gate-3 PASS.
+
+| Topic | Proposed Gate-3 acceptance rule | Current evidence / remaining definition |
+|-------|---------------------------------|-----------------------------------------|
+| Startup | Preserve configured-run START after successful configuration validation and logger initialisation. | SATISFIED: Slice 8; no earlier bootstrap event is implied. |
+| Configuration validation | Preserve stderr-only pre-initialisation failure; approve whether START is sufficient evidence of successful validation. | DECISION REQUIRED: a separate success event is not yet required. |
+| Documentation processing | Approve and evidence minimum processing observability under Section 12, including existing terminal failure reporting. | PARTIALLY SATISFIED: failure category exists; minimum successful processing evidence remains undefined. |
+| Azure DevOps communication | Approve and evidence minimum communication/result observability consistent with API Sections 6, 9 and 10. | PARTIALLY SATISFIED: generic terminal failure exists; further event content and boundaries remain undefined. |
+| Work-item creation | Approve creation-event granularity and safe evidence of successful creation. | NOT SATISFIED: per-item versus aggregate evidence remains undefined; no counts are mandated. |
+| Warnings | Approve applicable warning conditions and their evidence, or explicitly justify that no distinct warning condition applies under current V1.0 contracts. | DECISION REQUIRED: no warning taxonomy exists; do not invent business rules. |
+| Controlled errors | Preserve the seven approved categories, exact current reports and eligible owned-handler CRITICAL events until an approved reporting revision applies. | SATISFIED for Slice 6; HTTP reconciliation remains separate. |
+| Unexpected errors | Preserve UE-D1 to UE-D10, fixed fallback and owned-handler best-effort CRITICAL event. | SATISFIED: Slice 9, including handled-Exception traceback suppression. |
+| Successful completion | Preserve normal-return-only INFO COMPLETION and configured filtering. | SATISFIED: Slice 8; this is not an execution summary. |
+| Execution summary | Complete the separately approved summary contract, implementation, validation and evidence before Gate-3 PASS under owner-approved G3-D1. | NOT SATISFIED: behaviour remains undefined and unimplemented; CONTRACT, IMPLEMENTATION and VALIDATION remain required. |
+| Authentication/authorisation | Meet the reconciled API reporting contract in Section 13.2. | PARTIALLY SATISFIED: status retained, current terminal reporting generic. |
+| Rate limiting | Meet API Section 11 through approved identifiable rate-limit logging, preserving fail/no-sleep/no-retry behaviour. | PARTIALLY SATISFIED: generic failure exists; reporting contract and event remain outstanding. |
+| Diagnostic safety | Preserve safe existing messages and prove secret safety for every newly approved event. | PARTIALLY SATISFIED: existing fixed events evidenced; future content requires validation. |
+| Destination | Preserve the validated directory, fixed UTF-8 append logfile, owned-handler isolation and no fallback destination. | SATISFIED: Slice 6 and Configuration Section 6.4. |
+| Levels | Preserve configured thresholds, INFO lifecycle and CRITICAL terminal events; approve levels for any new events. | PARTIALLY SATISFIED: current levels evidenced; new-event levels undefined. |
+
+Further logging contracts shall define trigger, timing, content, level, ownership, filtering and
+write-failure behaviour. They shall state which existing event satisfies a topic and prevent duplicate
+terminal reporting. File logging remains operational infrastructure; user-facing presentation and
+process termination shall not move into the shared Application Core or Generator. Generator-owned
+creation/reuse/relationship decisions shall not be inferred from a successful application return.
+
+## 13.2 HTTP reporting and execution-summary dependencies
+
+Before Gate-3 PASS, an Approved Baseline behavioural contract shall reconcile API Section 6.1
+`401` authentication-failure reporting, `403` authorisation-failure reporting and Section 11 rate-limit
+logging with the current generic `Azure DevOps error.` process/log event. Its required implementation
+shall be merged and its evidence recorded. Exact messages, channels, levels and interaction with existing
+reports require separate approval; this gate contract does not select them. HTTP status retention and
+no-retry behaviour already exist. No new exception taxonomy is proven necessary. Optional safe
+`Retry-After` diagnostics do not authorise sleep or retry. API Section 6.1 implementation-status
+reconciliation remains mandatory separate documentation work before PASS; the API is not edited here.
+
+The execution summary remains mandatory under Sections 8 and 12. G3-D1 is RESOLVED / OWNER APPROVED:
+its contract, implementation, validation and evidence shall be complete before Gate-3 PASS. Unfinished
+summary functionality shall not be deferred to Gate 4; final RC regression may repeat its validation. Its separate
+contract shall settle content, destination, timing, success/failure applicability, partial-result
+semantics, safety and delivery-failure behaviour. It shall decide whether counts and Generator outcome
+information are necessary. No created/reused/repaired/skipped/total counts, typed result model or interface
+change is mandated here. API Section 7.1's summary/completion wording shall be reconciled with the
+mandatory summary requirement; Slice-8 COMPLETION shall not silently substitute for a summary.
+
+## 13.3 Runtime, safety and recovery boundaries
+
+G3-D2 is RESOLVED / OWNER APPROVED: minimum real Azure DevOps Services operational proof shall exist
+before Gate-3 PASS; mock-only evidence is insufficient. Testing Section 9.1 defines the minimum scope.
+The exact isolated environment and controlled procedure still require preparation before execution.
+Final live-validation repetition and explicitly allocated remaining release scenarios belong to Gate 4.
+
+Gate-3 acceptance shall preserve the approved package surface, configuration selection, integer outcomes,
+exclusive adapter SystemExit ownership and direct lower-level propagation. It shall preserve `AZDO_PAT`
+as the sole credential source, no PAT in TOML/CLI, no PAT or Authorization diagnostics, HTTPS,
+redirect/proxy protections, fixed existing reports and bounded handled-Exception traceback suppression.
+New logging/reporting/summary and live-test evidence shall be secret-safe; no redaction framework is
+introduced. Process-control exceptions and existing stderr-delivery boundaries remain unchanged.
+
+Acceptance shall preserve preflight before mutation, global fail-fast, accepted partial remote state,
+identity-based reuse and fresh MISSING/CORRECT/CONFLICTING relationship handling. No automatic retry,
+rollback, compensating mutation, credential switching or generic remote-state repair is authorised.
+G3-D3 is RESOLVED / OWNER APPROVED: broader Operational Recovery / Disaster Recovery is OUTSIDE V1.0,
+not deferred to Gate 4. V1.0 requires no new backup/restore or DR infrastructure, generic recovery
+subsystem, logfile recovery/rotation capability or dedicated DR platform/service. Narrow Generator
+rerun recovery remains unchanged and is not equivalent to operational DR. Operator guidance shall
+explain the bounded failure/rerun model under Release row L; row J retains its validation obligations.
+The scope decision does not establish completion of either row.
+
+This proposal introduces no new configuration, environment variable, dependency, launcher, public
+exception or result interface. It requires neither architectural refactoring nor test reorganisation.
+No Slice 10 has been allocated. Broader behavioural definitions and gate acceptance remain separate
+from the implemented, approved Slices 1-9.
+
+---
+
+# 14. Extensibility
 
 The architecture shall support future enhancements without requiring significant modification of the existing design.
 
@@ -1210,7 +1319,7 @@ Future enhancements shall preserve the established architectural principles and 
 
 ---
 
-# 14. Architecture Traceability
+# 15. Architecture Traceability
 
 This Software Architecture Document provides the technical implementation framework for the approved Product Requirements Document.
 
@@ -1227,7 +1336,7 @@ The Software Architecture Document shall remain consistent with the approved Pro
 
 ---
 
-# 15. Approval
+# 16. Approval
 
 Approval of a document version requires:
 

@@ -4,17 +4,21 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.32
+**Version:** 2.33
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-11
+**Last Updated:** 2026-09-12
 
 **Target Release:** v1.0.0
 
 **License:** MIT
 
 **Author:** Jack Spaetjens
+
+**Revision scope:** Revision 2.33 proposes the Gate-3 acceptance framework for owner review.
+References below to revision 2.32 as Approved Baseline identify the preceding implementation
+baseline, not approval of this Draft. Existing slice contracts and recorded results remain unchanged.
 
 ---
 
@@ -66,6 +70,7 @@
 | 2.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined required/planned validation for final unexpected-error handling and diagnostic safety while preserving current evidence. |
 | 2.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved planned validation contract to Application/Run Slice 9 without changing validation requirements or evidence. |
 | 2.32 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Slice-9 validation coverage and measured quality evidence. |
+| 2.33 | 2026-09-12 | Draft | Jack Spaetjens | Proposed Review Gate 3 integration, live-validation allocation, evidence recording and findings criteria. |
 
 ---
 
@@ -88,6 +93,7 @@
 - [7. Test Data](#7-test-data)
 - [8. Validation Strategy](#8-validation-strategy)
 - [9. Acceptance Criteria](#9-acceptance-criteria)
+  - [9.1 Review Gate 3 evidence requirements](#91-review-gate-3-evidence-requirements)
 - [10. Defect Management](#10-defect-management)
 - [11. Traceability](#11-traceability)
 - [12. Approval](#12-approval)
@@ -524,7 +530,7 @@ performed during this documentation status sync.
 Existing Slice-5/6 evidence remains authoritative for all seven controlled categories, exact reporting,
 owned-handler logging, D1–D5 and controlled secret-safety; Slice 7 changes none of those contracts.
 Broader logging beyond the implemented slices, execution-summary content and presentation, broader integration/E2E,
-live Azure DevOps Services validation, Operational Readiness, Operational Recovery / DR, API Section 6.1
+live Azure DevOps Services validation, Operational Readiness, API Section 6.1
 status-drift reconciliation before Review Gate 3, Gate 3 and final Version 1.0 readiness remain future.
 Version 1.0 remains pre-release; no live Azure DevOps E2E or release-readiness claim is made.
 
@@ -601,8 +607,7 @@ Compared with the pre-Slice-8 baseline, full tests increased from 723 to 743 (+2
 results establish no known failures in the executed checks, not mathematical proof of defect freedom.
 They are merged implementation evidence; Ruff and pytest were not rerun for this documentation-only
 status sync. Summary, remaining logging, integration/E2E, live validation,
-Operational Readiness, unsettled
-Operational Recovery / DR scope/Gate-3 placement, API Section 6.1 reconciliation before Gate 3,
+Operational Readiness, API Section 6.1 reconciliation before Gate 3,
 Review Gate 3 and final Version-1.0 readiness remain future.
 
 **Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety — IMPLEMENTED — APPROVED CONTRACT.**
@@ -686,8 +691,8 @@ The execution summary remains required, undefined and not implemented; no result
 Broader Architecture Section-12 logging and HTTP/API reporting contracts remain separate work.
 API Section 6.1 status reconciliation remains separate documentation work required before Gate 3.
 Broader integration/E2E and live validation remain incomplete. Operational Readiness definition/evidence
-remains future, with no complete normative Gate-3 checklist; Operational Recovery / DR scope and final
-Gate-3 placement remain future/unsettled. Gates 3 and 4 remain future and Version 1.0 remains pre-release.
+remains incomplete; Section 9.1 applies the resolved owner placements to Gate-3 evidence. Broader
+Operational Recovery / DR is outside V1.0 under G3-D3. Gates 3 and 4 remain future and Version 1.0 remains pre-release.
 
 Work Item Create Payload validation shall additionally cover:
 
@@ -812,6 +817,109 @@ Version 1.0 shall be considered successfully validated when all of the following
 - Complete traceability has been maintained between requirements, implementation and testing.
 
 Acceptance shall be based on the successful completion of the planned validation activities.
+
+---
+
+## 9.1 Review Gate 3 evidence requirements
+
+**DRAFT PROPOSAL - pending owner review; no new test execution evidence is claimed.**
+The Gate-3 evidence framework remains Draft. G3-D1 to G3-D3 are RESOLVED / OWNER APPROVED and
+settle summary/live-proof placement and broader DR exclusion alongside existing Sections 5 to 9.
+[Release Section 8.1](07-Release.md#81-review-gate-3-operational-readiness-acceptance) owns mandatory
+rows, placement decisions and acceptance. [Architecture Section 13](02-Architecture.md#13-review-gate-3-operational-readiness-boundaries)
+owns behavioural dependencies. Writing this section does not satisfy an evidence requirement.
+
+### Evidence forms and minimum application integration
+
+Existing unit, component/composition, subprocess, fake REST, stateful rerun and real filesystem/config
+results shall be credited with their actual boundaries. The recorded 764/764 full and warnings-as-errors
+results, Ruff pass, 95% coverage, 1,394 statements and 64 missed remain historical implementation evidence;
+`main.py` remains recorded as 110/0/100% and `__main__.py` as 3/0/100%. These results do not establish
+successful complete application E2E or live Services validation. Successful adapter-only subprocesses
+that replace `run_process()` are not successful application execution evidence.
+
+Before Gate-3 PASS, the following application-level evidence is proposed as mandatory:
+
+- At least one successful complete supported package invocation using real argument/configuration loading,
+  temporary non-secret configuration and Markdown files, documentation processing, Generator preflight and
+  traversal, runtime logging, approved reporting and the required summary, and process outcome/termination.
+  A controlled transport substitute may support repeatable automated integration, but the application,
+  parser and Generator shall not be replaced by successful no-op collaborators in this evidence.
+- Integrated failure evidence for configuration/bootstrap, preflight-before-persistence, downstream
+  mutation/relationship failure and the unexpected process fallback, showing no later work after failure.
+  Existing evidence may be composed by traceability where it already proves the relevant boundary;
+  failures need not all be induced against a live service.
+- Evidence of identity-based rerun behaviour and fresh relationship inspection, including child Create
+  followed by relationship failure, later MISSING repair without duplicate Create, CORRECT continuation
+  and CONFLICTING stop. Existing stateful Generator tests remain valid component evidence; the application
+  integration record shall identify which connections to the runtime path are additionally proven.
+- Approved logging/reporting acceptance, including configuration success interpretation, event ownership,
+  thresholds, duplicate prevention, delivery-failure precedence, `401`/`403` distinctions and rate-limit
+  reporting for `429` without sleep/retry. Under G3-D1, the separately defined summary contract,
+  implementation, validation and recorded evidence shall be complete before Gate-3 PASS; content,
+  destination, timing, failure/partial-result and delivery-failure semantics still require definition.
+- Regression and secret-safety evidence for all changed behaviour and the preserved Slice-1-9 boundaries.
+  A successful full suite and Ruff result tied to the assessed implementation shall be recorded; evidence
+  reuse shall identify the unchanged implementation and why earlier results remain applicable.
+
+Under owner-approved G3-D2, mock-only/fake-transport evidence is insufficient for Gate-3 PASS; minimum
+real Services operational proof is mandatory. V1.0 dry-run remains unsupported. A successful reused/CORRECT run with no persistent mutation
+still makes Azure requests and is not a substitute for creation/relationship validation.
+
+### Required live Services proof - G3-D2 RESOLVED / OWNER APPROVED
+
+Minimum real Services operational proof shall be complete before Gate-3 PASS; final RC repetition
+remains at Gate 4. The proof shall demonstrate a successful supported application invocation against
+an isolated Azure DevOps Services test organisation/project or equivalent isolated approved test project.
+It shall cover, where applicable to the supported V1.0 path, real connectivity, approved authentication/
+authorisation setup, project/field compatibility, validation-only Work Item Create acceptance, actual
+creation across the supported hierarchy and work-item types, expected mapped fields and parent-child
+relationships, followed by identity-based reuse on a later invocation without duplicate creation.
+The evidence shall demonstrate that no automatic retry, rollback or compensation is introduced and
+that credential and diagnostic handling remain safe.
+The record shall identify the actual process and custom identity-field support; it shall not label an
+inherited/customised project as proof of unmodified standard Scrum compatibility.
+
+The owner shall approve a scenario-to-gate matrix covering all existing Section-9 acceptance obligations,
+including standard Scrum and compatible inherited/customised Scrum compatibility and rejection scenarios.
+Only explicitly allocated scenarios beyond the mandatory minimum proof may remain for Gate 4 through
+the Release deferral rule, alongside final live repetition and release evidence. The minimum proof
+cannot be deferred; absence of a live environment does not permit mock-only acceptance. Exact project
+configuration, permissions, cleanup authorisation and the controlled scenario procedure still require
+definition before execution. No live-validation obligation is waived or live execution performed here.
+
+A controlled, repeatable manual procedure with documented results is acceptable; a dedicated automated
+live harness is not mandated unless a later approved contract requires automation. The procedure shall
+identify the isolated test organisation/project,
+approved input, required fields and process compatibility, API Section 6.2 least-privilege scopes and
+permissions, runtime-only credential provision, writable log destination, expected results and authorised
+mutation boundaries. Credentials shall not appear in source, TOML, CLI arguments, captured diagnostics or
+evidence. Any cleanup needs separately authorised scope; application deletion/compensation is not added.
+
+Broader Operational Recovery / DR is OUTSIDE V1.0 under owner-approved G3-D3 and is not deferred to
+Gate 4. No new DR/backup infrastructure, generic recovery subsystem or logfile recovery/rotation
+validation is required. Existing global-stop, partial-state, identity-reuse and fresh relationship
+MISSING/CORRECT/CONFLICTING validation remains required, as does bounded failure/rerun operator guidance.
+
+### Evidence record and findings
+
+For each Release matrix row A-O, the review record shall contain the source document/version/section,
+acceptance condition, assessed implementation commit and relevant merged change references, test, manual procedure or document-review
+identifier as applicable, environment and input identity without secrets, execution date, expected and actual
+outcome, result/artefact reference, known limitations, current status and reviewer. Existing evidence shall
+state its component/subprocess/live boundary and applicability to the assessed revision. A procedure that
+has not been executed is planned evidence, not a passed result.
+
+The proposed Gate-3 threshold adopts Section 9: no unresolved critical or high-severity defects or
+findings. This is an explicit governance assignment to Gate 3 and does not relax the existing V1.0 rule.
+Findings shall record severity, impact, disposition and closure evidence. If another review uses
+BLOCKER/MAJOR/MINOR/EDITORIAL labels, the owner-approved record shall state their critical/high relevance;
+labels shall not be silently treated as equivalent or used to evade the threshold. Lower-severity findings
+shall not leave a mandatory acceptance condition unsatisfied; any permitted residual work requires an
+explicit disposition under the Release deferral rule.
+
+No live operations, new tests, Ruff or pytest runs are performed by this contract-definition revision.
+Final RC regression/live repetition and final release evidence remain subject to Gate 4.
 
 ---
 
