@@ -6,7 +6,7 @@
 
 **Version:** 1.33
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-12
 
@@ -66,7 +66,7 @@ Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 1
 | 1.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved but unimplemented Final Unexpected-Error Handling and Diagnostic Safety capability as Application/Run Slice 9. |
 | 1.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and remaining pre-release limitations. |
 | 1.32 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 acceptance matrix, owner decisions, PASS and deferral rules and Gate-4 boundary. |
-| 1.33 | 2026-09-12 | Draft | Jack Spaetjens | Recorded approved execution-summary decisions with implementation and validation pending; Gate 3 remains not passed. |
+| 1.33 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded approved execution-summary decisions with implementation and validation pending; Gate 3 remains not passed. |
 
 ---
 
