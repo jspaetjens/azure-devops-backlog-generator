@@ -4,17 +4,21 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.37
+**Version:** 1.38
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-11
+**Last Updated:** 2026-09-12
 
 **Target Release:** v1.0.0
 
 **License:** MIT
 
 **Author:** Jack Spaetjens
+
+**Revision scope:** Revision 1.38 proposes the Gate-3 acceptance framework for owner review.
+References below to revision 1.37 as Approved Baseline identify the preceding implementation
+baseline, not approval of this Draft. Existing slice contracts and recorded results remain unchanged.
 
 ---
 
@@ -61,6 +65,7 @@
 | 1.35 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Recorded the owner-approved final unexpected-error handling and diagnostic-safety capability and remaining readiness work. |
 | 1.36 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated Final Unexpected-Error Handling and Diagnostic Safety as Application/Run Slice 9 and preserved remaining capability ordering as undefined. |
 | 1.37 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and preserved remaining capability ordering as undefined. |
+| 1.38 | 2026-09-12 | Draft | Jack Spaetjens | Recorded Review Gate 3 contract definition as the next governance milestone without allocating implementation slices. |
 
 ---
 
@@ -74,6 +79,7 @@
 - [3. Roadmap Objectives](#3-roadmap-objectives)
 - [4. Development Principles](#4-development-principles)
 - [5. Current Implementation Baseline](#5-current-implementation-baseline)
+  - [5.1 Review Gate 3 next governance milestone](#51-review-gate-3-next-governance-milestone)
 - [6. Development Phases](#6-development-phases)
   - [Phase 1 – Project Foundation](#phase-1--project-foundation)
   - [Phase 2 – Core Infrastructure](#phase-2--core-infrastructure)
@@ -224,7 +230,7 @@ is absent from stderr. Successful execution remains silent, with no stdout or st
 boundaries and future alternate-interface compatibility are preserved. Slice 5 does not introduce logging,
 execution summaries, unexpected-exception reporting, tracebacks, `sys.exit` or `SystemExit`, direct execution,
 packaging or GUI implementation. Slices 1–9 are implemented; the wider Application/Run phase remains
-incomplete, and Operational Readiness, Operational Recovery / DR, Review Gate 3, integration/end-to-end and final
+incomplete, and Operational Readiness, Review Gate 3, integration/end-to-end and final
 release-readiness work remain future.
 
 Application/Run Slice 6 — Runtime File Logging and Controlled-Failure Events is implemented.
@@ -261,7 +267,7 @@ includes broader logging beyond the implemented slices, execution-summary conten
 execution-result/aggregation and created/reused/repaired counts only if later summary requirements need
 them, HTTP/API reporting reconciliation/contract work, broader integration/E2E,
 live Azure DevOps Services validation, Operational Readiness,
-Operational Recovery / DR, Review Gate 3 and final Version 1.0 release readiness. Console-script
+Review Gate 3 and final Version 1.0 release readiness. Console-script
 packaging remains future only if separately approved; GUI implementation remains future and outside
 Version 1.0 scope. Beyond implemented Slice 9, these responsibilities prescribe neither new slices
 nor an order for future capabilities.
@@ -303,11 +309,13 @@ Wider Application/Run remains incomplete and Version 1.0 remains pre-release. Th
 is preserved, including summary content/presentation, remaining logging, broader integration/E2E,
 live Azure validation, Operational Readiness checklist/evidence and final readiness. Slice 9 resolves
 the previous native traceback limitation only on the supported handled-Exception package/run_process path.
-Review Gate 3 remains future; no complete normative Gate-3 acceptance checklist has been
-established, and Slice 8 does not complete its prerequisites. API Section 6.1 reconciliation remains
-separate future documentation work required before Gate 3. Operational Recovery / DR scope and exact
-Gate-3 placement remain future/unsettled; Generator later-run recovery does not settle them or constitute
-Operational Recovery / DR. No new recovery requirement is defined.
+The preceding Approved Baseline did not contain a complete normative Gate-3 acceptance checklist;
+Section 5.1 of this revision records the Gate-3 framework and governance milestone.
+Gate 3 remains FUTURE / NOT YET PASSED; Slice 8 does not complete its prerequisites.
+API Section 6.1 reconciliation remains
+separate future documentation work required before Gate 3. Owner-approved G3-D3 places broader
+Operational Recovery / DR outside V1.0; Generator later-run recovery remains unchanged and does not
+constitute Operational Recovery / DR.
 
 ---
 
@@ -346,9 +354,45 @@ Wider Application/Run remains incomplete and Version 1.0 remains pre-release. Se
 includes broader logging and HTTP/API reporting reconciliation/contract work; the required, undefined
 and not implemented execution summary (no result/count model exists); API Section 6.1 status reconciliation before Gate 3;
 broader integration/E2E; live Azure DevOps Services validation; Operational Readiness definition/evidence;
-Operational Recovery / DR; Review Gate 3; Review Gate 4; and final release readiness. No Gate-3 checklist,
-Recovery/DR scope or final Gate-3 placement is defined here. Gates 1 and 2 remain PASS; Gates 3 and 4
+Review Gate 3; Review Gate 4; and final release readiness. Section 5.1 records the Draft gate framework
+and resolved owner decisions, including broader DR outside V1.0. Gates 1 and 2 remain PASS; Gates 3 and 4
 remain future. This capability is required before final Version-1.0 readiness but completes none of those gates.
+
+---
+
+## 5.1 Review Gate 3 next governance milestone
+
+**DRAFT PROPOSAL - Gate 3 FUTURE / NOT YET PASSED; current readiness NOT READY.**
+The next governance milestone is definition and owner review of the Operational Readiness acceptance
+contract, followed by closure of its approved prerequisites and a separate Gate-3 assessment.
+This is not an Application/Run implementation slice or an approved order for future capabilities.
+
+[Release Section 8.1](07-Release.md#81-review-gate-3-operational-readiness-acceptance) owns the acceptance
+matrix, current statuses, owner decisions and PASS/NOT-READY/deferral rules.
+[Architecture Section 13](02-Architecture.md#13-review-gate-3-operational-readiness-boundaries) owns
+operational boundaries and unresolved behavioural dependencies.
+[Testing Section 9.1](06-Testing.md#91-review-gate-3-evidence-requirements) owns validation forms and records.
+
+The existing implementation baseline remains Slices 1-9 IMPLEMENTED + APPROVED, Gates 1 and 2 PASS,
+Gate 4 FUTURE and Version 1.0 PRE-RELEASE. No Slice 10 has been allocated. The preceding slice-status
+records describe the approved implementation baseline; this Draft proposes the missing gate framework
+with placement decisions G3-D1 to G3-D3 RESOLVED / OWNER APPROVED. Behavioural contracts and
+acceptance evidence remain incomplete; the framework remains Draft pending review.
+
+Remaining prerequisite groups are contract/documentation reconciliation; approved logging and HTTP
+reporting implementation/evidence; summary definition, implementation and validation; application
+integration and live validation; operator guidance; and findings/evidence/sign-off. API Section 6.1
+status reconciliation remains a mandatory pre-Gate-3 prerequisite. Owner-approved G3-D1 requires the
+complete summary capability before Gate 3. G3-D2 requires minimum real Services operational proof
+before Gate 3, with final RC repetition at Gate 4. G3-D3 places broader Operational Recovery / DR
+outside V1.0, not in the Gate-4 backlog. Bounded failure/rerun guidance and evidence remain required.
+Exact logging/reporting/summary behaviour and the live procedure/environment still need definition.
+
+Dependencies, rather than new slice numbers, govern continuation: behavioural contracts precede their
+implementation; validation follows the relevant implementation and environment preparation; gate review
+requires recorded evidence. The proposed Gate-4 boundary reserves final RC validation and release
+approval. Deferral requires the formal rule in Release Section 8.1 and cannot silently remove a V1.0
+requirement. No complete Gate-4 contract or additional implementation ordering is defined here.
 
 ---
 
