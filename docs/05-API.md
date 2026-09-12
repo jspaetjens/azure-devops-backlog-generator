@@ -6,7 +6,7 @@
 
 **Version:** 2.24
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-12
 
@@ -67,7 +67,7 @@ Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 1
 | 2.21 | 2026-08-29 | Approved Baseline | Jack Spaetjens | Synchronized implemented every-candidate preflight validation-only coordination status. |
 | 2.22 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition status. |
 | 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented Generator-owned orchestration status without REST contract changes. |
-| 2.24 | 2026-09-12 | Draft | Jack Spaetjens | Reconciled summary and completion sequencing and Application/Run implementation status without resolving HTTP reporting decisions. |
+| 2.24 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Reconciled summary and completion sequencing and Application/Run implementation status without resolving HTTP reporting decisions. |
 
 ---
 
