@@ -6,7 +6,7 @@
 
 **Version:** 2.33
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-12
 
@@ -70,7 +70,7 @@ baseline, not approval of this Draft. Existing slice contracts and recorded resu
 | 2.30 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Defined required/planned validation for final unexpected-error handling and diagnostic safety while preserving current evidence. |
 | 2.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Allocated the approved planned validation contract to Application/Run Slice 9 without changing validation requirements or evidence. |
 | 2.32 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Slice-9 validation coverage and measured quality evidence. |
-| 2.33 | 2026-09-12 | Draft | Jack Spaetjens | Proposed Review Gate 3 integration, live-validation allocation, evidence recording and findings criteria. |
+| 2.33 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 integration, live-validation allocation, evidence recording and findings criteria. |
 
 ---
 
