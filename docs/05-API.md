@@ -4,11 +4,11 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.24
+**Version:** 2.25
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-12
+**Last Updated:** 2026-09-16
 
 **Target Release:** v1.0.0
 
@@ -16,15 +16,18 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records owner-approved G3-SUM-D1 to G3-SUM-D9.
-The execution-summary behavioural decisions are approved; their implementation and validation
-remain pending. The approved starting baseline is main at `cff3397`. Historical slice contracts,
+**Revision scope:** This Draft records the owner allocation of Application/Run Slice 10 —
+Execution Summary Implementation and Validation. G3-SUM-D1 to G3-SUM-D9 remain Approved Baseline;
+Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED. The approved starting baseline is main
+at `db389a3`. Historical slice contracts,
 `None` returns, summary exclusions and recorded test results below describe their original
 implementation boundaries; they do not override the current summary contract in
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
 Historical references to pending API Section 6.1 status reconciliation describe the earlier
-baseline; this Draft reconciles that status only. HTTP reporting decisions remain separate.
-Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 10 is allocated.
+baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
+Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
+PRE-RELEASE. This allocation revision is Draft pending review and separate approval-only promotion;
+the G3-SUM behavioural contract remains approved. No subsequent slice is allocated.
 
 ---
 
@@ -68,6 +71,7 @@ Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 1
 | 2.22 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition status. |
 | 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented Generator-owned orchestration status without REST contract changes. |
 | 2.24 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Reconciled summary and completion sequencing and Application/Run implementation status without resolving HTTP reporting decisions. |
+| 2.25 | 2026-09-16 | Draft | Jack Spaetjens | Reconciled Application/Run Slice-10 allocation status without changing REST or execution-summary behaviour. |
 
 ---
 

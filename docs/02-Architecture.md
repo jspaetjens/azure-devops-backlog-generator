@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.44
+**Version:** 2.45
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-12
+**Last Updated:** 2026-09-16
 
 **Target Release:** v1.0.0
 
@@ -16,15 +16,18 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records owner-approved G3-SUM-D1 to G3-SUM-D9.
-The execution-summary behavioural decisions are approved; their implementation and validation
-remain pending. The approved starting baseline is main at `cff3397`. Historical slice contracts,
+**Revision scope:** This Draft records the owner allocation of Application/Run Slice 10 —
+Execution Summary Implementation and Validation. G3-SUM-D1 to G3-SUM-D9 remain Approved Baseline;
+Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED. The approved starting baseline is main
+at `db389a3`. Historical slice contracts,
 `None` returns, summary exclusions and recorded test results below describe their original
 implementation boundaries; they do not override the current summary contract in
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
 Historical references to pending API Section 6.1 status reconciliation describe the earlier
-baseline; this Draft reconciles that status only. HTTP reporting decisions remain separate.
-Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 10 is allocated.
+baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
+Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
+PRE-RELEASE. This allocation revision is Draft pending review and separate approval-only promotion;
+the G3-SUM behavioural contract remains approved. No subsequent slice is allocated.
 
 ---
 
@@ -88,6 +91,7 @@ Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 1
 | 2.42 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 Final Unexpected-Error Handling and Diagnostic Safety status. |
 | 2.43 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 operational boundaries and dependencies on unresolved behavioural contracts. |
 | 2.44 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded owner-approved G3-SUM-D1 to G3-SUM-D9 execution-summary behaviour and prospective interface changes; implementation and validation remain pending. |
+| 2.45 | 2026-09-16 | Draft | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 without changing G3-SUM-D1 to G3-SUM-D9. |
 
 ---
 
@@ -114,6 +118,7 @@ Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 1
     - [7.1.7 Application/Run Slice 7 — Package Execution Adapter with Controlled Process Termination](#717-applicationrun-slice-7--package-execution-adapter-with-controlled-process-termination)
     - [7.1.8 Application/Run Slice 8 — Process-Neutral Application Lifecycle File Logging](#718-applicationrun-slice-8--process-neutral-application-lifecycle-file-logging)
     - [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
+    - [Application/Run Slice 10 — Execution Summary Implementation and Validation](#applicationrun-slice-10--execution-summary-implementation-and-validation)
   - [7.2 Configuration Manager](#72-configuration-manager)
   - [7.3 Documentation Processor](#73-documentation-processor)
   - [7.4 Backlog Generator](#74-backlog-generator)
@@ -814,8 +819,8 @@ PR #147 (commit `1174bcb`, merge `ea37478`). Production changes are confined to
 This section is authoritative for the bounded final process-facing unexpected-error contract.
 The merged implementation replaces the earlier process-facing unexpected propagation and native-traceback
 limitation only on the supported handled-Exception `run_process()`/package path. Direct lower-level
-same-object exception propagation remains unchanged. No Slice 10 has been allocated; future capability
-ordering beyond Slice 9 remains undefined.
+same-object exception propagation remains unchanged. Slice 10 is allocated below; future capability
+ordering beyond Slice 10 remains undefined.
 
 **UE-D1 — Final catch boundary.** Only `run_process()` shall introduce the generic process-facing
 catch for otherwise-unclassified `Exception` instances. It shall catch `Exception`, not `BaseException`,
@@ -943,7 +948,7 @@ Broader Section-12 logging remains incomplete and separate. Section 13.4 now rec
 execution-summary contract; implementation and validation remain pending. The unexpected message is
 not a summary. Slice 9 defines no summary or other new lifecycle observations. Documentation-processing
 and Azure communication observability, work-item creation events, warnings and HTTP reporting decisions
-remain separate. API Section 6.1 implementation status is reconciled in this Draft; its unresolved
+remain separate. API Section 6.1 implementation status reconciliation is already approved; its unresolved
 HTTP reporting requirements remain separate contract work.
 
 Review Gates 1 and 2 remain PASS; Review Gates 3 and 4 remain future. Wider Application/Run remains
@@ -960,6 +965,30 @@ Testing Section 8 records merged Slice-9 evidence: 84/84 combined focused applic
 is 95% across 1,394 statements with 64 missed; `main.py` is 110/0/100% and `__main__.py` is 3/0/100%.
 No live Azure DevOps operations occurred. These are recorded implementation results, not new runs for
 this documentation status sync.
+
+---
+
+### Application/Run Slice 10 — Execution Summary Implementation and Validation
+
+**ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED — APPROVED BEHAVIOURAL CONTRACT.**
+The owner has allocated the implementation and automated validation of G3-SUM-D1 to G3-SUM-D9
+as Application/Run Slice 10, retaining the separate allocation workflow used for Slice 9.
+[Section 13.4](#134-execution-summary-behavioural-contract) remains the behavioural authority;
+[Testing Section 9.2](06-Testing.md#92-execution-summary-validation) retains the prospective validation.
+This allocation revision is Draft pending review and separate approval-only promotion.
+
+The bounded scope is the Generator-owned invocation-wide processed-source-item count, the two
+approved integer-return changes and unchanged forwarding, bootstrap-owned SUMMARY delivery before
+COMPLETION, and automated validation of that approved contract. All G3-SUM exclusions and preserved
+interfaces remain unchanged. Current implementation descriptions and historical evidence remain valid
+for their original boundaries; no Slice-10 implementation or validation is claimed.
+
+HTTP 401/403/429 reporting and unrelated logging decisions remain separate unresolved work.
+The owner identifies GUI implementation as a separate future Version-1.0 release requirement,
+outside Slice 10; earlier slice statements do not allocate or implement that requirement.
+No subsequent slice, broader recovery/DR, Gate-4 or release-candidate work is allocated.
+Slices 1–9 remain IMPLEMENTED + APPROVED; Gate 3 remains NOT PASSED, Gate 4 FUTURE and
+Version 1.0 PRE-RELEASE.
 
 ---
 
@@ -1218,8 +1247,8 @@ Logging shall provide sufficient information to diagnose issues without exposing
 
 # 13. Review Gate 3 Operational Readiness Boundaries
 
-**DRAFT PROPOSAL - pending owner review; Gate 3 has not passed.** This section proposes
-operational acceptance assignments for existing Version-1.0 requirements. It does not approve
+**APPROVED GATE FRAMEWORK — Gate 3 has not passed.** This section records
+operational acceptance assignments for existing Version-1.0 requirements. The gate framework does not approve
 new behavioural contracts. The authoritative acceptance matrix, decision register and PASS rules
 are in [Release Section 8.1](07-Release.md#81-review-gate-3-operational-readiness-acceptance).
 [Testing Section 9.1](06-Testing.md#91-review-gate-3-evidence-requirements) owns evidence requirements.
@@ -1272,7 +1301,7 @@ shall be merged and its evidence recorded. Exact messages, channels, levels and 
 reports require separate approval; this gate contract does not select them. HTTP status retention and
 no-retry behaviour already exist. No new exception taxonomy is proven necessary. Optional safe
 `Retry-After` diagnostics do not authorise sleep or retry. API Section 6.1 implementation-status
-reconciliation is recorded in API Section 6.1 by this Draft; required HTTP reporting contract,
+reconciliation in API Section 6.1 is already approved; required HTTP reporting contract,
 implementation and evidence remain pending before PASS.
 
 The execution summary remains mandatory under Sections 8 and 12. G3-D1 is RESOLVED / OWNER APPROVED:
@@ -1310,7 +1339,8 @@ The scope decision does not establish completion of either row.
 The gate framework itself introduces no new configuration, environment variable, dependency, launcher,
 public exception or result interface. Section 13.4 separately records the two approved count-return
 changes. The framework requires neither architectural refactoring nor test reorganisation.
-No Slice 10 has been allocated. Broader behavioural definitions and gate acceptance remain separate
+Slice 10 is allocated for execution-summary implementation and validation only; both remain pending.
+Broader behavioural definitions and gate acceptance remain separate
 from the implemented, approved Slices 1-9.
 
 ---
@@ -1318,11 +1348,11 @@ from the implemented, approved Slices 1-9.
 ## 13.4 Execution-summary behavioural contract
 
 **OWNER-APPROVED BEHAVIOURAL DECISIONS — IMPLEMENTATION AND VALIDATION PENDING.**
-G3-SUM-D1 to G3-SUM-D9 were explicitly approved by the owner on 2026-09-12. This Draft records
-those decisions; it does not claim merged implementation, executed validation or Gate-3 PASS.
+G3-SUM-D1 to G3-SUM-D9 were explicitly approved by the owner on 2026-09-12 and baselined in
+Architecture 2.44. This allocation revision does not claim merged implementation, executed validation or Gate-3 PASS.
 This section is authoritative for execution-summary behaviour and explicitly supersedes only the
 affected earlier return and summary contracts. Historical Slice-1–9 implementation and test evidence
-remain historical. No Application/Run Slice 10 is allocated.
+remain historical. Application/Run Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED.
 
 **G3-SUM-D1 — Purpose and content.** SUMMARY shall report successful completion of the configured
 backlog-generation operation and the number of semantic source items whose approved Generator

@@ -4,11 +4,11 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.33
+**Version:** 1.34
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-12
+**Last Updated:** 2026-09-16
 
 **Target Release:** v1.0.0
 
@@ -16,15 +16,18 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records owner-approved G3-SUM-D1 to G3-SUM-D9.
-The execution-summary behavioural decisions are approved; their implementation and validation
-remain pending. The approved starting baseline is main at `cff3397`. Historical slice contracts,
+**Revision scope:** This Draft records the owner allocation of Application/Run Slice 10 —
+Execution Summary Implementation and Validation. G3-SUM-D1 to G3-SUM-D9 remain Approved Baseline;
+Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED. The approved starting baseline is main
+at `db389a3`. Historical slice contracts,
 `None` returns, summary exclusions and recorded test results below describe their original
 implementation boundaries; they do not override the current summary contract in
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
 Historical references to pending API Section 6.1 status reconciliation describe the earlier
-baseline; this Draft reconciles that status only. HTTP reporting decisions remain separate.
-Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 10 is allocated.
+baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
+Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
+PRE-RELEASE. This allocation revision is Draft pending review and separate approval-only promotion;
+the G3-SUM behavioural contract remains approved. No subsequent slice is allocated.
 
 ---
 
@@ -67,6 +70,7 @@ Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE; no Slice 1
 | 1.31 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 status and remaining pre-release limitations. |
 | 1.32 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 acceptance matrix, owner decisions, PASS and deferral rules and Gate-4 boundary. |
 | 1.33 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded approved execution-summary decisions with implementation and validation pending; Gate 3 remains not passed. |
+| 1.34 | 2026-09-16 | Draft | Jack Spaetjens | Recorded Application/Run Slice 10 as allocated, not implemented and not validated, preserving Gate-3 acceptance as unsatisfied. |
 
 ---
 
@@ -208,7 +212,7 @@ broader logging and HTTP/API reporting reconciliation/contract work, execution-s
 presentation remain future. Typed execution-result/aggregation and created/reused/repaired counts are conditional on later summary requirements.
 Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness
 and Review Gate 3 remain future. Console-script packaging requires separate approval; GUI implementation
-remains future and outside Version 1.0. The known pre-existing non-blocking `05-API.md` Section 6.1 broad
+remains a separate future Version-1.0 release requirement outside Slice 10 under the owner's current direction. The known pre-existing non-blocking `05-API.md` Section 6.1 broad
 deferred Application/Run status conflicts with the more specific current documents showing Slices 1–9
 implemented. Reconciliation remains required before Gate 3 and is not a Slice-9 implementation blocker.
 The API Specification and REST semantics remain unchanged by this status sync.
@@ -257,8 +261,8 @@ Gate 3; the API Specification is unchanged. Testing Section 8 records merged Sli
 55/55 focused tests, 743/743 full pytest and 743/743 warnings-as-errors pytest, Ruff passed and 95%
 coverage across 1,381 statements with 64 missed. No live Azure DevOps validation was performed or new
 subprocess tests added; existing Slice-7 package/subprocess coverage passed. Future GUI/alternate-adapter
-reuse remains possible through presentation-neutral application/core behaviour; GUI remains outside
-Version 1.0.
+reuse remains possible through presentation-neutral application/core behaviour; GUI remains a separate
+future Version-1.0 release requirement outside Slice 10 under the owner's current direction.
 
 ---
 
@@ -267,7 +271,7 @@ Architecture's
 [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
 section defines authoritative owner-approved decisions UE-D1–UE-D10. Those decisions remain approved
 and are implemented. Release revision 1.31 is Approved Baseline.
-Slices 1–9 are implemented. No Slice 10 has been allocated; future capability ordering beyond Slice 9
+Slices 1–9 are implemented. Slice 10 is allocated below; future capability ordering beyond Slice 10
 remains undefined.
 
 Implementation provenance is PR #148 (commit `738fdc3`, merge `4549eee`). Contract provenance remains
@@ -301,12 +305,27 @@ Version 1.0 remains pre-release and wider Application/Run remains incomplete. Ga
 PASS; Gates 3 and 4 remain future. Broader Architecture Section-12 logging and unresolved HTTP/API
 reporting remain separate capability work. Architecture Section 13.4 records owner-approved
 G3-SUM-D1 to G3-SUM-D9; execution-summary implementation and validation remain pending. No result DTO
-is approved. API Section 6.1 implementation status is reconciled in this Draft; separate HTTP
+is approved. API Section 6.1 implementation status reconciliation is already approved; separate HTTP
 reporting decisions remain unresolved.
 Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness definition/evidence,
-and final release approval remain outstanding. Section 8.1 records the Draft Gate-3 framework and
+and final release approval remain outstanding. Section 8.1 records the approved Gate-3 framework and
 resolved placement decisions; broader Operational Recovery / DR is outside V1.0 under G3-D3.
 Existing release criteria are unchanged.
+
+---
+
+**Application/Run Slice 10 — Execution Summary Implementation and Validation — ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED.**
+The owner has allocated the already-approved G3-SUM-D1 to G3-SUM-D9 implementation and automated
+validation, retaining the separate Slice-9 allocation workflow. Architecture Section 13.4 remains
+the behavioural authority and Testing Section 9.2 retains the prospective validation requirements.
+This allocation revision is Draft pending review and separate approval-only promotion; it supplies no
+implementation, validation or release-readiness evidence. Execution-summary acceptance in Section 8.1
+row F remains NOT SATISFIED.
+
+Slices 1–9 remain IMPLEMENTED + APPROVED; Gate 3 remains NOT PASSED, Gate 4 FUTURE and
+Version 1.0 PRE-RELEASE. HTTP 401/403/429 reporting and unrelated logging decisions remain unresolved
+separate work. The future Version-1.0 GUI release requirement remains outside Slice 10.
+No subsequent slice, broader recovery/DR, Gate-4 or release-candidate work is allocated.
 
 ---
 
@@ -383,7 +402,7 @@ Only approved releases shall be published.
 ## 8.1 Review Gate 3 Operational Readiness Acceptance
 
 **Gate 3 is FUTURE / NOT YET PASSED and currently NOT READY.**
-This Draft records approved summary decisions within the approved Gate-3 framework.
+This Draft records the Slice-10 allocation within the approved Gate-3 framework.
 Gate 3 answers: "Is the application operationally complete and sufficiently evidenced to enter final
 release-candidate validation?" Gate 4 remains the Release Candidate / final pre-release gate. Neither
 approval of this contract nor a later Gate-3 PASS constitutes RC acceptance or final Version-1.0 approval.
@@ -391,7 +410,7 @@ approval of this contract nor a later Gate-3 PASS constitutes RC acceptance or f
 Existing normative requirements are identified in the matrix's source column. The gate framework,
 including its assignments and PASS rule, forms part of the approved starting baseline at main `cff3397`.
 G3-D1 to G3-D3 remain RESOLVED / OWNER APPROVED on 2026-09-12 and settle placement/applicability.
-This Draft records the separately owner-approved summary contract in Architecture Section 13.4;
+The summary contract in Architecture Section 13.4 is already Approved Baseline;
 summary implementation and validation remain pending, and no Gate-3 PASS is implied.
 
 [Architecture Section 13](02-Architecture.md#13-review-gate-3-operational-readiness-boundaries) defines
@@ -443,8 +462,8 @@ for the current operational gate. Runtime documentation can be completed separat
 ### Owner decision register
 
 Owner decisions below were explicitly approved on 2026-09-12. They resolve gate placement and
-scope only. The framework is part of the approved starting baseline; this summary-contract revision
-remains Draft.
+scope only. The framework and summary contract are part of the approved starting baseline;
+this allocation revision remains Draft.
 
 | Decision | Status | Owner-approved decision | Remaining boundary |
 |----------|--------|-------------------------|--------------------|
@@ -456,8 +475,9 @@ Separate behavioural owner decisions remain for unresolved logging interpretatio
 Section 13.1 and HTTP reporting channels/messages/event interaction. G3-SUM-D1 to G3-SUM-D9 settle
 summary behaviour only, including one processed-source-item count and two prospective return changes;
 they do not resolve other logging or HTTP decisions. Architecture Section 13.4 owns that contract and
-Testing Section 9.2 owns prospective validation. No result DTO, new exception taxonomy, configuration
-or implementation slice is introduced. Summary approval does not satisfy row F or establish Gate-3 PASS.
+Testing Section 9.2 owns prospective validation. No result DTO, new exception taxonomy or configuration
+is introduced. Slice 10 allocates only implementation and automated validation of that approved contract.
+Neither summary approval nor allocation satisfies row F or establishes Gate-3 PASS.
 
 ### Entry, PASS and NOT-READY rules
 
@@ -510,7 +530,7 @@ The Gate-3 record shall be referenced from a subsequent approved Release status 
 assessed commit, governing document revisions, completed A-O matrix, Testing Section 9.1 evidence index,
 G3-D1 to G3-D3 decisions, findings/deferrals, reviewer and dated owner decision. Signing off cannot replace
 missing evidence or amend requirements implicitly. Current Gate-1/2 PASS, Gate-4 FUTURE and Version-1.0
-PRE-RELEASE status remain unchanged. No Slice 10 has been allocated.
+PRE-RELEASE status remain unchanged. Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED.
 
 Release Sections 8 and 10 currently name critical defects while Testing Section 9 also names high-severity
 defects. The proposed Gate-3 threshold explicitly uses the stricter existing Testing criterion. The broader
