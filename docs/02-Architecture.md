@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.45
+**Version:** 2.46
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-16
 
@@ -16,18 +16,19 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records the owner allocation of Application/Run Slice 10 —
-Execution Summary Implementation and Validation. G3-SUM-D1 to G3-SUM-D9 remain Approved Baseline;
-Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED. The approved starting baseline is main
-at `db389a3`. Historical slice contracts,
+**Revision scope:** This Draft reconciles Application/Run Slice 10 — Execution Summary Implementation
+and Validation, merged in PR #157 (implementation `666f7aa`, merge `8e2a57d`). Slice 10 is
+IMPLEMENTED + AUTOMATED VALIDATION COMPLETE under the unchanged approved G3-SUM-D1 to G3-SUM-D9
+contract. The starting baseline is main at `8e2a57d`. Historical slice contracts,
 `None` returns, summary exclusions and recorded test results below describe their original
 implementation boundaries; they do not override the current summary contract in
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
 Historical references to pending API Section 6.1 status reconciliation describe the earlier
 baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
 Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
-PRE-RELEASE. This allocation revision is Draft pending review and separate approval-only promotion;
-the G3-SUM behavioural contract remains approved. No subsequent slice is allocated.
+PRE-RELEASE. This reconciliation revision is Draft pending review and separate approval-only promotion;
+the G3-SUM behavioural contract remains approved. No Slice 11 or subsequent capability order is allocated.
+PR #157 supplied automated evidence only; no live Azure DevOps Services validation is claimed.
 
 ---
 
@@ -92,6 +93,7 @@ the G3-SUM behavioural contract remains approved. No subsequent slice is allocat
 | 2.43 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 operational boundaries and dependencies on unresolved behavioural contracts. |
 | 2.44 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded owner-approved G3-SUM-D1 to G3-SUM-D9 execution-summary behaviour and prospective interface changes; implementation and validation remain pending. |
 | 2.45 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 without changing G3-SUM-D1 to G3-SUM-D9. |
+| 2.46 | 2026-09-16 | Draft | Jack Spaetjens | Reconciled merged Application/Run Slice 10 implementation and automated validation without changing G3-SUM-D1 to G3-SUM-D9. |
 
 ---
 
@@ -241,7 +243,7 @@ Its responsibilities include:
 
 Application/Run Slice 1 is an implemented callable composition layer located in `main.py`. The
 signature below records the implemented Slice-1 behaviour. Section 13.4 approves its replacement
-with a processed-source-item integer return; that replacement is not implemented or validated.
+with a processed-source-item integer return; Slice 10 implements and automatically validates that replacement.
 The implemented slice exposes exactly:
 
 ```python
@@ -819,7 +821,7 @@ PR #147 (commit `1174bcb`, merge `ea37478`). Production changes are confined to
 This section is authoritative for the bounded final process-facing unexpected-error contract.
 The merged implementation replaces the earlier process-facing unexpected propagation and native-traceback
 limitation only on the supported handled-Exception `run_process()`/package path. Direct lower-level
-same-object exception propagation remains unchanged. Slice 10 is allocated below; future capability
+same-object exception propagation remains unchanged. Slice 10 is implemented below; future capability
 ordering beyond Slice 10 remains undefined.
 
 **UE-D1 — Final catch boundary.** Only `run_process()` shall introduce the generic process-facing
@@ -945,7 +947,7 @@ isolation, stale-handler cleanup, controlled CRITICAL events, initialisation-onl
 and existing secondary-write precedence. No global logging setting or existing controlled message changes.
 
 Broader Section-12 logging remains incomplete and separate. Section 13.4 now records the approved
-execution-summary contract; implementation and validation remain pending. The unexpected message is
+execution-summary contract; Slice 10 implementation and automated validation are complete. The unexpected message is
 not a summary. Slice 9 defines no summary or other new lifecycle observations. Documentation-processing
 and Azure communication observability, work-item creation events, warnings and HTTP reporting decisions
 remain separate. API Section 6.1 implementation status reconciliation is already approved; its unresolved
@@ -970,22 +972,28 @@ this documentation status sync.
 
 ### Application/Run Slice 10 — Execution Summary Implementation and Validation
 
-**ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED — APPROVED BEHAVIOURAL CONTRACT.**
-The owner has allocated the implementation and automated validation of G3-SUM-D1 to G3-SUM-D9
-as Application/Run Slice 10, retaining the separate allocation workflow used for Slice 9.
+**IMPLEMENTED + AUTOMATED VALIDATION COMPLETE — APPROVED BEHAVIOURAL CONTRACT.**
+Slice 10 was merged in PR #157 (implementation commit `666f7aa`, merge `8e2a57d`).
 [Section 13.4](#134-execution-summary-behavioural-contract) remains the behavioural authority;
-[Testing Section 9.2](06-Testing.md#92-execution-summary-validation) retains the prospective validation.
-This allocation revision is Draft pending review and separate approval-only promotion.
+[Testing Section 9.2](06-Testing.md#92-execution-summary-validation) records the automated evidence.
+This reconciliation revision is Draft pending review and separate approval-only promotion.
 
 The bounded scope is the Generator-owned invocation-wide processed-source-item count, the two
 approved integer-return changes and unchanged forwarding, bootstrap-owned SUMMARY delivery before
 COMPLETION, and automated validation of that approved contract. All G3-SUM exclusions and preserved
-interfaces remain unchanged. Current implementation descriptions and historical evidence remain valid
-for their original boundaries; no Slice-10 implementation or validation is claimed.
+interfaces remain unchanged. Historical implementation descriptions and evidence remain valid
+for their original boundaries. `coordinate_generator_orchestration(...) -> int` now returns
+`len(preflight_state.candidates)` only after successful full preflight and traversal;
+`coordinate_application_run(configuration) -> int` forwards that count unchanged. Bootstrap captures
+the count, attempts SUMMARY, then independently attempts COMPLETION and remains `None`-returning.
+The approved summary behaviour is implemented; no behavioural decision is changed here.
+PR #157 recorded Ruff PASS, 824 collected / 824 passed / 0 failed, 95% coverage across 1,409 statements
+with 64 missed, both changed production files at 100% coverage, and `git diff --check` PASS.
+No live Azure DevOps Services validation occurred; no Ruff or pytest run is performed for this reconciliation.
 
 HTTP 401/403/429 reporting and unrelated logging decisions remain separate unresolved work.
-The owner identifies GUI implementation as a separate future Version-1.0 release requirement,
-outside Slice 10; earlier slice statements do not allocate or implement that requirement.
+A functioning GUI remains required for Version-1.0 release readiness, outside Slice 10 and not
+implemented by PR #157. It does not block Slice-10 reconciliation; no GUI design or allocation is added.
 No subsequent slice, broader recovery/DR, Gate-4 or release-candidate work is allocated.
 Slices 1–9 remain IMPLEMENTED + APPROVED; Gate 3 remains NOT PASSED, Gate 4 FUTURE and
 Version 1.0 PRE-RELEASE.
@@ -1059,7 +1067,7 @@ Responsibilities include:
 - Providing implemented root existing/new Work Item lifecycle coordination. The root-only coordinator invokes existing/new resolution once; for NEW it passes the exact supplied candidate and PAT to persistent Create once and returns the Create response ID, while for REUSED it returns the validated existing ID without Create. It returns no revision and performs no relationship-state GET, classification, gate, Parent-Child Relationship PATCH, descendant processing, validation-only Create or compatibility orchestration. Resolution and Create failures propagate without retry, fallback, reread, rollback, deletion compensation or other compensation. Application/Run Slice 1 composes this coordinator without changing its responsibilities.
 - Preventing duplicate work item creation.
 - Providing implemented full preflight coordination through the mutation barrier. `coordinate_full_preflight` first validates run-wide source identities, then constructs every candidate in deterministic source order, retrieves and retains canonical project evidence, retrieves required work-item-type and field metadata, evaluates structural Scrum compatibility, and submits every exact candidate through validation-only Create in that order. It returns immutable, slotted `PreflightState` evidence containing the original `DocumentationHierarchy`, the canonical `AzureDevOpsProject` and the exact candidate tuple. Source-identity failure occurs before REST activity; later preflight failures propagate unchanged, stop subsequent preflight operations and introduce no retry, fallback, rollback, compensation, credential switching or continuation. The final successful validation-only Create reaches the mutation barrier; no WIQL lookup, Work Item GET, persistent Create, relationship-state GET, relationship PATCH, lifecycle invocation or persistent hierarchy traversal occurs in this coordinator.
-- Providing implemented deterministic hierarchy traversal and Generator composition. `coordinate_deterministic_hierarchy_traversal` first validates that the semantic-item sequence and retained `PreflightState` candidate tuple have equal cardinality and positionally matching source identities, before any persistent REST operation. It then processes documents, roots and descendants in deterministic depth-first preorder, using the exact validation-only checked candidates without reconstruction. Roots delegate exactly once to the root lifecycle coordinator; each non-root resolves exactly once and delegates to the non-root lifecycle coordinator with its eligible direct parent ID. Descendants begin only after eligibility. Failures propagate globally without retry, rollback, compensation or continuation; existing lower-level lifecycle behaviour composes later-run MISSING recovery, CORRECT continuation and CONFLICTING stop. Preflight project, metadata, compatibility and validation-only operations are not repeated. `coordinate_generator_orchestration` is the implemented final Generator-owned entry coordinator: it passes the exact `DocumentationHierarchy`, REST client and PAT to full preflight once, passes the exact returned `PreflightState`, REST client and PAT to traversal once, and currently returns `None`. Section 13.4 approves a processed-source-item integer return after successful traversal; implementation and validation of that replacement remain pending. Successful full preflight is the required mutation barrier before traversal; a preflight failure prevents traversal and persistence. Implemented full-orchestration coverage proves malformed-response, HTTP `401` and HTTP `403` propagation with no retry, alternate credential, PAT event leakage or later descendant, sibling, root, document or persistence operation. Generator Orchestration implementation and required pre-Review-Gate-2 composition coverage are complete. Review Gate 2 completed with PASS, zero findings and no required remediation. Application/Run Slice 1 is implemented and does not own this Generator-internal sequencing; the wider Application/Run phase remains incomplete and Review Gate 3 remains future.
+- Providing implemented deterministic hierarchy traversal and Generator composition. `coordinate_deterministic_hierarchy_traversal` first validates that the semantic-item sequence and retained `PreflightState` candidate tuple have equal cardinality and positionally matching source identities, before any persistent REST operation. It then processes documents, roots and descendants in deterministic depth-first preorder, using the exact validation-only checked candidates without reconstruction. Roots delegate exactly once to the root lifecycle coordinator; each non-root resolves exactly once and delegates to the non-root lifecycle coordinator with its eligible direct parent ID. Descendants begin only after eligibility. Failures propagate globally without retry, rollback, compensation or continuation; existing lower-level lifecycle behaviour composes later-run MISSING recovery, CORRECT continuation and CONFLICTING stop. Preflight project, metadata, compatibility and validation-only operations are not repeated. `coordinate_generator_orchestration` is the implemented final Generator-owned entry coordinator: it passes the exact `DocumentationHierarchy`, REST client and PAT to full preflight once, passes the exact returned `PreflightState`, REST client and PAT to traversal once, and now returns `len(preflight_state.candidates)` as an integer after successful traversal. PR #157 implemented and automatically validated the approved Section 13.4 replacement in Slice 10. Successful full preflight is the required mutation barrier before traversal; a preflight failure prevents traversal and persistence. Implemented full-orchestration coverage proves malformed-response, HTTP `401` and HTTP `403` propagation with no retry, alternate credential, PAT event leakage or later descendant, sibling, root, document or persistence operation. Generator Orchestration implementation and required pre-Review-Gate-2 composition coverage are complete. Review Gate 2 completed with PASS, zero findings and no required remediation. Application/Run Slice 1 is implemented and does not own this Generator-internal sequencing; the wider Application/Run phase remains incomplete and Review Gate 3 remains future.
 
 ---
 
@@ -1151,7 +1159,7 @@ The application follows the logical execution sequence below.
 17. Root Epic items require neither relationship-state retrieval nor a parent relationship PATCH.
 18. Any controlled or uncontrolled failure causes a global stop: no later document, root, sibling, descendant, candidate or Azure DevOps generator operation begins. No retry, rollback, deletion, compensation or alternate credential is attempted.
 19. Results are logged under the applicable approved logging contracts.
-20. After normal configured application return, the eligible success-only INFO SUMMARY file event is attempted under Section 13.4, followed by the independently eligible COMPLETION lifecycle event. SUMMARY is filtered and best effort, with no console presentation. Its implementation and validation remain pending.
+20. After normal configured application return, the eligible success-only INFO SUMMARY file event is attempted under Section 13.4, followed by the independently eligible COMPLETION lifecycle event. SUMMARY is filtered and best effort, with no console presentation. PR #157 implemented and automatically validated this sequence in Slice 10.
 
 This flow permits deterministic recovery when an earlier execution created a child but its immediate relationship PATCH failed: the later execution resolves the parent and child, observes MISSING using a fresh relationship-state GET, repairs the relationship using the fresh revision and continues only after success.
 
@@ -1279,7 +1287,7 @@ the complete summary contract, implementation, validation and evidence before Ga
 | Controlled errors | Preserve the seven approved categories, exact current reports and eligible owned-handler CRITICAL events until an approved reporting revision applies. | SATISFIED for Slice 6; HTTP reconciliation remains separate. |
 | Unexpected errors | Preserve UE-D1 to UE-D10, fixed fallback and owned-handler best-effort CRITICAL event. | SATISFIED: Slice 9, including handled-Exception traceback suppression. |
 | Successful completion | Preserve normal-return-only INFO COMPLETION and configured filtering. | SATISFIED: Slice 8; this is not an execution summary. |
-| Execution summary | Complete the separately approved summary contract, implementation, validation and evidence before Gate-3 PASS under owner-approved G3-D1. | NOT SATISFIED: Section 13.4 records approved behaviour; implementation, validation and evidence remain pending. |
+| Execution summary | Complete the separately approved summary contract, implementation, validation and evidence before Gate-3 PASS under owner-approved G3-D1. | SATISFIED: approved Section 13.4 behaviour, merged PR #157 implementation and Testing Section 9.2 automated evidence; see Release row F. This reconciliation remains Draft and Gate 3 has not passed. |
 | Authentication/authorisation | Meet the reconciled API reporting contract in Section 13.2. | PARTIALLY SATISFIED: status retained, current terminal reporting generic. |
 | Rate limiting | Meet API Section 11 through approved identifiable rate-limit logging, preserving fail/no-sleep/no-retry behaviour. | PARTIALLY SATISFIED: generic failure exists; reporting contract and event remain outstanding. |
 | Diagnostic safety | Preserve safe existing messages and prove secret safety for every newly approved event. | PARTIALLY SATISFIED: existing fixed events evidenced; future content requires validation. |
@@ -1308,7 +1316,7 @@ The execution summary remains mandatory under Sections 8 and 12. G3-D1 is RESOLV
 its contract, implementation, validation and evidence shall be complete before Gate-3 PASS. Unfinished
 summary functionality shall not be deferred to Gate 4; final RC regression may repeat its validation.
 Section 13.4 records owner-approved G3-SUM-D1 to G3-SUM-D9, including one processed-source-item count
-and two prospective integer-return changes. Implementation and validation remain pending. API Section
+and two integer-return changes, now implemented and automatically validated by PR #157. API Section
 7.1 now distinguishes SUMMARY from the separate COMPLETION lifecycle event; neither substitutes for
 the other. Other logging topics and HTTP reporting decisions remain unresolved by this contract.
 
@@ -1339,7 +1347,7 @@ The scope decision does not establish completion of either row.
 The gate framework itself introduces no new configuration, environment variable, dependency, launcher,
 public exception or result interface. Section 13.4 separately records the two approved count-return
 changes. The framework requires neither architectural refactoring nor test reorganisation.
-Slice 10 is allocated for execution-summary implementation and validation only; both remain pending.
+Slice 10 execution-summary implementation is merged and automated validation is complete.
 Broader behavioural definitions and gate acceptance remain separate
 from the implemented, approved Slices 1-9.
 
@@ -1347,12 +1355,15 @@ from the implemented, approved Slices 1-9.
 
 ## 13.4 Execution-summary behavioural contract
 
-**OWNER-APPROVED BEHAVIOURAL DECISIONS — IMPLEMENTATION AND VALIDATION PENDING.**
+**OWNER-APPROVED BEHAVIOURAL DECISIONS — IMPLEMENTED + AUTOMATED VALIDATION COMPLETE.**
 G3-SUM-D1 to G3-SUM-D9 were explicitly approved by the owner on 2026-09-12 and baselined in
-Architecture 2.44. This allocation revision does not claim merged implementation, executed validation or Gate-3 PASS.
+Architecture 2.44. PR #157 supplies merged implementation and automated validation; no Gate-3 PASS is claimed.
 This section is authoritative for execution-summary behaviour and explicitly supersedes only the
 affected earlier return and summary contracts. Historical Slice-1–9 implementation and test evidence
-remain historical. Application/Run Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED.
+remain historical. Application/Run Slice 10 is IMPLEMENTED + AUTOMATED VALIDATION COMPLETE.
+The D1–D9 text below is preserved verbatim. D3's implementation-pending statements describe the
+Architecture-2.44 approval baseline; the Slice-10 implementation record above supersedes that status
+only. Testing Section 9.2 now records automated evidence against the unchanged validation requirements.
 
 **G3-SUM-D1 — Purpose and content.** SUMMARY shall report successful completion of the configured
 backlog-generation operation and the number of semantic source items whose approved Generator
