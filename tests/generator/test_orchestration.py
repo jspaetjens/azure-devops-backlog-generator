@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from azure_devops_backlog_generator.azure_devops.exceptions import (
@@ -22,6 +24,7 @@ from azure_devops_backlog_generator.documentation.models import (
     SemanticWorkItem,
     WorkItemType,
 )
+from azure_devops_backlog_generator.documentation.processor import DocumentationProcessor
 from azure_devops_backlog_generator.generator.candidates import (
     WorkItemCandidate,
     build_work_item_candidate,
@@ -574,7 +577,7 @@ def test_generator_entry_coordinator_sequences_exact_preflight_state_once(
         coordinate_generator_orchestration(
             hierarchy, rest_client, personal_access_token="secret-pat"  # type: ignore[arg-type]
         )
-        is None
+        == 0
     )
 
     assert calls == ["preflight", "traversal"]
@@ -636,7 +639,7 @@ def test_real_generator_orchestration_crosses_mutation_barrier_before_traversal(
         coordinate_generator_orchestration(
             hierarchy, rest_client, personal_access_token="secret-pat"  # type: ignore[arg-type]
         )
-        is None
+        == 5
     )
 
     assert [candidate.title for candidate in rest_client.validated_candidates] == [
@@ -1421,3 +1424,59 @@ def test_later_run_recovers_created_child_without_duplicate_create() -> None:
     )
 
     assert [candidate.title for candidate in rest_client.create_candidates] == ["Epic", "Feature"]
+
+
+@pytest.mark.parametrize(
+    "existing_titles",
+    [set(), {"Epic", "Feature", "PBI", "Task", "Second Epic"}, {"Epic", "PBI"}],
+    ids=["all-created", "all-reused", "mixed"],
+)
+@pytest.mark.parametrize("correct_relationships", [False, True])
+def test_generator_counts_source_items_once_across_documents_and_roots(
+    existing_titles: set[str], correct_relationships: bool,
+) -> None:
+    hierarchy = _complete_preflight_hierarchy()
+    rest_client = _TraversalRestClient(
+        preflight_enabled=True, expected_validation_count=5, existing_titles=existing_titles,
+    )
+    candidates = _traversal_state(hierarchy).candidates
+    if correct_relationships:
+        items = [rest_client._ensure_work_item(candidate) for candidate in candidates]
+        rest_client.relationship_parent_ids.update({
+            items[index].source_identity: (items[index - 1].id,) for index in (1, 2, 3)
+        })
+
+    result = coordinate_generator_orchestration(
+        hierarchy, rest_client, personal_access_token="secret-pat",
+    )
+
+    assert type(result) is int
+    assert result == 5
+    assert len(rest_client.validated_candidates) == 5
+    assert len(rest_client.events) > result
+    assert [candidate.title for candidate in rest_client.create_candidates] == [
+        candidate.title for candidate in candidates if candidate.title not in existing_titles
+    ]
+    assert [event for event in rest_client.events if event.startswith("patch:")] == [
+        f"patch:{title}" for title in ("Feature", "PBI", "Task")
+        if title not in existing_titles or not correct_relationships
+    ]
+
+
+def test_generator_returns_zero_for_permitted_document_without_semantic_items(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "input.md").write_text("Ordinary prose without headings.\n", encoding="utf-8")
+    hierarchy = DocumentationProcessor().process(tmp_path)
+    rest_client = _TraversalRestClient(preflight_enabled=True, expected_validation_count=0)
+
+    result = coordinate_generator_orchestration(
+        hierarchy, rest_client, personal_access_token="secret-pat",
+    )
+
+    assert type(result) is int
+    assert result == 0
+    assert rest_client.events
+    assert rest_client.validated_candidates == []
+    assert rest_client.lookup_candidates == []
+    assert rest_client.create_candidates == []

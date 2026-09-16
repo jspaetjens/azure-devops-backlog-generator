@@ -98,8 +98,8 @@ def coordinate_generator_orchestration(
     rest_client: AzureDevOpsRestClient,
     *,
     personal_access_token: str,
-) -> None:
-    """Run complete Generator preflight before deterministic persistence traversal."""
+) -> int:
+    """Return the semantic item count after successful preflight and traversal."""
     preflight_state = coordinate_full_preflight(
         hierarchy,
         rest_client,
@@ -110,6 +110,7 @@ def coordinate_generator_orchestration(
         rest_client,
         personal_access_token=personal_access_token,
     )
+    return len(preflight_state.candidates)
 
 
 def _required_global_field_references() -> tuple[str, ...]:
