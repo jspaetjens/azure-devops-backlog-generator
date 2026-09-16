@@ -6,7 +6,7 @@
 
 **Version:** 2.36
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -83,7 +83,7 @@ PR #157 supplied automated evidence only; no live Azure DevOps Services validati
 | 2.33 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 integration, live-validation allocation, evidence recording and findings criteria. |
 | 2.34 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Defined prospective validation for the owner-approved execution-summary contract while preserving historical implementation evidence. |
 | 2.35 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Associated prospective execution-summary validation with allocated Application/Run Slice 10 while preserving requirements and historical evidence. |
-| 2.36 | 2026-09-16 | Draft | Jack Spaetjens | Recorded PR #157 Slice-10 automated validation evidence for G3-SUM-D1 to G3-SUM-D9; live Services validation remains pending. |
+| 2.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded PR #157 Slice-10 automated validation evidence for G3-SUM-D1 to G3-SUM-D9; live Services validation remains pending. |
 
 ---
 

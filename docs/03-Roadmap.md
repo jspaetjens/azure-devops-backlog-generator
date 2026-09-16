@@ -6,7 +6,7 @@
 
 **Version:** 1.41
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -78,7 +78,7 @@ PR #157 supplied automated evidence only; no live Azure DevOps Services validati
 | 1.38 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 3 contract definition as the next governance milestone without allocating implementation slices. |
 | 1.39 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded the approved execution-summary contract with implementation and validation pending, without allocating a slice. |
 | 1.40 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 with implementation and validation pending. |
-| 1.41 | 2026-09-16 | Draft | Jack Spaetjens | Recorded Application/Run Slice 10 as implemented with automated validation complete, retaining separate documentation approval and no subsequent slice allocation. |
+| 1.41 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded Application/Run Slice 10 as implemented with automated validation complete, retaining separate documentation approval and no subsequent slice allocation. |
 
 ---
 
