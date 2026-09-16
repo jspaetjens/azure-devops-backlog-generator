@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.40
+**Version:** 1.41
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-16
 
@@ -16,18 +16,19 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records the owner allocation of Application/Run Slice 10 —
-Execution Summary Implementation and Validation. G3-SUM-D1 to G3-SUM-D9 remain Approved Baseline;
-Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED. The approved starting baseline is main
-at `db389a3`. Historical slice contracts,
+**Revision scope:** This Draft reconciles Application/Run Slice 10 — Execution Summary Implementation
+and Validation, merged in PR #157 (implementation `666f7aa`, merge `8e2a57d`). Slice 10 is
+IMPLEMENTED + AUTOMATED VALIDATION COMPLETE under the unchanged approved G3-SUM-D1 to G3-SUM-D9
+contract. The starting baseline is main at `8e2a57d`. Historical slice contracts,
 `None` returns, summary exclusions and recorded test results below describe their original
 implementation boundaries; they do not override the current summary contract in
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
 Historical references to pending API Section 6.1 status reconciliation describe the earlier
 baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
 Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
-PRE-RELEASE. This allocation revision is Draft pending review and separate approval-only promotion;
-the G3-SUM behavioural contract remains approved. No subsequent slice is allocated.
+PRE-RELEASE. This reconciliation revision is Draft pending review and separate approval-only promotion;
+the G3-SUM behavioural contract remains approved. No Slice 11 or subsequent capability order is allocated.
+PR #157 supplied automated evidence only; no live Azure DevOps Services validation is claimed.
 
 ---
 
@@ -77,6 +78,7 @@ the G3-SUM behavioural contract remains approved. No subsequent slice is allocat
 | 1.38 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded Review Gate 3 contract definition as the next governance milestone without allocating implementation slices. |
 | 1.39 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded the approved execution-summary contract with implementation and validation pending, without allocating a slice. |
 | 1.40 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 with implementation and validation pending. |
+| 1.41 | 2026-09-16 | Draft | Jack Spaetjens | Recorded Application/Run Slice 10 as implemented with automated validation complete, retaining separate documentation approval and no subsequent slice allocation. |
 
 ---
 
@@ -280,7 +282,7 @@ them, HTTP/API reporting reconciliation/contract work, broader integration/E2E,
 live Azure DevOps Services validation, Operational Readiness,
 Review Gate 3 and final Version 1.0 release readiness. Console-script
 packaging remains future only if separately approved; GUI implementation remains a separate future
-Version-1.0 release requirement outside Slice 10 under the owner's current direction. Beyond allocated Slice 10, these responsibilities prescribe neither new slices
+Version-1.0 release requirement outside Slice 10 under the owner's current direction. Beyond implemented Slice 10, these responsibilities prescribe neither new slices
 nor an order for future capabilities.
 
 Known pre-existing non-blocking documentation drift remains in `05-API.md` Section 6.1, whose broad
@@ -304,7 +306,7 @@ and best-effort writes without output, retry, fallback or application-outcome ch
 START after configuration validation/logging initialisation and immediately before configured execution;
 COMPLETION follows only normal application return. Delivery remains current-owned-handler-only.
 
-Slices 1–9 are implemented under their approved contracts. Slice 10 is allocated below and no
+Slices 1–9 are implemented under their approved contracts. Slice 10 is implemented below and no
 future capability order beyond Slice 10 is defined. The Slice-8 status-sync revision 1.34 is Approved
 Baseline; revision 1.37 is Approved Baseline.
 
@@ -335,7 +337,7 @@ The technical authority is Architecture's
 [Application/Run Slice 9 — Final Unexpected-Error Handling and Diagnostic Safety](02-Architecture.md#applicationrun-slice-9--final-unexpected-error-handling-and-diagnostic-safety)
 contract, UE-D1–UE-D10. These decisions remain approved and are implemented. Roadmap revision 1.37
 is Approved Baseline. Future capability ordering beyond
-Slice 10 remains undefined. Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED.
+Slice 10 remains undefined. Slice 10 is IMPLEMENTED + AUTOMATED VALIDATION COMPLETE.
 
 Implementation provenance is PR #148 (commit `738fdc3`, merge `4549eee`). Contract provenance remains
 PR #144 (commit `2070425`, merge `4d80b58`) and approval PR #145 (commit `e3e190f`, merge `fa158d9`);
@@ -362,8 +364,8 @@ across 1,394 statements with 64 missed; `main.py` is 110/0/100% and `__main__.py
 No live Azure DevOps operations occurred; Ruff and pytest were not rerun for this status sync.
 
 Wider Application/Run remains incomplete and Version 1.0 remains pre-release. Separate remaining work
-includes broader logging and HTTP/API reporting reconciliation/contract work; implementation and
-validation of the owner-approved execution-summary contract in Architecture Section 13.4;
+includes broader logging and HTTP/API reporting reconciliation/contract work; separate approval of
+the Slice-10 documentation reconciliation;
 broader integration/E2E; live Azure DevOps Services validation; Operational Readiness definition/evidence;
 Review Gate 3; Review Gate 4; and final release readiness. Section 5.1 records the approved gate framework
 and resolved owner decisions, including broader DR outside V1.0. Gates 1 and 2 remain PASS; Gates 3 and 4
@@ -371,18 +373,22 @@ remain future. This capability is required before final Version-1.0 readiness bu
 
 ---
 
-**Application/Run Slice 10 — Execution Summary Implementation and Validation — ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED.**
-The owner has selected the separate allocation workflow used for Slice 9. Slice 10 delivers only
+**Application/Run Slice 10 — Execution Summary Implementation and Validation — IMPLEMENTED + AUTOMATED VALIDATION COMPLETE.**
+PR #157 (implementation `666f7aa`, merge `8e2a57d`) delivers only
 the approved G3-SUM-D1 to G3-SUM-D9 capability in
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract):
 Generator-owned invocation-wide counting, the two approved integer returns and unchanged forwarding,
-bootstrap-owned SUMMARY before COMPLETION, and the existing prospective automated validation in
+bootstrap-owned SUMMARY before independently eligible COMPLETION, and automated validation recorded in
 [Testing Section 9.2](06-Testing.md#92-execution-summary-validation).
-The G3-SUM contract and all its exclusions remain unchanged. Implementation and validation are pending;
-this allocation revision is Draft pending review and separate approval-only promotion.
+The G3-SUM contract and all its exclusions remain unchanged. PR #157 recorded Ruff PASS,
+824 collected / 824 passed / 0 failed and 95% coverage; Testing Section 9.2 records the detailed evidence.
+No live Azure DevOps Services validation occurred. This reconciliation revision is Draft pending
+review and separate approval-only promotion; completed automated validation does not approve this revision.
 
-HTTP 401/403/429 reporting, unrelated logging decisions and the separate future Version-1.0 GUI
-release requirement remain outside Slice 10. No subsequent slice or capability order is allocated.
+HTTP 401/403/429 reporting and unrelated logging decisions remain unresolved outside Slice 10.
+A functioning GUI remains required for Version-1.0 release readiness, outside Slice 10 and not
+implemented by PR #157; it does not block this reconciliation. No GUI design or allocation is added.
+No Slice 11 or subsequent capability order is allocated; future ordering remains undefined.
 Slices 1–9 remain IMPLEMENTED + APPROVED; Gate 3 remains NOT PASSED, Gate 4 FUTURE and
 Version 1.0 PRE-RELEASE. Dependency-based continuation below remains applicable.
 
@@ -392,8 +398,8 @@ Version 1.0 PRE-RELEASE. Dependency-based continuation below remains applicable.
 
 **Gate 3 FUTURE / NOT YET PASSED; current readiness NOT READY.**
 The approved gate framework governs prerequisite closure and a separate Gate-3 assessment.
-This Draft records the Slice-10 allocation under the already-approved summary decisions;
-implementation and validation remain pending. The gate framework itself is not an implementation slice
+This Draft records merged Slice-10 implementation and completed automated validation under the
+already-approved summary decisions. The gate framework itself is not an implementation slice
 or an approved order for other future capabilities.
 
 [Release Section 8.1](07-Release.md#81-review-gate-3-operational-readiness-acceptance) owns the acceptance
@@ -403,23 +409,23 @@ operational boundaries and unresolved behavioural dependencies.
 [Testing Section 9.1](06-Testing.md#91-review-gate-3-evidence-requirements) owns validation forms and records.
 
 The existing implementation baseline remains Slices 1-9 IMPLEMENTED + APPROVED, Gates 1 and 2 PASS,
-Gate 4 FUTURE and Version 1.0 PRE-RELEASE. Slice 10 is allocated but not implemented or validated. The preceding slice-status
+Gate 4 FUTURE and Version 1.0 PRE-RELEASE. Slice 10 is implemented with automated validation complete. The preceding slice-status
 records describe the approved implementation baseline. G3-D1 to G3-D3 remain RESOLVED / OWNER
 APPROVED. Summary decisions G3-SUM-D1 to G3-SUM-D9 are now approved; other behavioural contracts
 and acceptance evidence remain incomplete. This documentation revision remains Draft.
 
 Remaining prerequisite groups are contract/documentation reconciliation; approved logging and HTTP
-reporting implementation/evidence; implementation and validation of the approved summary contract;
+reporting implementation/evidence; approval of this summary-status documentation reconciliation;
 application integration and live validation; operator guidance; and findings/evidence/sign-off.
 API Section 6.1 implementation status reconciliation is already approved; HTTP reporting remains separate.
 Owner-approved G3-D1 requires the
 complete summary capability before Gate 3. G3-D2 requires minimum real Services operational proof
 before Gate 3, with final RC repetition at Gate 4. G3-D3 places broader Operational Recovery / DR
 outside V1.0, not in the Gate-4 backlog. Bounded failure/rerun guidance and evidence remain required.
-G3-SUM-D1 to G3-SUM-D9 are owner-approved in Architecture Section 13.4; Testing Section 9.2 defines
-prospective validation. Summary implementation and validation remain pending and its acceptance
-condition is not satisfied. Other logging/HTTP reporting behaviour and the live procedure/environment
-still need definition. Only Slice 10 is newly allocated; no subsequent slice or capability order is allocated.
+G3-SUM-D1 to G3-SUM-D9 are owner-approved in Architecture Section 13.4; Testing Section 9.2 records
+PR #157 automated validation. Release row F is SATISFIED on that bounded evidence; required live proof
+remains separate under row H and Gate 3 remains NOT PASSED. Other logging/HTTP reporting behaviour
+and the live procedure/environment still need definition. No Slice 11 or subsequent capability order is allocated.
 
 Dependencies, rather than new slice numbers, govern continuation: behavioural contracts precede their
 implementation; validation follows the relevant implementation and environment preparation; gate review

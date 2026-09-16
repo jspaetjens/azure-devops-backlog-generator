@@ -4,9 +4,9 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.35
+**Version:** 2.36
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-16
 
@@ -16,18 +16,19 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records the owner allocation of Application/Run Slice 10 —
-Execution Summary Implementation and Validation. G3-SUM-D1 to G3-SUM-D9 remain Approved Baseline;
-Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED. The approved starting baseline is main
-at `db389a3`. Historical slice contracts,
+**Revision scope:** This Draft reconciles Application/Run Slice 10 — Execution Summary Implementation
+and Validation, merged in PR #157 (implementation `666f7aa`, merge `8e2a57d`). Slice 10 is
+IMPLEMENTED + AUTOMATED VALIDATION COMPLETE under the unchanged approved G3-SUM-D1 to G3-SUM-D9
+contract. The starting baseline is main at `8e2a57d`. Historical slice contracts,
 `None` returns, summary exclusions and recorded test results below describe their original
 implementation boundaries; they do not override the current summary contract in
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
 Historical references to pending API Section 6.1 status reconciliation describe the earlier
 baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
 Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
-PRE-RELEASE. This allocation revision is Draft pending review and separate approval-only promotion;
-the G3-SUM behavioural contract remains approved. No subsequent slice is allocated.
+PRE-RELEASE. This reconciliation revision is Draft pending review and separate approval-only promotion;
+the G3-SUM behavioural contract remains approved. No Slice 11 or subsequent capability order is allocated.
+PR #157 supplied automated evidence only; no live Azure DevOps Services validation is claimed.
 
 ---
 
@@ -82,6 +83,7 @@ the G3-SUM behavioural contract remains approved. No subsequent slice is allocat
 | 2.33 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 integration, live-validation allocation, evidence recording and findings criteria. |
 | 2.34 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Defined prospective validation for the owner-approved execution-summary contract while preserving historical implementation evidence. |
 | 2.35 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Associated prospective execution-summary validation with allocated Application/Run Slice 10 while preserving requirements and historical evidence. |
+| 2.36 | 2026-09-16 | Draft | Jack Spaetjens | Recorded PR #157 Slice-10 automated validation evidence for G3-SUM-D1 to G3-SUM-D9; live Services validation remains pending. |
 
 ---
 
@@ -698,9 +700,9 @@ The previous native traceback limitation is resolved only on the supported handl
 framework, sanitised traceback or debug diagnostic feature was added.
 
 Slices 1–9 are implemented under approved contracts; wider Application/Run remains incomplete.
-Slice 10 is ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED; future capability ordering beyond Slice 10 remains undefined.
+Slice 10 is IMPLEMENTED + AUTOMATED VALIDATION COMPLETE; future capability ordering beyond Slice 10 remains undefined.
 The execution-summary behavioural contract is owner-approved in Architecture Section 13.4.
-Its implementation and validation remain pending; Section 9.2 defines prospective coverage.
+Section 9.2 records its merged PR #157 implementation and automated validation evidence.
 The preceding Slice-9 results remain historical and do not validate the new count returns or SUMMARY.
 Broader Architecture Section-12 logging and HTTP/API reporting contracts remain separate work.
 API Section 6.1 implementation status reconciliation is already approved; HTTP reporting decisions remain separate.
@@ -871,7 +873,7 @@ Before Gate-3 PASS, the following application-level evidence is proposed as mand
   thresholds, duplicate prevention, delivery-failure precedence, `401`/`403` distinctions and rate-limit
   reporting for `429` without sleep/retry. Under G3-D1, the owner-approved summary contract in
   Architecture Section 13.4 requires implementation, validation and recorded evidence before Gate-3
-  PASS. Section 9.2 defines prospective summary validation; those results do not yet exist.
+  PASS. Section 9.2 records the merged PR #157 automated summary-validation results.
 - Regression and secret-safety evidence for all changed behaviour and the preserved Slice-1-9 boundaries.
   A successful full suite and Ruff result tied to the assessed implementation shall be recorded; evidence
   reuse shall identify the unchanged implementation and why earlier results remain applicable.
@@ -939,16 +941,16 @@ Final RC regression/live repetition and final release evidence remain subject to
 
 ## 9.2 Execution-summary validation
 
-**PROSPECTIVE REQUIREMENTS — NO IMPLEMENTATION OR EXECUTION EVIDENCE CLAIMED.**
-**Application/Run Slice 10 — Execution Summary Implementation and Validation — ALLOCATED / NOT IMPLEMENTED / NOT VALIDATED.**
-The owner has allocated implementation and the existing prospective automated validation below to
-Slice 10. The requirements and historical evidence are unchanged; Slice-10 validation is planned and
-pending. This allocation revision is Draft pending review and separate approval-only promotion.
-No tests, Ruff, pytest or live Azure DevOps operations are run for this documentation-only allocation.
+**MERGED AUTOMATED VALIDATION EVIDENCE — NO LIVE SERVICES VALIDATION CLAIMED.**
+**Application/Run Slice 10 — Execution Summary Implementation and Validation — IMPLEMENTED + AUTOMATED VALIDATION COMPLETE.**
+PR #157 (implementation `666f7aa`, merge `8e2a57d`) implemented and automatically validated the
+approved requirements below. This reconciliation revision is Draft pending review and separate
+approval-only promotion. No tests, Ruff, pytest or live Azure DevOps operations are run for this
+documentation-only reconciliation; the results recorded here are the supplied PR #157 evidence.
 
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract) is
 authoritative for owner-approved G3-SUM-D1 to G3-SUM-D9. Tests shall validate the following observable
-behaviour after implementation; this section does not claim that those tests currently exist.
+behaviour; these validation requirements remain unchanged.
 
 - **D1 — Count semantics:** exact non-negative integer count across Epic, Feature, Product Backlog Item
   and Task; new, reused and mixed paths; repaired relationships without double counting; multiple
@@ -988,10 +990,42 @@ behaviour after implementation; this section does not claim that those tests cur
   substitutes are insufficient. Preserve the failure/rerun integration obligations in Section 9.1.
 
 Historical Slice-9 764/764 full-suite and warnings-as-errors results, Ruff pass and 95% coverage remain
-historical implementation evidence only. Record new implementation-revision-specific results under
-Section 9.1 after the summary changes; neither this contract nor existing adapter-only success proves
-summary validation. Minimum live Services proof remains separately required under G3-D2. No tests,
-Ruff, pytest or live Azure DevOps operations are executed by this documentation-contract change.
+historical implementation evidence only. The following PR #157 record supplies the Slice-10 evidence
+against G3-SUM-D1 to G3-SUM-D9, distinct from earlier adapter-only success.
+
+| PR #157 automated check | Recorded result |
+|-------------------------|-----------------|
+| Ruff | PASS |
+| pytest collected / passed / failed | 824 / 824 / 0 |
+| Coverage | 95% |
+| Statements / missed | 1,409 / 64 |
+| Changed production `generator/orchestration.py` coverage | 100% |
+| Changed production `main.py` coverage | 100% |
+| `git diff --check` | PASS |
+
+Production changes are in `src/azure_devops_backlog_generator/generator/orchestration.py` and
+`src/azure_devops_backlog_generator/main.py`. Merged test evidence is traceable as follows:
+
+| Contract | Merged automated evidence | Proven boundary |
+|----------|---------------------------|-----------------|
+| D1/D3 | `tests/generator/test_orchestration.py`: `test_generator_counts_source_items_once_across_documents_and_roots`, `test_generator_returns_zero_for_permitted_document_without_semantic_items`, and existing preflight/traversal failure tests | Exact integer count after success; all-created, all-reused and mixed paths; MISSING repair without double counting, CORRECT relationships, multiple documents/roots, zero semantic items and exclusion of HTTP activity. |
+| D3 | `tests/test_main.py`: `test_composes_the_configured_application_run_once` and preserved bootstrap/main/process tests | Unchanged forwarding of zero and multidigit counts; bootstrap/main remain `None`-returning and successful process outcome remains 0. |
+| D2/D4/D5/D8 | `tests/test_main.py`: successful lifecycle order, filtering, handler isolation, repeated invocation and failure-path tests | Exact zero/multidigit summary; INFO behaviour, logger and handler filtering/threshold suppression, current-handler ownership, silent console, SUMMARY before COMPLETION and no summary on failure. |
+| D6/D7 | `tests/test_main.py`: `test_summary_failure_is_silent_best_effort_and_completion_is_independent`, `test_summary_preserves_non_exception_failures` | Ordinary formatting/delivery failures preserve success and independent COMPLETION eligibility without retry, fallback or replacement diagnostics; KeyboardInterrupt, SystemExit, GeneratorExit and other non-Exception BaseException propagation; diagnostic-safety sentinels. |
+| D2/D7/D9 | `tests/test___main__.py`: `test_package_summary_with_real_parsing_generator_and_controlled_transport` | Supported package execution with real argument/configuration loading, temporary Markdown, parser, Generator preflight/traversal and logging; only JSON transport is substituted. Success, empty input, partial-persistence/rerun and conflict/global-stop/rerun scenarios prove invocation-local summaries, bounded repair without duplicate creation, exact SUMMARY/COMPLETION, process outcomes and diagnostic safety. |
+
+The implemented logical message is exactly `Execution summary: outcome=success; source_items_processed=N.`
+It is constructed only from fixed text, literal success and the Generator-owned count; source,
+configuration, transport and exception details are excluded. Its INFO delivery uses only the current
+invocation's owned logfile handler with normal logger/handler enablement, levels and filtering.
+Ordinary `Exception` failures in summary work are best effort; non-`Exception` BaseException subclasses
+propagate. These observations reconcile the implementation; Architecture Section 13.4 remains authoritative.
+
+The integrated evidence uses controlled transport, not live Azure DevOps Services. No live validation
+occurred in PR #157. Minimum live Services proof remains pending under Section 9.1 / G3-D2 and Release
+row H. The bounded summary evidence supports Release row F; it does not close the wider integration,
+logging/HTTP reporting, live-validation or Gate-3 acceptance obligations. No warnings-as-errors result
+is claimed for PR #157. No new test execution evidence is produced by this reconciliation.
 
 ---
 
