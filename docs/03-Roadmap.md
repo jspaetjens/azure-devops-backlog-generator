@@ -6,7 +6,7 @@
 
 **Version:** 1.42
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -81,7 +81,7 @@ Continuation is dependency-first; no Slice 11 is allocated. No new implementatio
 | 1.39 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded the approved execution-summary contract with implementation and validation pending, without allocating a slice. |
 | 1.40 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 with implementation and validation pending. |
 | 1.41 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded Application/Run Slice 10 as implemented with automated validation complete, retaining separate documentation approval and no subsequent slice allocation. |
-| 1.42 | 2026-09-16 | Draft | Jack Spaetjens | Recorded dependency-first Gate-3 closure under the owner-approved decisions without allocating Slice 11. |
+| 1.42 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded dependency-first Gate-3 closure under the owner-approved decisions without allocating Slice 11. |
 
 ---
 

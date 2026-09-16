@@ -6,7 +6,7 @@
 
 **Version:** 2.47
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -96,7 +96,7 @@ Continuation is dependency-first; no Slice 11 is allocated. No new implementatio
 | 2.44 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded owner-approved G3-SUM-D1 to G3-SUM-D9 execution-summary behaviour and prospective interface changes; implementation and validation remain pending. |
 | 2.45 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 without changing G3-SUM-D1 to G3-SUM-D9. |
 | 2.46 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled merged Application/Run Slice 10 implementation and automated validation without changing G3-SUM-D1 to G3-SUM-D9. |
-| 2.47 | 2026-09-16 | Draft | Jack Spaetjens | Recorded owner-approved Gate-3 logging/HTTP and closure decisions D01-D14 and reconciliation-only R01 without allocating a new slice. |
+| 2.47 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded owner-approved Gate-3 logging/HTTP and closure decisions D01-D14 and reconciliation-only R01 without allocating a new slice. |
 
 ---
 
