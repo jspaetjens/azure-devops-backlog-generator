@@ -145,6 +145,36 @@ def _emit_lifecycle_event(message: str) -> None:
         pass
 
 
+def _emit_execution_summary(source_items_processed: int) -> None:
+    """Attempt the success summary through only the eligible current owned handler."""
+    try:
+        handler = _ACTIVE_LOG_HANDLER
+        if (
+            handler is None
+            or not _LOGGER.isEnabledFor(logging.INFO)
+            or handler.level > logging.INFO
+        ):
+            return
+        record = _LOGGER.makeRecord(
+            _LOGGER.name,
+            logging.INFO,
+            "",
+            0,
+            "Execution summary: outcome=success; "
+            f"source_items_processed={source_items_processed:d}.",
+            (),
+            None,
+        )
+        # Apply logger filters without dispatching to non-owned handlers.
+        filtered = _LOGGER.filter(record)
+        if filtered:
+            if isinstance(filtered, logging.LogRecord):
+                record = filtered
+            handler.handle(record)
+    except Exception:
+        pass
+
+
 def _emit_unexpected_failure() -> None:
     """Attempt one owned unexpected-failure event without replacing the failure."""
     try:
@@ -209,18 +239,19 @@ def coordinate_application_bootstrap(arguments: Sequence[str]) -> None:
     configuration = load_configuration_from_cli(arguments)
     _initialise_runtime_logging(configuration)
     _emit_lifecycle_event("Application run started.")
-    coordinate_application_run(configuration)
+    source_items_processed = coordinate_application_run(configuration)
+    _emit_execution_summary(source_items_processed)
     _emit_lifecycle_event("Application run completed successfully.")
 
 
-def coordinate_application_run(configuration: Configuration) -> None:
-    """Process configured documentation and coordinate backlog generation."""
+def coordinate_application_run(configuration: Configuration) -> int:
+    """Process documentation and forward the successful Generator item count."""
     hierarchy = DocumentationProcessor().process(configuration.documentation.source_directory)
     rest_client = AzureDevOpsRestClient(
         configuration.azure_devops.organization,
         configuration.azure_devops.project,
     )
-    coordinate_generator_orchestration(
+    return coordinate_generator_orchestration(
         hierarchy,
         rest_client,
         personal_access_token=configuration.personal_access_token,

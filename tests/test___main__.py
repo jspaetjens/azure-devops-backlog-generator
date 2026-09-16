@@ -1,10 +1,12 @@
 """Package execution adapter tests, including isolated child adapter harnesses."""
 
 import importlib
+import json
 import os
 import runpy
 import subprocess
 import sys
+import textwrap
 from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import Mock
@@ -279,3 +281,153 @@ def test_package_subprocess_real_fallback_suppresses_unexpected_details_and_trac
         assert list(tmp_path.iterdir()) == []
     for sentinel in (*sentinels, "RuntimeError", "ValueError", "Traceback"):
         assert sentinel not in result.stderr + contents
+
+
+@pytest.mark.parametrize("scenario", ["success", "empty", "partial-rerun", "conflict-rerun"])
+def test_package_summary_with_real_parsing_generator_and_controlled_transport(
+    tmp_path: Path, child_environment: dict[str, str], scenario: str,
+) -> None:
+    """Exercise the supported application, substituting only JSON transport."""
+    source = tmp_path / "SYNTHETIC_SOURCE"
+    source.mkdir()
+    markdown = (
+        "# SYNTHETIC_EPIC\nSYNTHETIC_BODY\n"
+        "## SYNTHETIC_FEATURE\nSYNTHETIC_REQUEST_CONTENT\n"
+        "### SYNTHETIC_PBI\nSYNTHETIC_HIERARCHY\n"
+        "#### SYNTHETIC_TASK\nhttps://example.invalid/SYNTHETIC_URL\n"
+    )
+    for index in range(3 if scenario == "success" else 1):
+        (source / f"input-{index}.md").write_text(
+            "Ordinary prose.\n" if scenario == "empty" else markdown, encoding="utf-8",
+        )
+    config = tmp_path / "SYNTHETIC_CONFIG.toml"
+    config.write_text(
+        '[azure_devops]\norganization = "SYNTHETIC_ORG"\nproject = "SYNTHETIC_PROJECT"\n'
+        '[documentation]\nsource_directory = "SYNTHETIC_SOURCE"\n'
+        '[logging]\nlevel = "INFO"\nlog_directory = "logs"\n', encoding="utf-8",
+    )
+    child_environment["AZDO_PAT"] = "SYNTHETIC_PAT"
+    script = textwrap.dedent('''\
+        import json
+        import runpy
+        import sys
+        from pathlib import Path
+        from azure_devops_backlog_generator.azure_devops.rest_client import AzureDevOpsRestClient
+        from azure_devops_backlog_generator.azure_devops.exceptions import AzureDevOpsTransportError
+
+        scenario = sys.argv[1]
+        config = sys.argv[2]
+        identity_field = "Custom.BacklogGeneratorSourceIdentity"
+        items = {}
+        parents = {}
+        requests = []
+        snapshots = []
+        outcomes = []
+        phase = 0
+
+        def transport(self, *, method, path_segments, personal_access_token,
+                      query=None, json_body=None, **kwargs):
+            assert personal_access_token == "SYNTHETIC_PAT"
+            path = tuple(path_segments)
+            requests.append([phase, method, list(path), query])
+            if path[:2] == ("_apis", "projects"):
+                return {"id": "SYNTHETIC_PROJECT_ID", "name": "SYNTHETIC_PROJECT"}
+            if "fields" in path:
+                field = path[-1]
+                result = {"referenceName": field}
+                if field == identity_field:
+                    result.update(name="Backlog Generator Source Identity", type="String",
+                                  readOnly=False, defaultValue=None, alwaysRequired=False)
+                return result
+            if "workitemtypes" in path:
+                return {"name": path[-1]}
+            if path[-1] == "wiql":
+                return {"workItems": [
+                    {"id": item["id"]} for item in items.values()
+                    if item["fields"][identity_field] in json_body["query"]
+                ]}
+            if path[:3] == ("_apis", "wit", "workitems"):
+                if query == {"validateOnly": "true"}:
+                    return {}
+                if method == "POST":
+                    fields = {op["path"].removeprefix("/fields/"): op["value"]
+                              for op in json_body}
+                    fields.update({"System.TeamProject": "SYNTHETIC_PROJECT",
+                                   "System.WorkItemType": path[-1]})
+                    item_id = 987650 + len(items)
+                    item = {"id": item_id, "rev": 1, "fields": fields,
+                            "synthetic_response": "SYNTHETIC_RESPONSE_CONTENT"}
+                    items[item_id] = item
+                    return item
+                item_id = int(path[-1])
+                if method == "PATCH":
+                    if scenario.endswith("rerun") and phase == 0:
+                        raise AzureDevOpsTransportError("Authorization: SYNTHETIC_AUTH")
+                    parents[item_id] = int(json_body[1]["value"]["url"].rsplit("/", 1)[1])
+                    return {}
+                if query == {"$expand": "relations"}:
+                    parent = parents.get(item_id)
+                    if scenario == "conflict-rerun" and phase == 1:
+                        parent = 123456789
+                    return {"id": item_id, "rev": 1, "relations": [] if parent is None else [
+                        {"rel": "System.LinkTypes.Hierarchy-Reverse",
+                         "url": f"https://dev.azure.com/SYNTHETIC_ORG/_apis/wit/workItems/{parent}"}
+                    ]}
+                return items[item_id]
+            raise AssertionError("Unexpected transport operation")
+
+        AzureDevOpsRestClient.send_json_request = transport
+        runs = 3 if scenario == "conflict-rerun" else 2 if scenario == "partial-rerun" else 1
+        for phase in range(runs):
+            sys.argv = ["azure_devops_backlog_generator", "--config-file", config]
+            try:
+                runpy.run_module("azure_devops_backlog_generator", run_name="__main__")
+            except SystemExit as result:
+                outcomes.append(result.code)
+            snapshots.append({
+                "log": Path("logs/azure-devops-backlog-generator.log").read_text(encoding="utf-8"),
+                "items": len(items),
+            })
+        Path("evidence.json").write_text(json.dumps({
+            "outcomes": outcomes, "snapshots": snapshots, "requests": requests,
+            "identities": [item["fields"][identity_field] for item in items.values()],
+        }), encoding="utf-8")
+        sys.exit(outcomes[-1])
+    ''')
+    result = _run_child(["-c", script, scenario, str(config)], tmp_path, child_environment)
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == ""
+    expected_errors = "Azure DevOps error.\n" if scenario.endswith("rerun") else ""
+    if scenario == "conflict-rerun":
+        expected_errors += "Conflicting reused child relationship error.\n"
+    assert result.stderr == expected_errors
+    evidence = json.loads((tmp_path / "evidence.json").read_text(encoding="utf-8"))
+    assert evidence["outcomes"] == (
+        [1, 1, 0] if scenario == "conflict-rerun" else
+        [1, 0] if scenario == "partial-rerun" else [0]
+    )
+    count = 0 if scenario == "empty" else 12 if scenario == "success" else 4
+    summary = f"Execution summary: outcome=success; source_items_processed={count}."
+    final_log = evidence["snapshots"][-1]["log"]
+    assert final_log.count("Execution summary:") == 1
+    assert [line.split(" ", 1)[1] for line in final_log.splitlines()[-3:]] == [
+        "INFO azure_devops_backlog_generator Application run started.",
+        f"INFO azure_devops_backlog_generator {summary}",
+        "INFO azure_devops_backlog_generator Application run completed successfully.",
+    ]
+    assert evidence["snapshots"][-1]["items"] == count
+    for snapshot in evidence["snapshots"][:-1]:
+        assert snapshot["items"] == 2
+        assert "Execution summary:" not in snapshot["log"]
+        assert "Application run completed successfully." not in snapshot["log"]
+    creates = [request for request in evidence["requests"]
+               if request[1] == "POST" and request[2][:3] == ["_apis", "wit", "workitems"]
+               and request[3] is None]
+    assert len(creates) == count
+    assert len(evidence["requests"]) > count
+    for sentinel in (
+        "SYNTHETIC", "987650", "987651", "123456789", "Authorization", "Traceback",
+        str(tmp_path), "https://", "adbg:source-id", *evidence["identities"],
+    ):
+        assert sentinel not in final_log + result.stdout + result.stderr

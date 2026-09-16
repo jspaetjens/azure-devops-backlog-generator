@@ -277,9 +277,10 @@ def test_composes_application_bootstrap_with_the_exact_collaborator_values(
         events.append("loader")
         return configuration
 
-    def coordinate_run(configuration_received: Configuration) -> None:
+    def coordinate_run(configuration_received: Configuration) -> int:
         assert configuration_received is configuration
         events.append("slice-1")
+        return 0
 
     monkeypatch.setattr(main_module, "load_configuration_from_cli", load_configuration)
     monkeypatch.setattr(main_module, "coordinate_application_run", coordinate_run)
@@ -344,8 +345,10 @@ def test_propagates_slice_1_failure_without_retry_or_fallback(
     assert events == ["loader", "slice-1"]
 
 
+@pytest.mark.parametrize("count", [0, 1234])
 def test_composes_the_configured_application_run_once(
     monkeypatch: pytest.MonkeyPatch,
+    count: int,
 ) -> None:
     source_directory = Path("documentation-input")
     configuration = _configuration(source_directory)
@@ -373,17 +376,18 @@ def test_composes_the_configured_application_run_once(
         received_rest_client: object,
         *,
         personal_access_token: str,
-    ) -> None:
+    ) -> int:
         assert received_hierarchy is hierarchy
         assert received_rest_client is rest_client
         assert personal_access_token is configuration.personal_access_token
         events.append("generator")
+        return count
 
     monkeypatch.setattr(main_module, "DocumentationProcessor", Processor)
     monkeypatch.setattr(main_module, "AzureDevOpsRestClient", construct_rest_client)
     monkeypatch.setattr(main_module, "coordinate_generator_orchestration", coordinate_generator)
 
-    assert main_module.coordinate_application_run(configuration) is None
+    assert main_module.coordinate_application_run(configuration) is count
     assert events == ["processor-init", "process", "rest-client-init", "generator"]
     assert all(_SYNTHETIC_PAT not in event for event in events)
 
@@ -586,11 +590,13 @@ def test_each_reachable_post_initialisation_controlled_failure_is_logged_once(
 
 
 @pytest.mark.parametrize("level", ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+@pytest.mark.parametrize("count", [0, 1234])
 def test_successful_run_emits_only_eligible_fixed_lifecycle_records_in_order(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
     level: str,
+    count: int,
 ) -> None:
     configuration = Configuration(
         azure_devops=AzureDevOpsConfig(
@@ -617,10 +623,11 @@ def test_successful_run_emits_only_eligible_fixed_lifecycle_records_in_order(
         events.append(record.getMessage())
         return original_handle(handler, record)
 
-    def run(received_configuration: Configuration) -> None:
+    def run(received_configuration: Configuration) -> int:
         assert received_configuration is configuration
         assert main_module._ACTIVE_LOG_HANDLER is not None
         events.append("application")
+        return count
 
     monkeypatch.setattr(main_module.sys, "argv", ["backlog-generator", *arguments])
     monkeypatch.setattr(main_module, "load_configuration_from_cli", load)
@@ -632,12 +639,14 @@ def test_successful_run_emits_only_eligible_fixed_lifecycle_records_in_order(
     assert captured.out == ""
     assert captured.err == ""
     expected_messages = (
-        ["Application run started.", "Application run completed successfully."]
+        ["Application run started.",
+         f"Execution summary: outcome=success; source_items_processed={count}.",
+         "Application run completed successfully."]
         if level in ("DEBUG", "INFO")
         else []
     )
     assert events == (
-        ["configuration", expected_messages[0], "application", expected_messages[1]]
+        ["configuration", expected_messages[0], "application", *expected_messages[1:]]
         if expected_messages
         else ["configuration", "application"]
     )
@@ -681,7 +690,7 @@ def test_configuration_error_has_no_file_event_and_deactivates_a_stale_handler(
         raise ConfigurationFileError("SYNTHETIC_PAT_DO_NOT_RENDER C:\\secret\\config.toml")
 
     monkeypatch.setattr(main_module, "load_configuration_from_cli", load)
-    monkeypatch.setattr(main_module, "coordinate_application_run", lambda _: None)
+    monkeypatch.setattr(main_module, "coordinate_application_run", lambda _: 0)
 
     assert main_module.run_process() == 0
     first_handler = main_module._ACTIVE_LOG_HANDLER
@@ -796,9 +805,10 @@ def test_application_events_bypass_non_owned_named_root_and_unrelated_handlers(
     unrelated_logger.addHandler(unrelated_handler)
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
 
-    def run(_: Configuration) -> None:
+    def run(_: Configuration) -> int:
         if fails:
             raise DocumentationReadError("detail")
+        return 0
 
     monkeypatch.setattr(main_module, "coordinate_application_run", run)
 
@@ -821,10 +831,12 @@ def test_application_events_bypass_non_owned_named_root_and_unrelated_handlers(
         contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
         assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
             "INFO azure_devops_backlog_generator Application run started.",
-            "CRITICAL azure_devops_backlog_generator Documentation processing error."
-            if fails
-            else "INFO azure_devops_backlog_generator Application run completed successfully.",
-        ]
+        ] + (["CRITICAL azure_devops_backlog_generator Documentation processing error."]
+             if fails else [
+                 "INFO azure_devops_backlog_generator Execution summary: "
+                 "outcome=success; source_items_processed=0.",
+                 "INFO azure_devops_backlog_generator Application run completed successfully.",
+             ])
     finally:
         main_module._LOGGER.removeHandler(named_handler)
         named_handler.close()
@@ -904,9 +916,10 @@ def test_repeated_invocations_replace_only_owned_handlers_and_do_not_duplicate_r
     logging.getLogger().addHandler(root_handler)
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
 
-    def run(_: Configuration) -> None:
+    def run(_: Configuration) -> int:
         if fails:
             raise DocumentationReadError("detail")
+        return 0
 
     monkeypatch.setattr(main_module, "coordinate_application_run", run)
 
@@ -926,7 +939,10 @@ def test_repeated_invocations_replace_only_owned_handlers_and_do_not_duplicate_r
     assert contents.count("Documentation processing error.") == (2 if fails else 0)
     assert contents.count("Application run started.") == 2
     assert contents.count("Application run completed successfully.") == (0 if fails else 2)
-    assert len(contents.splitlines()) == 4
+    assert contents.count("Execution summary: outcome=success; source_items_processed=0.") == (
+        0 if fails else 2
+    )
+    assert len(contents.splitlines()) == (4 if fails else 6)
     logging.getLogger().removeHandler(root_handler)
     unrelated_logger.removeHandler(unrelated)
 
@@ -995,9 +1011,10 @@ def test_lifecycle_delivery_failure_preserves_silent_success_without_retry_or_fa
             raise _SentinelError("SYNTHETIC_EXCEPTION Authorization: SYNTHETIC_AUTH")
         return original_delivery(handler, record)
 
-    def run(received_configuration: Configuration) -> None:
+    def run(received_configuration: Configuration) -> int:
         assert received_configuration is configuration
         events.append("application")
+        return 0
 
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
     monkeypatch.setattr(main_module, "coordinate_application_run", run)
@@ -1013,6 +1030,7 @@ def test_lifecycle_delivery_failure_preserves_silent_success_without_retry_or_fa
     assert events == [
         "Application run started.",
         "application",
+        "Execution summary: outcome=success; source_items_processed=0.",
         "Application run completed successfully.",
     ]
     captured = capsys.readouterr()
@@ -1025,7 +1043,11 @@ def test_lifecycle_delivery_failure_preserves_silent_success_without_retry_or_fa
     contents = log_file.read_text(encoding="utf-8")
     assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
         f"INFO azure_devops_backlog_generator {message}"
-        for message in ("Application run started.", "Application run completed successfully.")
+        for message in (
+            "Application run started.",
+            "Execution summary: outcome=success; source_items_processed=0.",
+            "Application run completed successfully.",
+        )
         if message != failed_message
     ]
 
@@ -1092,7 +1114,11 @@ def test_lifecycle_best_effort_does_not_swallow_process_control_exceptions(
         return original_handle(handler, record)
 
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
-    monkeypatch.setattr(main_module, "coordinate_application_run", lambda _: events.append("run"))
+    def run(_: Configuration) -> int:
+        events.append("run")
+        return 0
+
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
     monkeypatch.setattr(main_module._ApplicationFileHandler, "handle", handle)
 
     with pytest.raises(type(error)) as raised:
@@ -1102,7 +1128,9 @@ def test_lifecycle_best_effort_does_not_swallow_process_control_exceptions(
     assert events == (
         ["Application run started."]
         if failed_message == "Application run started."
-        else ["Application run started.", "run", "Application run completed successfully."]
+        else ["Application run started.", "run",
+              "Execution summary: outcome=success; source_items_processed=0.",
+              "Application run completed successfully."]
     )
 
 
@@ -1202,7 +1230,7 @@ def test_pre_initialisation_unexpected_failure_does_not_use_a_stale_handler(
 ) -> None:
     configuration = _configuration(tmp_path, tmp_path)
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
-    monkeypatch.setattr(main_module, "coordinate_application_run", lambda _: None)
+    monkeypatch.setattr(main_module, "coordinate_application_run", lambda _: 0)
     assert main_module.run_process() == 0
     stale_handler = main_module._ACTIVE_LOG_HANDLER
     assert stale_handler is not None
@@ -1385,3 +1413,187 @@ def test_unexpected_stderr_delivery_failure_propagates_without_retry_or_fallback
         "INFO azure_devops_backlog_generator Application run started.",
         "CRITICAL azure_devops_backlog_generator Unexpected application error.",
     ]
+
+
+@pytest.mark.parametrize(
+    "boundary",
+    ["logger-filter", "handler-filter", "logger-level", "handler-level", "disabled", "no-handler"],
+)
+def test_summary_honours_logger_and_handler_filtering(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, boundary: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    attempts: list[str] = []
+
+    def reject(record: logging.LogRecord) -> bool:
+        attempts.append(record.getMessage())
+        return False
+
+    def run(_: Configuration) -> int:
+        handler = main_module._ACTIVE_LOG_HANDLER
+        assert handler is not None
+        if boundary == "logger-filter":
+            monkeypatch.setattr(main_module._LOGGER, "filters", [reject])
+        elif boundary == "handler-filter":
+            handler.addFilter(reject)
+        elif boundary == "logger-level":
+            main_module._LOGGER.setLevel(logging.WARNING)
+        elif boundary == "handler-level":
+            handler.setLevel(logging.WARNING)
+        elif boundary == "disabled":
+            monkeypatch.setattr(main_module._LOGGER, "disabled", True)
+        else:
+            main_module._deactivate_runtime_logging()
+        return 42
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    assert main_module.run_process() == 0
+    contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+    assert "Execution summary:" not in contents
+    if boundary.endswith("filter"):
+        assert attempts.count("Execution summary: outcome=success; source_items_processed=42.") == 1
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
+
+
+def test_summary_accepts_replacement_records_from_normal_logger_filters(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    main_module._initialise_runtime_logging(_configuration(tmp_path, tmp_path))
+    records: list[logging.LogRecord] = []
+    replacement = logging.LogRecord(
+        main_module._LOGGER.name, logging.INFO, "", 0,
+        "Execution summary: outcome=success; source_items_processed=1.", (), None,
+    )
+    monkeypatch.setattr(main_module._LOGGER, "filters", [lambda _: replacement])
+    monkeypatch.setattr(main_module._ACTIVE_LOG_HANDLER, "emit", records.append)
+    main_module._emit_execution_summary(1)
+    assert records == [replacement]
+
+
+@pytest.mark.parametrize(
+    "stage",
+    [
+        "format", "record", "logger-filter", "handler-filter",
+        "handle", "emit", "formatter", "stream",
+    ],
+)
+@pytest.mark.parametrize("entrypoint", ["bootstrap", "main", "process"])
+def test_summary_failure_is_silent_best_effort_and_completion_is_independent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture, stage: str, entrypoint: str,
+) -> None:
+    configuration = _configuration(tmp_path, tmp_path)
+    attempts: list[str] = []
+    sensitive = " ".join(_UNEXPECTED_SENTINELS)
+
+    def fail() -> None:
+        attempts.append(stage)
+        raise _SentinelError(sensitive)
+
+    class UnformattableCount(int):
+        def __format__(self, spec: str) -> str:
+            fail()
+
+    def intercept(original):
+        def deliver(record):
+            if record.getMessage().startswith("Execution summary:"):
+                fail()
+            return original(record)
+        return deliver
+
+    def run(_: Configuration) -> int:
+        handler = main_module._ACTIVE_LOG_HANDLER
+        assert handler is not None
+        if stage == "record":
+            original = main_module._LOGGER.makeRecord
+
+            def make_record(*args, **kwargs):
+                if args[4].startswith("Execution summary:"):
+                    fail()
+                return original(*args, **kwargs)
+
+            monkeypatch.setattr(main_module._LOGGER, "makeRecord", make_record)
+        elif stage in ("logger-filter", "handler-filter"):
+            target = main_module._LOGGER if stage == "logger-filter" else handler
+            monkeypatch.setattr(target, "filter", intercept(target.filter))
+        elif stage in ("handle", "emit", "formatter"):
+            method = "format" if stage == "formatter" else stage
+            monkeypatch.setattr(handler, method, intercept(getattr(handler, method)))
+        elif stage == "stream":
+            original_stream = handler.stream
+
+            class FailingSummaryStream:
+                def write(self, text: str) -> int:
+                    if "Execution summary:" in text:
+                        fail()
+                    return original_stream.write(text)
+
+                def flush(self) -> None:
+                    original_stream.flush()
+
+            monkeypatch.setattr(handler, "stream", FailingSummaryStream())
+        return UnformattableCount(12) if stage == "format" else 12
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    if entrypoint == "bootstrap":
+        assert main_module.coordinate_application_bootstrap([]) is None
+    elif entrypoint == "main":
+        assert main_module.main() is None
+    else:
+        assert main_module.run_process() == 0
+    assert attempts == [stage]
+    contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+    assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+        "INFO azure_devops_backlog_generator Application run started.",
+        "INFO azure_devops_backlog_generator Application run completed successfully.",
+    ]
+    assert list(tmp_path.iterdir()) == [tmp_path / "azure-devops-backlog-generator.log"]
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
+    assert caplog.records == []
+    for sentinel in (*_UNEXPECTED_SENTINELS, "Traceback", "_SentinelError"):
+        assert sentinel not in contents
+
+
+@pytest.mark.parametrize(
+    "error",
+    [KeyboardInterrupt(), SystemExit(7), GeneratorExit(), BaseException("SYNTHETIC_CONTROL")],
+)
+@pytest.mark.parametrize("stage", ["format", "record", "handle"])
+def test_summary_preserves_non_exception_failures(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    error: BaseException, stage: str,
+) -> None:
+    attempts: list[str] = []
+
+    def fail(*args, **kwargs):
+        attempts.append(stage)
+        raise error
+
+    class FailingCount(int):
+        __format__ = fail
+
+    def run(_: Configuration) -> int:
+        if stage == "record":
+            monkeypatch.setattr(main_module._LOGGER, "makeRecord", fail)
+        elif stage == "handle":
+            monkeypatch.setattr(main_module._ACTIVE_LOG_HANDLER, "handle", fail)
+        return FailingCount(12) if stage == "format" else 12
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli",
+                        lambda _: _configuration(tmp_path, tmp_path))
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    with pytest.raises(type(error)) as raised:
+        main_module.run_process()
+    assert raised.value is error
+    assert attempts == [stage]
+    contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+    assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+        "INFO azure_devops_backlog_generator Application run started.",
+    ]
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
