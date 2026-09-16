@@ -6,7 +6,7 @@
 
 **Version:** 2.45
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -91,7 +91,7 @@ the G3-SUM behavioural contract remains approved. No subsequent slice is allocat
 | 2.42 | 2026-09-11 | Approved Baseline | Jack Spaetjens | Synchronized implemented Application/Run Slice 9 Final Unexpected-Error Handling and Diagnostic Safety status. |
 | 2.43 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 operational boundaries and dependencies on unresolved behavioural contracts. |
 | 2.44 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded owner-approved G3-SUM-D1 to G3-SUM-D9 execution-summary behaviour and prospective interface changes; implementation and validation remain pending. |
-| 2.45 | 2026-09-16 | Draft | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 without changing G3-SUM-D1 to G3-SUM-D9. |
+| 2.45 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 without changing G3-SUM-D1 to G3-SUM-D9. |
 
 ---
 

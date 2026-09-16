@@ -6,7 +6,7 @@
 
 **Version:** 2.25
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -71,7 +71,7 @@ the G3-SUM behavioural contract remains approved. No subsequent slice is allocat
 | 2.22 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented deterministic hierarchy traversal composition status. |
 | 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented Generator-owned orchestration status without REST contract changes. |
 | 2.24 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Reconciled summary and completion sequencing and Application/Run implementation status without resolving HTTP reporting decisions. |
-| 2.25 | 2026-09-16 | Draft | Jack Spaetjens | Reconciled Application/Run Slice-10 allocation status without changing REST or execution-summary behaviour. |
+| 2.25 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled Application/Run Slice-10 allocation status without changing REST or execution-summary behaviour. |
 
 ---
 
