@@ -6,7 +6,7 @@
 
 **Version:** 1.36
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -75,7 +75,7 @@ Continuation is dependency-first; no Slice 11 is allocated. No new implementatio
 | 1.33 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded approved execution-summary decisions with implementation and validation pending; Gate 3 remains not passed. |
 | 1.34 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded Application/Run Slice 10 as allocated, not implemented and not validated, preserving Gate-3 acceptance as unsatisfied. |
 | 1.35 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled merged Slice-10 implementation and automated validation, recording row F as satisfied while Gate 3 remains not passed. |
-| 1.36 | 2026-09-16 | Draft | Jack Spaetjens | Recorded owner-approved Gate-3 closure decisions and reconciled the CRITICAL/HIGH threshold while preserving open acceptance statuses. |
+| 1.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded owner-approved Gate-3 closure decisions and reconciled the CRITICAL/HIGH threshold while preserving open acceptance statuses. |
 
 ---
 
