@@ -6,7 +6,7 @@
 
 **Version:** 2.26
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -73,7 +73,7 @@ PR #157 supplied automated evidence only; no live Azure DevOps Services validati
 | 2.23 | 2026-08-30 | Approved Baseline | Jack Spaetjens | Synchronized implemented Generator-owned orchestration status without REST contract changes. |
 | 2.24 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Reconciled summary and completion sequencing and Application/Run implementation status without resolving HTTP reporting decisions. |
 | 2.25 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled Application/Run Slice-10 allocation status without changing REST or execution-summary behaviour. |
-| 2.26 | 2026-09-16 | Draft | Jack Spaetjens | Reconciled implemented Generator/application integer returns and SUMMARY before COMPLETION without changing REST behaviour. |
+| 2.26 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled implemented Generator/application integer returns and SUMMARY before COMPLETION without changing REST behaviour. |
 
 ---
 

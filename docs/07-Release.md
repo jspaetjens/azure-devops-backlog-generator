@@ -6,7 +6,7 @@
 
 **Version:** 1.35
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-16
 
@@ -72,7 +72,7 @@ PR #157 supplied automated evidence only; no live Azure DevOps Services validati
 | 1.32 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Proposed Review Gate 3 acceptance matrix, owner decisions, PASS and deferral rules and Gate-4 boundary. |
 | 1.33 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded approved execution-summary decisions with implementation and validation pending; Gate 3 remains not passed. |
 | 1.34 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded Application/Run Slice 10 as allocated, not implemented and not validated, preserving Gate-3 acceptance as unsatisfied. |
-| 1.35 | 2026-09-16 | Draft | Jack Spaetjens | Reconciled merged Slice-10 implementation and automated validation, recording row F as satisfied while Gate 3 remains not passed. |
+| 1.35 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled merged Slice-10 implementation and automated validation, recording row F as satisfied while Gate 3 remains not passed. |
 
 ---
 
