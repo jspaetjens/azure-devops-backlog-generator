@@ -4,9 +4,9 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.46
+**Version:** 2.47
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-16
 
@@ -16,19 +16,21 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft reconciles Application/Run Slice 10 — Execution Summary Implementation
-and Validation, merged in PR #157 (implementation `666f7aa`, merge `8e2a57d`). Slice 10 is
-IMPLEMENTED + AUTOMATED VALIDATION COMPLETE under the unchanged approved G3-SUM-D1 to G3-SUM-D9
-contract. The starting baseline is main at `8e2a57d`. Historical slice contracts,
-`None` returns, summary exclusions and recorded test results below describe their original
-implementation boundaries; they do not override the current summary contract in
-[Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
-Historical references to pending API Section 6.1 status reconciliation describe the earlier
-baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
-Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
-PRE-RELEASE. This reconciliation revision is Draft pending review and separate approval-only promotion;
-the G3-SUM behavioural contract remains approved. No Slice 11 or subsequent capability order is allocated.
-PR #157 supplied automated evidence only; no live Azure DevOps Services validation is claimed.
+**Revision scope:** This Draft records the owner-approved Gate-3 logging/HTTP and closure decisions
+G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01, authoritative in
+[Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
+The starting Approved Baseline is main at `91b848f`. This revision awaits document review and
+baseline promotion; owner decision approval does not establish implementation or execution evidence.
+Status-aware HTTP 401/403/429 reporting remains production work with implementation and validation pending.
+Historical slice contracts, `None` returns, summary exclusions and test results retain their original
+boundaries. Earlier references to unresolved logging/HTTP decisions or undefined continuation order
+describe those historical baselines; Section 13.5 and Roadmap Section 5.1 now settle those decisions
+and dependencies. API Section 6.1 implementation-status reconciliation is already approved.
+G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain IMPLEMENTED + APPROVED;
+Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
+(`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
+row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
+Continuation is dependency-first; no Slice 11 is allocated. No new implementation or live evidence is claimed.
 
 ---
 
@@ -94,6 +96,7 @@ PR #157 supplied automated evidence only; no live Azure DevOps Services validati
 | 2.44 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded owner-approved G3-SUM-D1 to G3-SUM-D9 execution-summary behaviour and prospective interface changes; implementation and validation remain pending. |
 | 2.45 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 without changing G3-SUM-D1 to G3-SUM-D9. |
 | 2.46 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled merged Application/Run Slice 10 implementation and automated validation without changing G3-SUM-D1 to G3-SUM-D9. |
+| 2.47 | 2026-09-16 | Draft | Jack Spaetjens | Recorded owner-approved Gate-3 logging/HTTP and closure decisions D01-D14 and reconciliation-only R01 without allocating a new slice. |
 
 ---
 
@@ -137,6 +140,7 @@ PR #157 supplied automated evidence only; no live Azure DevOps Services validati
   - [13.2 HTTP reporting and execution-summary dependencies](#132-http-reporting-and-execution-summary-dependencies)
   - [13.3 Runtime, safety and recovery boundaries](#133-runtime-safety-and-recovery-boundaries)
   - [13.4 Execution-summary behavioural contract](#134-execution-summary-behavioural-contract)
+  - [13.5 Gate-3 owner-approved closure decisions](#135-gate-3-owner-approved-closure-decisions)
 - [14. Extensibility](#14-extensibility)
 - [15. Architecture Traceability](#15-architecture-traceability)
 - [16. Approval](#16-approval)
@@ -1264,35 +1268,36 @@ are in [Release Section 8.1](07-Release.md#81-review-gate-3-operational-readines
 Gate 3 asks whether the application is operationally complete and sufficiently evidenced to enter
 final release-candidate validation. It is not final Version-1.0 approval. Existing normative sources
 remain PRD FR-001 to FR-010 and NFR-001 to NFR-007, this Architecture, API Sections 5 to 11,
-Configuration Sections 5 to 8 and Testing Sections 5 to 9. Their assignment to Gate 3 is newly proposed
-unless already explicit, notably API Section 6.1 status reconciliation before Gate 3. Owner-approved
-G3-D1 to G3-D3 now settle summary/live-proof placement and broader DR exclusion; this document remains Draft.
+Configuration Sections 5 to 8 and Testing Sections 5 to 9. The gate assignments are already approved,
+including API Section 6.1 status reconciliation before Gate 3. G3-D1 to G3-D3 preserve summary/live-proof
+placement and broader DR exclusion. Section 13.5 records the remaining owner-approved closure decisions;
+this document revision remains Draft.
 
 ## 13.1 Logging acceptance boundary
 
 Before PASS, each applicable Section-12 topic shall have an approved interpretation and evidence
 against that interpretation. Existing Slice-6/8/9 behaviour shall be credited without reimplementation.
-Unresolved topics require separate behavioural contracts followed by any required implementation
-and validation. No event is required merely because it is imaginable. Owner-approved G3-D1 requires
+Section 13.5 settles the remaining interpretations, with required implementation and evidence still
+pending. No event is required merely because it is imaginable. Owner-approved G3-D1 requires
 the complete summary contract, implementation, validation and evidence before Gate-3 PASS.
 
-| Topic | Proposed Gate-3 acceptance rule | Current evidence / remaining definition |
+| Topic | Gate-3 acceptance rule | Current evidence / remaining closure |
 |-------|---------------------------------|-----------------------------------------|
 | Startup | Preserve configured-run START after successful configuration validation and logger initialisation. | SATISFIED: Slice 8; no earlier bootstrap event is implied. |
-| Configuration validation | Preserve stderr-only pre-initialisation failure; approve whether START is sufficient evidence of successful validation. | DECISION REQUIRED: a separate success event is not yet required. |
-| Documentation processing | Approve and evidence minimum processing observability under Section 12, including existing terminal failure reporting. | PARTIALLY SATISFIED: failure category exists; minimum successful processing evidence remains undefined. |
-| Azure DevOps communication | Approve and evidence minimum communication/result observability consistent with API Sections 6, 9 and 10. | PARTIALLY SATISFIED: generic terminal failure exists; further event content and boundaries remain undefined. |
-| Work-item creation | Approve creation-event granularity and safe evidence of successful creation. | NOT SATISFIED: per-item versus aggregate evidence remains undefined; no counts are mandated. |
-| Warnings | Approve applicable warning conditions and their evidence, or explicitly justify that no distinct warning condition applies under current V1.0 contracts. | DECISION REQUIRED: no warning taxonomy exists; do not invent business rules. |
+| Configuration validation | G3-OWN-D06 accepts START with its stated limitations; preserve stderr-only pre-initialisation failure. | Interpretation OWNER APPROVED; no new event required. Applicable evidence remains to be indexed. |
+| Documentation processing | G3-OWN-D07 accepts successful application execution, SUMMARY and traceable automated/integration evidence. | PARTIALLY SATISFIED: interpretation approved; evidence applicability remains to be assessed. |
+| Azure DevOps communication | G3-OWN-D08 accepts Generator completion, SUMMARY, automated evidence and required live Services proof. | PARTIALLY SATISFIED: interpretation approved; HTTP reporting implementation and live proof pending. |
+| Work-item creation/reuse | G3-OWN-D09 accepts SUMMARY, automated Generator/integration evidence and live remote inspection; no new counters or per-item events. | NOT SATISFIED: interpretation approved; required live evidence absent. |
+| Warnings | G3-OWN-D10 records no distinct V1.0 warning taxonomy because no approved warning-worthy condition exists. | Applicability OWNER APPROVED; no new event required. WARNING remains a configured threshold. |
 | Controlled errors | Preserve the seven approved categories, exact current reports and eligible owned-handler CRITICAL events until an approved reporting revision applies. | SATISFIED for Slice 6; HTTP reconciliation remains separate. |
 | Unexpected errors | Preserve UE-D1 to UE-D10, fixed fallback and owned-handler best-effort CRITICAL event. | SATISFIED: Slice 9, including handled-Exception traceback suppression. |
 | Successful completion | Preserve normal-return-only INFO COMPLETION and configured filtering. | SATISFIED: Slice 8; this is not an execution summary. |
 | Execution summary | Complete the separately approved summary contract, implementation, validation and evidence before Gate-3 PASS under owner-approved G3-D1. | SATISFIED: approved Section 13.4 behaviour, merged PR #157 implementation and Testing Section 9.2 automated evidence; see Release row F. This reconciliation remains Draft and Gate 3 has not passed. |
 | Authentication/authorisation | Meet the reconciled API reporting contract in Section 13.2. | PARTIALLY SATISFIED: status retained, current terminal reporting generic. |
-| Rate limiting | Meet API Section 11 through approved identifiable rate-limit logging, preserving fail/no-sleep/no-retry behaviour. | PARTIALLY SATISFIED: generic failure exists; reporting contract and event remain outstanding. |
+| Rate limiting | Meet G3-OWN-D05 and API Section 11; omit Retry-After entirely and preserve fail/no-sleep/no-retry behaviour. | PARTIALLY SATISFIED: reporting decision approved; implementation and evidence pending. |
 | Diagnostic safety | Preserve safe existing messages and prove secret safety for every newly approved event. | PARTIALLY SATISFIED: existing fixed events evidenced; future content requires validation. |
 | Destination | Preserve the validated directory, fixed UTF-8 append logfile, owned-handler isolation and no fallback destination. | SATISFIED: Slice 6 and Configuration Section 6.4. |
-| Levels | Preserve configured thresholds, INFO lifecycle and CRITICAL terminal events; approve levels for any new events. | PARTIALLY SATISFIED: current levels evidenced; new-event levels undefined. |
+| Levels | Preserve configured thresholds and INFO lifecycle/SUMMARY; G3-OWN-D02 requires CRITICAL HTTP terminal reports. | PARTIALLY SATISFIED: levels approved; new HTTP implementation and evidence pending. |
 
 Further logging contracts shall define trigger, timing, content, level, ownership, filtering and
 write-failure behaviour. They shall state which existing event satisfies a topic and prevent duplicate
@@ -1302,15 +1307,13 @@ creation/reuse/relationship decisions shall not be inferred from a successful ap
 
 ## 13.2 HTTP reporting and execution-summary dependencies
 
-Before Gate-3 PASS, an Approved Baseline behavioural contract shall reconcile API Section 6.1
-`401` authentication-failure reporting, `403` authorisation-failure reporting and Section 11 rate-limit
-logging with the current generic `Azure DevOps error.` process/log event. Its required implementation
-shall be merged and its evidence recorded. Exact messages, channels, levels and interaction with existing
-reports require separate approval; this gate contract does not select them. HTTP status retention and
-no-retry behaviour already exist. No new exception taxonomy is proven necessary. Optional safe
-`Retry-After` diagnostics do not authorise sleep or retry. API Section 6.1 implementation-status
-reconciliation in API Section 6.1 is already approved; required HTTP reporting contract,
-implementation and evidence remain pending before PASS.
+G3-OWN-D01 to G3-OWN-D05 in Section 13.5 settle the safety, delivery and exact `401`/`403`/`429`
+messages, replacing the generic `Azure DevOps error.` report in both logfile and stderr for those
+statuses. API Section 6.1 records the reporting contract; transport/status retention remains unchanged.
+`Retry-After` is omitted entirely. No new exception taxonomy, retry, sleep or backoff is introduced.
+This contract revision must reach Approved Baseline before implementation; merged implementation and
+recorded validation remain mandatory before Gate-3 PASS. API Section 6.1 implementation-status
+reconciliation is already approved and is distinct from this pending reporting implementation.
 
 The execution summary remains mandatory under Sections 8 and 12. G3-D1 is RESOLVED / OWNER APPROVED:
 its contract, implementation, validation and evidence shall be complete before Gate-3 PASS. Unfinished
@@ -1318,7 +1321,7 @@ summary functionality shall not be deferred to Gate 4; final RC regression may r
 Section 13.4 records owner-approved G3-SUM-D1 to G3-SUM-D9, including one processed-source-item count
 and two integer-return changes, now implemented and automatically validated by PR #157. API Section
 7.1 now distinguishes SUMMARY from the separate COMPLETION lifecycle event; neither substitutes for
-the other. Other logging topics and HTTP reporting decisions remain unresolved by this contract.
+the other. Section 13.5 settles the other logging/HTTP decisions without changing Section 13.4.
 
 ## 13.3 Runtime, safety and recovery boundaries
 
@@ -1477,6 +1480,149 @@ Historical implementation and test evidence shall not be rewritten as if these c
 Behavioural approval does not establish implementation, validation or Gate-3 PASS. Required HTTP
 `401`/`403`/`429` reporting and other unresolved logging topics remain separate Gate-3 work.
 G3-D2 and G3-D3 remain unchanged; Gate 4 remains FUTURE and Version 1.0 PRE-RELEASE.
+
+---
+
+## 13.5 Gate-3 owner-approved closure decisions
+
+**OWNER APPROVED on 2026-09-16 — contract revision Draft; implementation/evidence pending.**
+This register owns G3-OWN-D01 to G3-OWN-D14. These decisions settle the remaining logging/HTTP
+interpretations and closure requirements without reopening G3-D1 to G3-D3 or rewriting G3-SUM-D1
+to G3-SUM-D9. G3-REC-R01 records reconciliation only. Historical generic HTTP reporting remains the
+implemented baseline until the approved status-aware replacement is implemented and validated.
+
+**G3-OWN-D01 — Diagnostic-safety boundary — APPROVED: Option A.** New Gate-3 reporting may contain
+only fixed text and stable non-secret literals explicitly approved by contract. No new arbitrary
+dynamic diagnostics, general redaction framework or numeric diagnostics are approved. Newly approved
+reporting shall exclude PAT, derived Authorization material, request/response bodies, exception details,
+tracebacks, local paths, source titles/content, source identities/digests, URLs, organisation names,
+project names, configuration values and remote IDs unless separately approved. Existing G3-SUM
+permissions remain unchanged.
+
+**G3-OWN-D02 — Shared new-event delivery contract — APPROVED: Option B.** Retain role-specific
+delivery profiles; do not globally harmonise historical logging. Newly approved HTTP terminal reporting
+uses the existing controlled-terminal profile: current invocation owned logfile handler only, CRITICAL
+severity, preserved process-boundary stderr reporting and one eligible attempt per failure, with one
+report attempt per destination. The status-specific report replaces the generic terminal report without
+duplication. Preserve the underlying failure/process outcome; an ordinary secondary logfile-write
+Exception shall not replace the primary failure. No retry, fallback destination, replacement diagnostic
+or logging-recovery mechanism is permitted. Non-Exception BaseException/process-control failures remain
+unsuppressed. D01 applies. Existing lifecycle/SUMMARY filtering and stderr-delivery semantics are unchanged.
+
+**G3-OWN-D03 — HTTP 401 authentication reporting — APPROVED: Option A.** HTTP 401 means authentication
+rejection. The exact logical message is `Azure DevOps authentication failed.` It replaces
+`Azure DevOps error.` in BOTH logfile and stderr; do not emit the generic report additionally for the
+same failure. Report at the process boundary after propagated status-aware failure classification,
+with CRITICAL logfile severity, one report attempt per destination and unchanged exit/failure semantics.
+Do not diagnose expiration, revocation, missing scope or a credential defect. No unsupported root-cause
+diagnosis, new exception taxonomy, retry or alternate credential behaviour is required or introduced.
+D01 and D02 apply.
+
+**G3-OWN-D04 — HTTP 403 authorisation reporting — APPROVED: Option A.** HTTP 403 means authorisation
+failure, distinct from 401 authentication rejection. The exact logical message is
+`Azure DevOps authorisation failed.` It replaces `Azure DevOps error.` in BOTH logfile and stderr;
+do not emit the generic report additionally for the same failure. Report at the process boundary with
+CRITICAL logfile severity, one report attempt per destination and unchanged exit/failure semantics.
+Do not diagnose a particular PAT scope, permission, group or policy. No new exception taxonomy, retry,
+escalation or credential substitution is introduced. D01 and D02 apply.
+
+**G3-OWN-D05 — HTTP 429 rate-limit reporting — APPROVED: Option A.** HTTP 429 means rate-limit
+rejection. The exact logical message is `Azure DevOps rate limit reached.` It replaces
+`Azure DevOps error.` in BOTH logfile and stderr; do not emit the generic report additionally for the
+same failure. Report at the process boundary with CRITICAL logfile severity, one report attempt per
+destination and unchanged exit/failure semantics. No retry, sleep, backoff, fallback or new exception
+taxonomy is introduced. **Retry-After: APPROVED — OMIT ENTIRELY.** Do not inspect it for reporting,
+propagate it into application reporting, add header parsing or header-derived diagnostics, or echo raw
+header data. D01 and D02 apply.
+
+**G3-OWN-D06 — Configuration-validation success evidence — APPROVED: Option A.** Existing START is
+sufficient evidence that configuration loading/validation and runtime logging initialisation returned
+successfully and application execution was reached. START does not prove documentation processing,
+Azure DevOps connectivity or persistence. Its absence does not itself prove validation failure because
+filtering and best-effort delivery may suppress it. No new configuration-success event is required.
+
+**G3-OWN-D07 — Successful documentation-processing evidence — APPROVED: Option A.** The successful
+application path, execution SUMMARY and traceable automated/integration evidence are sufficient.
+No new documentation-processing success event is required; do not introduce document titles, paths,
+counts or content into runtime reporting.
+
+**G3-OWN-D08 — Successful Azure DevOps communication evidence — APPROVED: Option A.** Successful
+Generator completion, execution SUMMARY, applicable automated evidence and required live Azure DevOps
+Services evidence together are sufficient. No additional communication-success event is required.
+Live Services evidence remains independently mandatory.
+
+**G3-OWN-D09 — Creation/reuse success evidence — APPROVED: Option A.** Existing execution SUMMARY,
+automated Generator/integration evidence and live remote inspection evidence are sufficient. Do not add
+created/reused counters, alter SUMMARY, add per-item creation/reuse events or expose titles or IDs.
+SUMMARY remains a processed-source-item count, NOT a created-item count.
+
+**G3-OWN-D10 — Warning applicability — APPROVED: Option A.** There is no distinct V1.0 warning
+taxonomy required for Gate 3 because no approved warning-worthy condition has been established.
+Do not invent warning conditions. WARNING as a configured logging threshold remains a logging-level
+feature, not a warning taxonomy. D06-D10 require no new runtime observability events.
+
+**G3-OWN-D11 — Complete scenario-to-gate allocation — APPROVED: Option A.** Gate 3 shall complete
+its mandatory minimum. Only eligible remaining scenarios may be explicitly allocated to Gate 4; every
+deferral shall record the exact requirement/scenario, rationale, receiving gate, responsible owner,
+required evidence and completion condition. The mandatory Gate-3 minimum may NOT be deferred and
+includes, where applicable: complete supported application success; required integrated failures;
+preflight-before-persistence; downstream mutation/relationship failures; unexpected fallback; partial-state
+rerun behaviour; MISSING repair; CORRECT continuation; CONFLICTING stop; approved 401/403/429 reporting
+and safety; applicable full-suite/Ruff evidence; and minimum real Services proof required by G3-D2.
+Gate 4 retains final RC regression and repeated live validation. G3-D2 and G3-D3 are not reopened.
+
+**G3-OWN-D12 — Live environment, mutation and cleanup plan — APPROVED: Option B.** Use an approved
+isolated dedicated test project inside an existing Azure DevOps TEST organisation, with synthetic backlog
+input only. This decision does NOT authorise immediate execution; concrete environment-specific values
+and execution authorisation remain pending. The procedure shall identify truthfully the actual supported/
+inherited-compatible Scrum process and the externally provisioned required identity field. It shall
+require a least-privilege runtime PAT with `Project and Team: Read` and `Work Items: Read & write`,
+documented project/Area Path permissions and tag-creation permission only when actually required.
+It shall cover real persistent Create, real parent-child PATCH, a later unchanged-input reuse run and
+remote inspection. No deliberate rate-limit generation or unapproved disruptive negative scenarios
+are permitted. Before execution, an explicit environment-specific cleanup/retention decision shall
+identify either authorised removal of specifically identified synthetic test artefacts, or authorised
+retention with a custodian and review/expiry point. Do not give the generator deletion/cleanup capability
+or grant runtime deletion permissions merely for cleanup. Evidence shall contain no secrets or
+prohibited diagnostics. Gate-4 repetition remains mandatory.
+
+**G3-REC-R01 — Findings threshold reconciliation — reconciliation only.** The already-authoritative
+Gate-3 threshold is: **No unresolved CRITICAL or HIGH defects/findings.** Release Sections 8 and 10
+shall use the same threshold as Testing Section 9. This is not a new behavioural or owner decision,
+and does not weaken the Testing contract.
+
+**G3-OWN-D13 — Operator-guidance location and acceptance — APPROVED: Option B.** Required guidance
+shall live in a separate operator guide, planned as `docs/10-Operator-Guide.md` under the numbered
+documentation convention. README shall provide a clear discoverable link when the guide is delivered.
+This revision records planning only; neither the guide nor a placeholder or README edit is required here.
+Acceptance requires coverage of supported package invocation; an explicit `--config-file` example;
+configuration path-resolution rules; `AZDO_PAT` only; supported process/project prerequisites;
+least-privilege permissions; 0/1 process outcomes; logfile location; log-level/filtering behaviour;
+SUMMARY semantics; no dry-run; preflight then real persistence; accepted partial persistence; identity
+reuse; MISSING repair; CORRECT continuation; CONFLICTING stop; no automatic retry, sleep/backoff,
+rollback or compensation; and final approved 401/403/429 meanings and both reporting destinations.
+
+**G3-OWN-D14 — Evidence index, applicability and sign-off — APPROVED: Option A.** Use one consolidated
+versioned Gate-3 dossier. It shall contain the assessed implementation commit, governing document
+versions, relevant merged changes and an A-O acceptance index. Each row shall identify its normative
+source/section, acceptance condition, current status and evidence references, including automated/manual/
+live/document-review type, safe environment/input references, execution dates, expected/actual result,
+artefact reference, limitations and applicability of earlier evidence to the assessed revision. Include
+approved owner decisions, a findings register with CRITICAL/HIGH relevance, owner/disposition and
+verified closure evidence, explicit permitted D11 Gate-4 deferrals, reviewer, review date and final dated
+owner PASS/NOT-PASSED sign-off. Defining this structure does not pass Gate 3 or supply missing evidence.
+
+**Allocation and remaining work.** Separate numbered allocation is not mandatory. Remaining work
+proceeds dependency-first under this approved Gate-3 closure contract, with approved behavioural
+documentation baselined before implementation. No Slice 11 or later slice number is allocated.
+The definite remaining production work is status-aware 401/403/429 reporting; D06-D10 require no
+additional observability events. Roadmap Section 5.1 owns continuation order. Live execution, operator
+guidance, the completed evidence dossier, findings assessment and final owner sign-off remain pending.
+
+**GUI boundary.** A functioning GUI remains mandatory for Version 1.0 release readiness. It is outside
+these Gate-3 logging/HTTP decisions, is not a Gate-3 blocker under the current approved contract and
+is not implemented here. The older PRD exclusion of GUI from V1.0 remains a known scope inconsistency;
+formal PRD/Architecture/Roadmap/Testing/Release reconciliation remains future governance work.
 
 ---
 

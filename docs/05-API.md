@@ -4,9 +4,9 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.26
+**Version:** 2.27
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-16
 
@@ -16,19 +16,21 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft reconciles Application/Run Slice 10 — Execution Summary Implementation
-and Validation, merged in PR #157 (implementation `666f7aa`, merge `8e2a57d`). Slice 10 is
-IMPLEMENTED + AUTOMATED VALIDATION COMPLETE under the unchanged approved G3-SUM-D1 to G3-SUM-D9
-contract. The starting baseline is main at `8e2a57d`. Historical slice contracts,
-`None` returns, summary exclusions and recorded test results below describe their original
-implementation boundaries; they do not override the current summary contract in
-[Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
-Historical references to pending API Section 6.1 status reconciliation describe the earlier
-baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
-Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
-PRE-RELEASE. This reconciliation revision is Draft pending review and separate approval-only promotion;
-the G3-SUM behavioural contract remains approved. No Slice 11 or subsequent capability order is allocated.
-PR #157 supplied automated evidence only; no live Azure DevOps Services validation is claimed.
+**Revision scope:** This Draft records the owner-approved Gate-3 logging/HTTP and closure decisions
+G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01, authoritative in
+[Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
+The starting Approved Baseline is main at `91b848f`. This revision awaits document review and
+baseline promotion; owner decision approval does not establish implementation or execution evidence.
+Status-aware HTTP 401/403/429 reporting remains production work with implementation and validation pending.
+Historical slice contracts, `None` returns, summary exclusions and test results retain their original
+boundaries. Earlier references to unresolved logging/HTTP decisions or undefined continuation order
+describe those historical baselines; Section 13.5 and Roadmap Section 5.1 now settle those decisions
+and dependencies. API Section 6.1 implementation-status reconciliation is already approved.
+G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain IMPLEMENTED + APPROVED;
+Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
+(`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
+row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
+Continuation is dependency-first; no Slice 11 is allocated. No new implementation or live evidence is claimed.
 
 ---
 
@@ -74,6 +76,7 @@ PR #157 supplied automated evidence only; no live Azure DevOps Services validati
 | 2.24 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Reconciled summary and completion sequencing and Application/Run implementation status without resolving HTTP reporting decisions. |
 | 2.25 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled Application/Run Slice-10 allocation status without changing REST or execution-summary behaviour. |
 | 2.26 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled implemented Generator/application integer returns and SUMMARY before COMPLETION without changing REST behaviour. |
+| 2.27 | 2026-09-16 | Draft | Jack Spaetjens | Recorded approved status-specific 401/403/429 terminal reporting and complete omission of Retry-After; implementation remains pending. |
 
 ---
 
@@ -228,13 +231,52 @@ The application shall fail immediately without automatic retry on connection fai
 The minimum generic HTTP status interpretation shall be:
 
 - `400`: invalid or malformed request, or incompatible request payload; fail.
-- `401`: authentication rejected; report authentication failure without claiming a more specific root cause unless Azure DevOps provides trustworthy evidence.
+- `401`: authentication rejected; report the fixed authentication-failure message below without a more specific root-cause diagnosis.
 - `403`: authenticated request lacks required authorisation or permission; report authorisation failure.
 - `404`: requested project, resource or work item not found; fail in the relevant operation.
 - `409` or `412`: applicable conflict, concurrency or state failure; fail. Existing relationship `/rev` no-retry behaviour remains unchanged.
 - `408`, `429` or `5xx`: fail without automatic retry.
 
 On HTTP failure, the implementation shall preserve the HTTP status. It may extract a bounded safe Azure DevOps error message or code when present. Non-JSON error responses shall be handled safely. Error-body parsing is an optional diagnostic enhancement and is not required for correctness. The application shall not log an entire response body by default, expose the Authorization header or PAT, or assume every error response has the same JSON schema.
+
+The preceding transport/status-retention contract is unchanged. Its optional diagnostic extraction
+does not authorise dynamic application reporting: newly approved Gate-3 reporting is limited by
+G3-OWN-D01. In particular, 401/403/429 reports shall not expose extracted error messages or codes.
+
+### Approved HTTP terminal reporting — implementation and validation pending
+
+[Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions),
+G3-OWN-D01 to G3-OWN-D05, owns the owner-approved contract recorded in this Draft. Following
+propagation of the status-preserving failure, status-aware classification at the process boundary
+shall select the exact logical message:
+
+| HTTP status | Category | Exact logical message | Owner decision |
+|-------------|----------|-----------------------|----------------|
+| 401 | Authentication rejection | `Azure DevOps authentication failed.` | G3-OWN-D03, Option A |
+| 403 | Authorisation failure, distinct from 401 | `Azure DevOps authorisation failed.` | G3-OWN-D04, Option A |
+| 429 | Rate-limit rejection | `Azure DevOps rate limit reached.` | G3-OWN-D05, Option A |
+
+For EACH status, the specific report REPLACES `Azure DevOps error.` in BOTH logfile and stderr;
+no additional generic event or stderr report shall be emitted for that failure. Each uses CRITICAL
+logfile severity and the existing controlled-terminal delivery profile: only the current invocation's
+owned logfile handler, one eligible logfile attempt and one process-boundary stderr report attempt.
+Preserve existing stderr line termination and delivery semantics, underlying failure, global stop,
+process outcome `1` and package termination ownership. Ordinary secondary logfile-write Exception
+failure shall not replace the primary failure or prevent its stderr report. Non-Exception
+BaseException/process-control failures remain unsuppressed. No retry, sleep, backoff, fallback
+destination, replacement diagnostic or logging recovery is introduced. Role-specific historical
+delivery profiles, including lifecycle/SUMMARY filtering, are not globally harmonised.
+
+D01 permits only fixed text and explicitly approved stable non-secret literals for new reporting;
+no arbitrary dynamic or new numeric diagnostics, secret material, exception details or other prohibited
+content may be added. No unsupported root-cause diagnosis is permitted: 401 shall not claim expiration,
+revocation, missing scope or credential defect; 403 shall not diagnose a particular PAT scope,
+permission, group or policy; 429 reports rate-limit rejection only. No exception-taxonomy redesign,
+alternate credential, privilege escalation or credential substitution is introduced.
+
+For 429, `Retry-After` is OMITTED ENTIRELY: do not inspect it for reporting, propagate it into
+application reporting, add header parsing or header-derived diagnostics, or echo raw header data.
+Existing transport/status preservation remains; this revision claims no reporting implementation.
 
 Successful controlled execution shall exit with status `0`. A controlled application failure shall exit with status `1`. Version 1.0 shall not define a differentiated numeric exit-code taxonomy. The implementation may use internal typed exception categories, including configuration, validation, compatibility, transport or API, response-shape, identity-resolution and relationship-state categories, provided that public behaviour remains consistent. Version 1.0 dry-run remains unsupported.
 
@@ -261,7 +303,7 @@ Version 1.0 does not require Project Administrator, Project Collection Administr
 
 The Backlog Generator selects which approved Azure DevOps operation shall be requested. The REST Client sends that authenticated request and validates its response; it shall not select an alternate credential or attempt privilege escalation. Existing Configuration Specification, Development Standards, Architecture security rules and Section 6.1 remain authoritative for `AZDO_PAT` as the sole credential input, non-persistence of credentials, secret-safe diagnostics and the prohibition on credentials in logs, exception text, URLs, query strings, request bodies, generated backlog content or source control.
 
-`401` remains authentication rejection. `403` means the authenticated identity lacks required authorization for the requested operation. On `403`, the application shall fail the affected operation immediately, preserve the HTTP status and secret-safe diagnostics, and shall not retry, downgrade behaviour, use another credential, attempt privilege escalation or mutate unrelated state. The generic HTTP failure handling in Section 6.1 remains authoritative.
+`401` remains authentication rejection. `403` means the authenticated identity lacks required authorization for the requested operation. On `403`, the application shall fail the affected operation immediately, preserve the HTTP status and secret-safe diagnostics, and shall not retry, downgrade behaviour, use another credential, attempt privilege escalation or mutate unrelated state. Section 6.1 remains authoritative, including its approved status-specific terminal reporting replacement; no particular missing permission is diagnosed.
 
 ---
 
@@ -730,9 +772,13 @@ The application shall operate in a manner that respects Azure DevOps REST API us
 Version 1.0 shall:
 
 - Detect API rate limiting where applicable.
-- Report rate limiting events through the logging mechanism.
+- Report HTTP 429 through the exact logfile and stderr replacement contract in Section 6.1 / G3-OWN-D05.
 - Avoid unnecessary API requests through efficient request handling.
-- Support future implementation of retry strategies if required.
+- Fail without retry, sleep, backoff or fallback; any future retry strategy requires separate approval.
+
+`Retry-After` is omitted entirely under G3-OWN-D05, including reporting inspection, propagation,
+header parsing and header-derived diagnostics. This is an approved reporting decision with
+implementation and validation pending; no new execution evidence is claimed.
 
 Rate limiting shall not compromise application stability.
 

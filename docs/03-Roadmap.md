@@ -4,9 +4,9 @@
 
 > *This document defines the phased implementation plan for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.41
+**Version:** 1.42
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-16
 
@@ -16,19 +16,21 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft reconciles Application/Run Slice 10 — Execution Summary Implementation
-and Validation, merged in PR #157 (implementation `666f7aa`, merge `8e2a57d`). Slice 10 is
-IMPLEMENTED + AUTOMATED VALIDATION COMPLETE under the unchanged approved G3-SUM-D1 to G3-SUM-D9
-contract. The starting baseline is main at `8e2a57d`. Historical slice contracts,
-`None` returns, summary exclusions and recorded test results below describe their original
-implementation boundaries; they do not override the current summary contract in
-[Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract).
-Historical references to pending API Section 6.1 status reconciliation describe the earlier
-baseline; that status reconciliation is already approved. HTTP reporting decisions remain separate.
-Slices 1–9 remain IMPLEMENTED + APPROVED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0
-PRE-RELEASE. This reconciliation revision is Draft pending review and separate approval-only promotion;
-the G3-SUM behavioural contract remains approved. No Slice 11 or subsequent capability order is allocated.
-PR #157 supplied automated evidence only; no live Azure DevOps Services validation is claimed.
+**Revision scope:** This Draft records the owner-approved Gate-3 logging/HTTP and closure decisions
+G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01, authoritative in
+[Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
+The starting Approved Baseline is main at `91b848f`. This revision awaits document review and
+baseline promotion; owner decision approval does not establish implementation or execution evidence.
+Status-aware HTTP 401/403/429 reporting remains production work with implementation and validation pending.
+Historical slice contracts, `None` returns, summary exclusions and test results retain their original
+boundaries. Earlier references to unresolved logging/HTTP decisions or undefined continuation order
+describe those historical baselines; Section 13.5 and Roadmap Section 5.1 now settle those decisions
+and dependencies. API Section 6.1 implementation-status reconciliation is already approved.
+G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain IMPLEMENTED + APPROVED;
+Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
+(`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
+row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
+Continuation is dependency-first; no Slice 11 is allocated. No new implementation or live evidence is claimed.
 
 ---
 
@@ -79,6 +81,7 @@ PR #157 supplied automated evidence only; no live Azure DevOps Services validati
 | 1.39 | 2026-09-12 | Approved Baseline | Jack Spaetjens | Recorded the approved execution-summary contract with implementation and validation pending, without allocating a slice. |
 | 1.40 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 with implementation and validation pending. |
 | 1.41 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded Application/Run Slice 10 as implemented with automated validation complete, retaining separate documentation approval and no subsequent slice allocation. |
+| 1.42 | 2026-09-16 | Draft | Jack Spaetjens | Recorded dependency-first Gate-3 closure under the owner-approved decisions without allocating Slice 11. |
 
 ---
 
@@ -398,24 +401,25 @@ Version 1.0 PRE-RELEASE. Dependency-based continuation below remains applicable.
 
 **Gate 3 FUTURE / NOT YET PASSED; current readiness NOT READY.**
 The approved gate framework governs prerequisite closure and a separate Gate-3 assessment.
-This Draft records merged Slice-10 implementation and completed automated validation under the
-already-approved summary decisions. The gate framework itself is not an implementation slice
-or an approved order for other future capabilities.
+This Draft records owner-approved G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01,
+with dependency-first continuation below. Separate numbered allocation is not mandatory;
+no Slice 11 or later numbered work is allocated.
 
 [Release Section 8.1](07-Release.md#81-review-gate-3-operational-readiness-acceptance) owns the acceptance
 matrix, current statuses, owner decisions and PASS/NOT-READY/deferral rules.
 [Architecture Section 13](02-Architecture.md#13-review-gate-3-operational-readiness-boundaries) owns
-operational boundaries and unresolved behavioural dependencies.
+operational boundaries and the owner-approved closure register in Section 13.5.
 [Testing Section 9.1](06-Testing.md#91-review-gate-3-evidence-requirements) owns validation forms and records.
 
 The existing implementation baseline remains Slices 1-9 IMPLEMENTED + APPROVED, Gates 1 and 2 PASS,
 Gate 4 FUTURE and Version 1.0 PRE-RELEASE. Slice 10 is implemented with automated validation complete. The preceding slice-status
 records describe the approved implementation baseline. G3-D1 to G3-D3 remain RESOLVED / OWNER
-APPROVED. Summary decisions G3-SUM-D1 to G3-SUM-D9 are now approved; other behavioural contracts
-and acceptance evidence remain incomplete. This documentation revision remains Draft.
+APPROVED. G3-SUM-D1 to G3-SUM-D9 and the Slice-10 status reconciliation are Approved Baseline.
+The remaining logging/HTTP interpretations are owner-approved in Architecture Section 13.5;
+this new documentation revision remains Draft and acceptance evidence remains incomplete.
 
-Remaining prerequisite groups are contract/documentation reconciliation; approved logging and HTTP
-reporting implementation/evidence; approval of this summary-status documentation reconciliation;
+Remaining prerequisite groups are approval/baselining of this closure contract; status-aware HTTP
+401/403/429 reporting implementation/evidence;
 application integration and live validation; operator guidance; and findings/evidence/sign-off.
 API Section 6.1 implementation status reconciliation is already approved; HTTP reporting remains separate.
 Owner-approved G3-D1 requires the
@@ -424,14 +428,32 @@ before Gate 3, with final RC repetition at Gate 4. G3-D3 places broader Operatio
 outside V1.0, not in the Gate-4 backlog. Bounded failure/rerun guidance and evidence remain required.
 G3-SUM-D1 to G3-SUM-D9 are owner-approved in Architecture Section 13.4; Testing Section 9.2 records
 PR #157 automated validation. Release row F is SATISFIED on that bounded evidence; required live proof
-remains separate under row H and Gate 3 remains NOT PASSED. Other logging/HTTP reporting behaviour
-and the live procedure/environment still need definition. No Slice 11 or subsequent capability order is allocated.
+remains separate under row H and Gate 3 remains NOT PASSED. D06-D10 require no new runtime events;
+the definite remaining production work is status-aware 401/403/429 reporting. The D12 live-plan
+contract is approved, but concrete environment values, cleanup/retention and execution authorisation
+remain pending. No live execution is authorised by this revision.
 
-Dependencies, rather than new slice numbers, govern continuation: behavioural contracts precede their
-implementation; validation follows the relevant implementation and environment preparation; gate review
-requires recorded evidence. The proposed Gate-4 boundary reserves final RC validation and release
-approval. Deferral requires the formal rule in Release Section 8.1 and cannot silently remove a V1.0
-requirement. No complete Gate-4 contract or additional implementation ordering is defined here.
+The dependency-first Gate-3 closure sequence is:
+
+1. Approve and baseline this contract revision before implementation.
+2. Implement and test status-aware 401/403/429 reporting under G3-OWN-D01 to G3-OWN-D05 and Testing
+   Section 9.3, including applicable full-suite and Ruff regression evidence.
+3. Reconcile implementation status and evidence against the approved contract.
+4. Complete and review the separate `docs/10-Operator-Guide.md`, with a clear discoverable README link,
+   against G3-OWN-D13. The guide and README update remain future work.
+5. Complete the consolidated versioned Gate-3 evidence dossier under G3-OWN-D14 for the evidence then
+   available; identify outstanding live results and sign-off explicitly, to be completed in steps 6-8.
+6. Authorise the concrete D12 environment, mutation and cleanup/retention plan, then execute and record
+   minimum live Services validation under G3-D2. Populate the dossier with actual results.
+7. Assess findings and scenario allocations under D11 and reconciliation-only R01; record verified
+   closure and any permitted Gate-4 deferrals, without deferring the mandatory Gate-3 minimum.
+8. Obtain final dated owner Gate-3 PASS/NOT-PASSED sign-off against the completed dossier and matrix.
+
+Gate 4 retains final RC regression and repeated live validation and remains FUTURE. G3-D2 and G3-D3
+are not reopened. No complete Gate-4 contract or subsequent slice allocation is introduced.
+A functioning GUI remains mandatory for V1.0 release readiness, outside these Gate-3 decisions and
+not a current Gate-3 blocker. The older PRD exclusion remains a known scope inconsistency requiring
+future formal PRD/Architecture/Roadmap/Testing/Release reconciliation; no GUI implementation is added.
 
 ---
 
