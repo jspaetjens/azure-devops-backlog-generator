@@ -4,11 +4,11 @@
 
 > *This document defines the software architecture of the Azure DevOps Backlog Generator and describes the architectural principles, components and interactions that support Version 1.0.*
 
-**Version:** 2.47
+**Version:** 2.48
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-16
+**Last Updated:** 2026-09-17
 
 **Target Release:** v1.0.0
 
@@ -16,12 +16,14 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records the owner-approved Gate-3 logging/HTTP and closure decisions
-G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01, authoritative in
+**Revision scope:** This Draft reconciles PR #162 (implementation `8515573`, merge `337116d`)
+against the Approved Baseline Gate-3 logging/HTTP and closure contract in Architecture 2.47,
+Roadmap 1.42, API 2.27, Testing 2.37 and Release 1.36. G3-OWN-D01 to G3-OWN-D14 and
+reconciliation-only G3-REC-R01 remain unchanged and authoritative in
 [Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
-The starting Approved Baseline is main at `91b848f`. This revision awaits document review and
-baseline promotion; owner decision approval does not establish implementation or execution evidence.
-Status-aware HTTP 401/403/429 reporting remains production work with implementation and validation pending.
+The starting implementation baseline is main at `337116d`. This reconciliation awaits document
+review and baseline promotion. Status-aware HTTP 401/403/429 reporting under D01-D05 is
+IMPLEMENTED + AUTOMATED VALIDATION COMPLETE; Testing Section 9.3 records the supplied PR #162 evidence.
 Historical slice contracts, `None` returns, summary exclusions and test results retain their original
 boundaries. Earlier references to unresolved logging/HTTP decisions or undefined continuation order
 describe those historical baselines; Section 13.5 and Roadmap Section 5.1 now settle those decisions
@@ -30,7 +32,8 @@ G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain 
 Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
 (`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
 row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
-Continuation is dependency-first; no Slice 11 is allocated. No new implementation or live evidence is claimed.
+Continuation is dependency-first; no Slice 11 is allocated. No new execution evidence is produced by
+this documentation revision. PR #162 supplies no live Azure DevOps Services validation evidence.
 
 ---
 
@@ -97,6 +100,7 @@ Continuation is dependency-first; no Slice 11 is allocated. No new implementatio
 | 2.45 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 without changing G3-SUM-D1 to G3-SUM-D9. |
 | 2.46 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled merged Application/Run Slice 10 implementation and automated validation without changing G3-SUM-D1 to G3-SUM-D9. |
 | 2.47 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded owner-approved Gate-3 logging/HTTP and closure decisions D01-D14 and reconciliation-only R01 without allocating a new slice. |
+| 2.48 | 2026-09-17 | Draft | Jack Spaetjens | Reconciled PR #162 HTTP reporting implementation and automated evidence; remaining Gate-3 closure stays pending. |
 
 ---
 
@@ -953,9 +957,9 @@ and existing secondary-write precedence. No global logging setting or existing c
 Broader Section-12 logging remains incomplete and separate. Section 13.4 now records the approved
 execution-summary contract; Slice 10 implementation and automated validation are complete. The unexpected message is
 not a summary. Slice 9 defines no summary or other new lifecycle observations. Documentation-processing
-and Azure communication observability, work-item creation events, warnings and HTTP reporting decisions
-remain separate. API Section 6.1 implementation status reconciliation is already approved; its unresolved
-HTTP reporting requirements remain separate contract work.
+and Azure communication observability, work-item creation/reuse and warning applicability now follow
+Approved Baseline D06-D10 without new events. PR #162 implements and automatically validates the
+approved HTTP reporting contract; wider evidence acceptance remains separate.
 
 Review Gates 1 and 2 remain PASS; Review Gates 3 and 4 remain future. Wider Application/Run remains
 incomplete and Version 1.0 remains pre-release. This capability is required before final Version-1.0
@@ -980,7 +984,7 @@ this documentation status sync.
 Slice 10 was merged in PR #157 (implementation commit `666f7aa`, merge `8e2a57d`).
 [Section 13.4](#134-execution-summary-behavioural-contract) remains the behavioural authority;
 [Testing Section 9.2](06-Testing.md#92-execution-summary-validation) records the automated evidence.
-This reconciliation revision is Draft pending review and separate approval-only promotion.
+The Slice-10 reconciliation is Approved Baseline; the present PR #162 reconciliation remains Draft.
 
 The bounded scope is the Generator-owned invocation-wide processed-source-item count, the two
 approved integer-return changes and unchanged forwarding, bootstrap-owned SUMMARY delivery before
@@ -995,7 +999,8 @@ PR #157 recorded Ruff PASS, 824 collected / 824 passed / 0 failed, 95% coverage 
 with 64 missed, both changed production files at 100% coverage, and `git diff --check` PASS.
 No live Azure DevOps Services validation occurred; no Ruff or pytest run is performed for this reconciliation.
 
-HTTP 401/403/429 reporting and unrelated logging decisions remain separate unresolved work.
+Logging/HTTP decisions are Approved Baseline; PR #162 implements and automatically validates
+HTTP 401/403/429 reporting. Wider Gate-3 evidence and closure remain incomplete.
 A functioning GUI remains required for Version-1.0 release readiness, outside Slice 10 and not
 implemented by PR #157. It does not block Slice-10 reconciliation; no GUI design or allocation is added.
 No subsequent slice, broader recovery/DR, Gate-4 or release-candidate work is allocated.
@@ -1277,8 +1282,9 @@ this document revision remains Draft.
 
 Before PASS, each applicable Section-12 topic shall have an approved interpretation and evidence
 against that interpretation. Existing Slice-6/8/9 behaviour shall be credited without reimplementation.
-Section 13.5 settles the remaining interpretations, with required implementation and evidence still
-pending. No event is required merely because it is imaginable. Owner-approved G3-D1 requires
+Section 13.5 settles the interpretations; PR #162 implements and automatically validates D01-D05.
+Wider event/evidence mapping and required live proof remain incomplete. No event is required merely
+because it is imaginable. Owner-approved G3-D1 requires
 the complete summary contract, implementation, validation and evidence before Gate-3 PASS.
 
 | Topic | Gate-3 acceptance rule | Current evidence / remaining closure |
@@ -1286,18 +1292,18 @@ the complete summary contract, implementation, validation and evidence before Ga
 | Startup | Preserve configured-run START after successful configuration validation and logger initialisation. | SATISFIED: Slice 8; no earlier bootstrap event is implied. |
 | Configuration validation | G3-OWN-D06 accepts START with its stated limitations; preserve stderr-only pre-initialisation failure. | Interpretation OWNER APPROVED; no new event required. Applicable evidence remains to be indexed. |
 | Documentation processing | G3-OWN-D07 accepts successful application execution, SUMMARY and traceable automated/integration evidence. | PARTIALLY SATISFIED: interpretation approved; evidence applicability remains to be assessed. |
-| Azure DevOps communication | G3-OWN-D08 accepts Generator completion, SUMMARY, automated evidence and required live Services proof. | PARTIALLY SATISFIED: interpretation approved; HTTP reporting implementation and live proof pending. |
+| Azure DevOps communication | G3-OWN-D08 accepts Generator completion, SUMMARY, automated evidence and required live Services proof. | PARTIALLY SATISFIED: HTTP reporting implemented and automatically validated by PR #162; applicable success evidence mapping and live proof remain pending. |
 | Work-item creation/reuse | G3-OWN-D09 accepts SUMMARY, automated Generator/integration evidence and live remote inspection; no new counters or per-item events. | NOT SATISFIED: interpretation approved; required live evidence absent. |
 | Warnings | G3-OWN-D10 records no distinct V1.0 warning taxonomy because no approved warning-worthy condition exists. | Applicability OWNER APPROVED; no new event required. WARNING remains a configured threshold. |
-| Controlled errors | Preserve the seven approved categories, exact current reports and eligible owned-handler CRITICAL events until an approved reporting revision applies. | SATISFIED for Slice 6; HTTP reconciliation remains separate. |
+| Controlled errors | Preserve the seven approved categories, exact current reports and eligible owned-handler CRITICAL events with the approved status-specific HTTP replacements. | SATISFIED: Slice 6 and PR #162 HTTP reporting evidence in Testing Section 9.3. |
 | Unexpected errors | Preserve UE-D1 to UE-D10, fixed fallback and owned-handler best-effort CRITICAL event. | SATISFIED: Slice 9, including handled-Exception traceback suppression. |
 | Successful completion | Preserve normal-return-only INFO COMPLETION and configured filtering. | SATISFIED: Slice 8; this is not an execution summary. |
-| Execution summary | Complete the separately approved summary contract, implementation, validation and evidence before Gate-3 PASS under owner-approved G3-D1. | SATISFIED: approved Section 13.4 behaviour, merged PR #157 implementation and Testing Section 9.2 automated evidence; see Release row F. This reconciliation remains Draft and Gate 3 has not passed. |
-| Authentication/authorisation | Meet the reconciled API reporting contract in Section 13.2. | PARTIALLY SATISFIED: status retained, current terminal reporting generic. |
-| Rate limiting | Meet G3-OWN-D05 and API Section 11; omit Retry-After entirely and preserve fail/no-sleep/no-retry behaviour. | PARTIALLY SATISFIED: reporting decision approved; implementation and evidence pending. |
-| Diagnostic safety | Preserve safe existing messages and prove secret safety for every newly approved event. | PARTIALLY SATISFIED: existing fixed events evidenced; future content requires validation. |
+| Execution summary | Complete the separately approved summary contract, implementation, validation and evidence before Gate-3 PASS under owner-approved G3-D1. | SATISFIED: approved Section 13.4 behaviour, merged PR #157 implementation and Testing Section 9.2 automated evidence; see Release row F. The Slice-10 reconciliation is Approved Baseline; Gate 3 has not passed. |
+| Authentication/authorisation | Meet the reconciled API reporting contract in Section 13.2. | SATISFIED: approved D03/D04, PR #162 status-specific terminal reporting and Testing Section 9.3 automated evidence. |
+| Rate limiting | Meet G3-OWN-D05 and API Section 11; omit Retry-After entirely and preserve fail/no-sleep/no-retry behaviour. | SATISFIED: approved D05, PR #162 implementation and Testing Section 9.3 automated evidence, including Retry-After omission. |
+| Diagnostic safety | Preserve safe existing messages and prove secret safety for every newly approved event. | SATISFIED for runtime reporting: existing fixed events and PR #162 HTTP safety evidence in Testing Section 9.3; live-procedure safety evidence remains separate under Release row I. |
 | Destination | Preserve the validated directory, fixed UTF-8 append logfile, owned-handler isolation and no fallback destination. | SATISFIED: Slice 6 and Configuration Section 6.4. |
-| Levels | Preserve configured thresholds and INFO lifecycle/SUMMARY; G3-OWN-D02 requires CRITICAL HTTP terminal reports. | PARTIALLY SATISFIED: levels approved; new HTTP implementation and evidence pending. |
+| Levels | Preserve configured thresholds and INFO lifecycle/SUMMARY; G3-OWN-D02 requires CRITICAL HTTP terminal reports. | SATISFIED: existing level/filtering evidence and PR #162 CRITICAL HTTP reporting evidence in Testing Section 9.3. |
 
 Further logging contracts shall define trigger, timing, content, level, ownership, filtering and
 write-failure behaviour. They shall state which existing event satisfies a topic and prevent duplicate
@@ -1311,9 +1317,10 @@ G3-OWN-D01 to G3-OWN-D05 in Section 13.5 settle the safety, delivery and exact `
 messages, replacing the generic `Azure DevOps error.` report in both logfile and stderr for those
 statuses. API Section 6.1 records the reporting contract; transport/status retention remains unchanged.
 `Retry-After` is omitted entirely. No new exception taxonomy, retry, sleep or backoff is introduced.
-This contract revision must reach Approved Baseline before implementation; merged implementation and
-recorded validation remain mandatory before Gate-3 PASS. API Section 6.1 implementation-status
-reconciliation is already approved and is distinct from this pending reporting implementation.
+The contract reached Approved Baseline in Architecture 2.47 and API 2.27 before PR #162
+(implementation `8515573`, merge `337116d`). D01-D05 reporting is IMPLEMENTED + AUTOMATED
+VALIDATION COMPLETE, with evidence in Testing Section 9.3. All other HTTP / REST-client errors
+retain `Azure DevOps error.`. Wider Gate-3 evidence and closure remain incomplete.
 
 The execution summary remains mandatory under Sections 8 and 12. G3-D1 is RESOLVED / OWNER APPROVED:
 its contract, implementation, validation and evidence shall be complete before Gate-3 PASS. Unfinished
@@ -1366,7 +1373,9 @@ affected earlier return and summary contracts. Historical Slice-1–9 implementa
 remain historical. Application/Run Slice 10 is IMPLEMENTED + AUTOMATED VALIDATION COMPLETE.
 The D1–D9 text below is preserved verbatim. D3's implementation-pending statements describe the
 Architecture-2.44 approval baseline; the Slice-10 implementation record above supersedes that status
-only. Testing Section 9.2 now records automated evidence against the unchanged validation requirements.
+only. D9's unresolved HTTP/logging references likewise describe that earlier baseline; Section 13.5
+records the approved decisions and PR #162 implementation/evidence. Testing Section 9.2 now records
+automated evidence against the unchanged summary validation requirements.
 
 **G3-SUM-D1 — Purpose and content.** SUMMARY shall report successful completion of the configured
 backlog-generation operation and the number of semantic source items whose approved Generator
@@ -1485,11 +1494,16 @@ G3-D2 and G3-D3 remain unchanged; Gate 4 remains FUTURE and Version 1.0 PRE-RELE
 
 ## 13.5 Gate-3 owner-approved closure decisions
 
-**OWNER APPROVED on 2026-09-16 — contract revision Draft; implementation/evidence pending.**
+**OWNER APPROVED on 2026-09-16 — contract Approved Baseline; D01-D05 IMPLEMENTED + AUTOMATED VALIDATION COMPLETE.**
 This register owns G3-OWN-D01 to G3-OWN-D14. These decisions settle the remaining logging/HTTP
 interpretations and closure requirements without reopening G3-D1 to G3-D3 or rewriting G3-SUM-D1
-to G3-SUM-D9. G3-REC-R01 records reconciliation only. Historical generic HTTP reporting remains the
-implemented baseline until the approved status-aware replacement is implemented and validated.
+to G3-SUM-D9. G3-REC-R01 records reconciliation only. PR #162 (implementation `8515573`, merge
+`337116d`) implements D01-D05 in `main.py`; Testing Section 9.3 records automated validation.
+Generic reporting is replaced only for 401/403/429; all other HTTP / REST-client errors retain
+`Azure DevOps error.`. The exact integer failure outcome `1`, global stop and package termination
+ownership remain unchanged. No lower-layer REST-client production code or exception taxonomy changed.
+No live Azure DevOps Services validation occurred or is evidenced by PR #162. The owner decisions
+below remain unchanged; this post-implementation reconciliation is Draft.
 
 **G3-OWN-D01 — Diagnostic-safety boundary — APPROVED: Option A.** New Gate-3 reporting may contain
 only fixed text and stable non-secret literals explicitly approved by contract. No new arbitrary
@@ -1615,9 +1629,11 @@ owner PASS/NOT-PASSED sign-off. Defining this structure does not pass Gate 3 or 
 **Allocation and remaining work.** Separate numbered allocation is not mandatory. Remaining work
 proceeds dependency-first under this approved Gate-3 closure contract, with approved behavioural
 documentation baselined before implementation. No Slice 11 or later slice number is allocated.
-The definite remaining production work is status-aware 401/403/429 reporting; D06-D10 require no
-additional observability events. Roadmap Section 5.1 owns continuation order. Live execution, operator
-guidance, the completed evidence dossier, findings assessment and final owner sign-off remain pending.
+Status-aware 401/403/429 production work and automated validation are complete under PR #162;
+D06-D10 remain no-new-event decisions. Roadmap Section 5.1 owns continuation order. Remaining work
+includes application/integration evidence completion and applicability mapping, authorised live Services
+validation, operator guidance, the consolidated versioned evidence dossier, findings assessment and
+verified CRITICAL/HIGH closure, D11 scenario-to-gate allocation review and final dated owner sign-off.
 
 **GUI boundary.** A functioning GUI remains mandatory for Version 1.0 release readiness. It is outside
 these Gate-3 logging/HTTP decisions, is not a Gate-3 blocker under the current approved contract and
