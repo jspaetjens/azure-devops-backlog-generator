@@ -5,7 +5,10 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from azure_devops_backlog_generator.azure_devops.exceptions import AzureDevOpsRestClientError
+from azure_devops_backlog_generator.azure_devops.exceptions import (
+    AzureDevOpsHttpError,
+    AzureDevOpsRestClientError,
+)
 from azure_devops_backlog_generator.azure_devops.rest_client import AzureDevOpsRestClient
 from azure_devops_backlog_generator.config.exceptions import ConfigurationError
 from azure_devops_backlog_generator.config.loader import load_configuration_from_cli
@@ -89,11 +92,17 @@ def _controlled_failure_message(
     | ConflictingReusedChildRelationshipError
     | ApplicationLoggingError,
 ) -> str:
-    """Return the fixed category-only message for one controlled failure."""
+    """Return the fixed category or HTTP-status message for one controlled failure."""
     if isinstance(error, ConfigurationError):
         return "Configuration error."
     if isinstance(error, DocumentationProcessingError):
         return "Documentation processing error."
+    if isinstance(error, AzureDevOpsHttpError):
+        return {
+            401: "Azure DevOps authentication failed.",
+            403: "Azure DevOps authorisation failed.",
+            429: "Azure DevOps rate limit reached.",
+        }.get(error.status, "Azure DevOps error.")
     if isinstance(error, AzureDevOpsRestClientError):
         return "Azure DevOps error."
     if isinstance(error, SourceIdentityValidationError):
@@ -107,18 +116,21 @@ def _controlled_failure_message(
 
 def _emit_controlled_failure(message: str) -> None:
     """Attempt one current-invocation controlled-failure file event."""
-    handler = _ACTIVE_LOG_HANDLER
-    if handler is not None:
-        record = _LOGGER.makeRecord(
-            _LOGGER.name,
-            logging.CRITICAL,
-            "",
-            0,
-            message,
-            (),
-            None,
-        )
-        handler.handle(record)
+    try:
+        handler = _ACTIVE_LOG_HANDLER
+        if handler is not None:
+            record = _LOGGER.makeRecord(
+                _LOGGER.name,
+                logging.CRITICAL,
+                "",
+                0,
+                message,
+                (),
+                None,
+            )
+            handler.handle(record)
+    except Exception:
+        pass
 
 
 def _emit_lifecycle_event(message: str) -> None:

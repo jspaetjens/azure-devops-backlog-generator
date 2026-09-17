@@ -283,9 +283,19 @@ def test_package_subprocess_real_fallback_suppresses_unexpected_details_and_trac
         assert sentinel not in result.stderr + contents
 
 
-@pytest.mark.parametrize("scenario", ["success", "empty", "partial-rerun", "conflict-rerun"])
+@pytest.mark.parametrize(
+    ("scenario", "http_message"),
+    [(scenario, None) for scenario in ("success", "empty", "partial-rerun", "conflict-rerun")]
+    + [(f"http-{status}-{stage}", message)
+       for status, message in (
+           (401, "Azure DevOps authentication failed."),
+           (403, "Azure DevOps authorisation failed."),
+           (429, "Azure DevOps rate limit reached."),
+       ) for stage in ("preflight", "patch")],
+)
 def test_package_summary_with_real_parsing_generator_and_controlled_transport(
     tmp_path: Path, child_environment: dict[str, str], scenario: str,
+    http_message: str | None,
 ) -> None:
     """Exercise the supported application, substituting only JSON transport."""
     source = tmp_path / "SYNTHETIC_SOURCE"
@@ -296,7 +306,7 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
         "### SYNTHETIC_PBI\nSYNTHETIC_HIERARCHY\n"
         "#### SYNTHETIC_TASK\nhttps://example.invalid/SYNTHETIC_URL\n"
     )
-    for index in range(3 if scenario == "success" else 1):
+    for index in range(3 if scenario == "success" or http_message else 1):
         (source / f"input-{index}.md").write_text(
             "Ordinary prose.\n" if scenario == "empty" else markdown, encoding="utf-8",
         )
@@ -311,9 +321,12 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
         import json
         import runpy
         import sys
+        import time
         from pathlib import Path
         from azure_devops_backlog_generator.azure_devops.rest_client import AzureDevOpsRestClient
-        from azure_devops_backlog_generator.azure_devops.exceptions import AzureDevOpsTransportError
+        from azure_devops_backlog_generator.azure_devops.exceptions import (
+            AzureDevOpsHttpError, AzureDevOpsTransportError,
+        )
 
         scenario = sys.argv[1]
         config = sys.argv[2]
@@ -323,13 +336,31 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
         requests = []
         snapshots = []
         outcomes = []
+        failures = []
+        sleeps = []
         phase = 0
+
+        def forbidden_sleep(seconds):
+            sleeps.append(seconds)
+            raise AssertionError("Application must not sleep")
+
+        time.sleep = forbidden_sleep
 
         def transport(self, *, method, path_segments, personal_access_token,
                       query=None, json_body=None, **kwargs):
             assert personal_access_token == "SYNTHETIC_PAT"
             path = tuple(path_segments)
             requests.append([phase, method, list(path), query])
+            if failures:
+                raise AssertionError("No operation may follow an HTTP failure")
+            if scenario.startswith("http-") and (
+                (scenario.endswith("preflight") and path[:2] == ("_apis", "projects"))
+                or (scenario.endswith("patch") and method == "PATCH")
+            ):
+                failures.append(len(requests))
+                error = AzureDevOpsHttpError(int(scenario.split("-")[1]))
+                error.args = ("Authorization: SYNTHETIC_AUTH", "SYNTHETIC_RESPONSE_CONTENT")
+                raise error
             if path[:2] == ("_apis", "projects"):
                 return {"id": "SYNTHETIC_PROJECT_ID", "name": "SYNTHETIC_PROJECT"}
             if "fields" in path:
@@ -390,11 +421,41 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
             })
         Path("evidence.json").write_text(json.dumps({
             "outcomes": outcomes, "snapshots": snapshots, "requests": requests,
+            "failures": failures, "sleeps": sleeps,
             "identities": [item["fields"][identity_field] for item in items.values()],
         }), encoding="utf-8")
         sys.exit(outcomes[-1])
     ''')
     result = _run_child(["-c", script, scenario, str(config)], tmp_path, child_environment)
+
+    evidence = json.loads((tmp_path / "evidence.json").read_text(encoding="utf-8"))
+    final_log = evidence["snapshots"][-1]["log"]
+    assert evidence["sleeps"] == []
+    for sentinel in (
+        "SYNTHETIC", "987650", "987651", "123456789", "Authorization", "Traceback",
+        str(tmp_path), "https://", "adbg:source-id", *evidence["identities"],
+    ):
+        assert sentinel not in final_log + result.stdout + result.stderr
+    if http_message is not None:
+        assert result.returncode == 1
+        assert result.stdout == ""
+        assert result.stderr == f"{http_message}\n"
+        assert evidence["outcomes"] == [1]
+        assert type(evidence["outcomes"][0]) is int
+        assert evidence["failures"] == [len(evidence["requests"])]
+        assert [line.split(" ", 1)[1] for line in final_log.splitlines()] == [
+            "INFO azure_devops_backlog_generator Application run started.",
+            f"CRITICAL azure_devops_backlog_generator {http_message}",
+        ]
+        if scenario.endswith("preflight"):
+            assert len(evidence["requests"]) == 1
+            assert evidence["snapshots"][-1]["items"] == 0
+        else:
+            assert evidence["requests"][-1][1] == "PATCH"
+            assert evidence["snapshots"][-1]["items"] == 2
+            assert sum(request[1] == "PATCH" for request in evidence["requests"]) == 1
+        assert all(request[1] != "DELETE" for request in evidence["requests"])
+        return
 
     assert result.returncode == 0, result.stderr
     assert result.stdout == ""
@@ -402,14 +463,12 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
     if scenario == "conflict-rerun":
         expected_errors += "Conflicting reused child relationship error.\n"
     assert result.stderr == expected_errors
-    evidence = json.loads((tmp_path / "evidence.json").read_text(encoding="utf-8"))
     assert evidence["outcomes"] == (
         [1, 1, 0] if scenario == "conflict-rerun" else
         [1, 0] if scenario == "partial-rerun" else [0]
     )
     count = 0 if scenario == "empty" else 12 if scenario == "success" else 4
     summary = f"Execution summary: outcome=success; source_items_processed={count}."
-    final_log = evidence["snapshots"][-1]["log"]
     assert final_log.count("Execution summary:") == 1
     assert [line.split(" ", 1)[1] for line in final_log.splitlines()[-3:]] == [
         "INFO azure_devops_backlog_generator Application run started.",
@@ -426,8 +485,3 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
                and request[3] is None]
     assert len(creates) == count
     assert len(evidence["requests"]) > count
-    for sentinel in (
-        "SYNTHETIC", "987650", "987651", "123456789", "Authorization", "Traceback",
-        str(tmp_path), "https://", "adbg:source-id", *evidence["identities"],
-    ):
-        assert sentinel not in final_log + result.stdout + result.stderr

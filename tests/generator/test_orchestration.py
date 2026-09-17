@@ -941,8 +941,9 @@ def _failure_stop_hierarchy() -> DocumentationHierarchy:
         (AzureDevOpsResponseError("Malformed response"), AzureDevOpsResponseError),
         (AzureDevOpsHttpError(401), AzureDevOpsHttpError),
         (AzureDevOpsHttpError(403), AzureDevOpsHttpError),
+        (AzureDevOpsHttpError(429), AzureDevOpsHttpError),
     ],
-    ids=("malformed-response", "http-401", "http-403"),
+    ids=("malformed-response", "http-401", "http-403", "http-429"),
 )
 def test_real_generator_orchestration_stops_all_later_work_after_persistence_failure(
     failure: Exception,

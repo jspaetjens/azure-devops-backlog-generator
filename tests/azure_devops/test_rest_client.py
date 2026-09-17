@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import base64
 import json
-from collections.abc import Iterator
+import time
+from collections.abc import Iterator, Mapping
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import ProxyHandler
 
 import pytest
 
 import azure_devops_backlog_generator.azure_devops.rest_client as rest_client_module
+import azure_devops_backlog_generator.main as main_module
 from azure_devops_backlog_generator.azure_devops.exceptions import (
     AzureDevOpsHttpError,
     AzureDevOpsResponseError,
@@ -26,6 +29,12 @@ from azure_devops_backlog_generator.azure_devops.rest_client import (
     AzureDevOpsRestClient,
     build_parent_child_relationship_json_patch,
     build_work_item_create_json_patch,
+)
+from azure_devops_backlog_generator.config.models import (
+    AzureDevOpsConfig,
+    Configuration,
+    DocumentationConfig,
+    LoggingConfig,
 )
 from azure_devops_backlog_generator.documentation.models import WorkItemType
 from azure_devops_backlog_generator.generator.candidates import WorkItemCandidate
@@ -164,7 +173,7 @@ def test_builds_a_fresh_opener_that_disables_proxies_and_redirects(
     assert redirect_handler.redirect_request(None, None, None, None, None, None, None, None) is None
 
 
-@pytest.mark.parametrize("status", [201, 204, 301, 302])
+@pytest.mark.parametrize("status", [201, 204, 301, 302, 401, 403, 429])
 def test_rejects_every_unexpected_success_or_redirect_status(
     client: AzureDevOpsRestClient, opener: _Opener, status: int
 ) -> None:
@@ -175,23 +184,99 @@ def test_rejects_every_unexpected_success_or_redirect_status(
         _request(client)
 
     assert error.value.status == status
+    assert len(opener.calls) == 1
     assert response.read_called
     assert response.closed
 
 
+@pytest.mark.parametrize("status", [401, 403, 429])
 def test_http_error_is_controlled_and_discards_the_error_body(
-    client: AzureDevOpsRestClient, opener: _Opener
+    client: AzureDevOpsRestClient, opener: _Opener, status: int,
 ) -> None:
-    error_response = _Response(status=401, body=b'{"message":"secret-pat"}')
-    opener.response = HTTPError("https://dev.azure.com", 401, "Unauthorized", None, error_response)
+    error_response = _Response(status=status, body=b'{"message":"secret-pat"}')
+    opener.response = HTTPError("https://dev.azure.com", status, "Rejected", None, error_response)
 
     with pytest.raises(AzureDevOpsHttpError) as error:
         _request(client)
 
-    assert error.value.status == 401
+    assert error.value.status == status
+    assert error.value.__cause__ is opener.response
+    assert len(opener.calls) == 1
     assert "secret-pat" not in str(error.value)
     assert error_response.read_called
     assert error_response.closed
+
+
+@pytest.mark.parametrize("retry_after", ["SYNTHETIC_AUTHORIZATION_SECRET", "not-a-date; -1", "120"])
+def test_429_headers_are_ignored_through_terminal_reporting(
+    client: AzureDevOpsRestClient, opener: _Opener, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], retry_after: str,
+) -> None:
+    accesses: list[str] = []
+    sleeps: list[float] = []
+    failures: list[AzureDevOpsHttpError] = []
+
+    class Headers(Mapping[str, str]):
+        def __getitem__(self, key: str) -> str:
+            accesses.append(key)
+            return {"Retry-After": retry_after}[key]
+
+        def __iter__(self) -> Iterator[str]:
+            accesses.append("iterate")
+            return iter(("Retry-After",))
+
+        def __len__(self) -> int:
+            accesses.append("length")
+            return 1
+
+    def forbidden_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+        pytest.fail("HTTP failure must not sleep")
+
+    response = _Response(status=429, body=b'SYNTHETIC_RESPONSE_BODY')
+    http_error = HTTPError("https://example.invalid/SYNTHETIC_URL", 429,
+                           "SYNTHETIC_EXCEPTION_DETAIL", Headers(), response)
+    opener.response = http_error
+    configuration = Configuration(
+        azure_devops=AzureDevOpsConfig("SYNTHETIC_ORG", "SYNTHETIC_PROJECT"),
+        documentation=DocumentationConfig(tmp_path),
+        logging=LoggingConfig(level="INFO", log_directory=tmp_path),
+        personal_access_token="SYNTHETIC_PAT",
+    )
+
+    def run(_: Configuration) -> None:
+        try:
+            _request(client, configuration.personal_access_token)
+        except AzureDevOpsHttpError as error:
+            failures.append(error)
+            raise
+
+    monkeypatch.setattr(time, "sleep", forbidden_sleep)
+    monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    try:
+        result = main_module.run_process()
+        assert type(result) is int and result == 1
+    finally:
+        main_module._deactivate_runtime_logging()
+
+    assert len(failures) == 1
+    assert failures[0].status == 429
+    assert failures[0].__cause__ is http_error
+    assert response.read_called and response.closed
+    assert len(opener.calls) == 1
+    assert accesses == sleeps == []
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "Azure DevOps rate limit reached.\n"
+    contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+    logical_records = [line.split(" ", 1)[1] for line in contents.splitlines()]
+    assert logical_records == [
+        "INFO azure_devops_backlog_generator Application run started.",
+        "CRITICAL azure_devops_backlog_generator Azure DevOps rate limit reached.",
+    ]
+    for sentinel in (retry_after, "SYNTHETIC", "Retry-After", "429", "Traceback", "secret-pat"):
+        assert sentinel not in "\n".join(logical_records) + captured.err
 
 
 def test_http_403_is_controlled_without_retry_or_credential_disclosure(
