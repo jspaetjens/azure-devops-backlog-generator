@@ -3,11 +3,18 @@
 import logging
 from io import StringIO
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
 import azure_devops_backlog_generator.main as main_module
-from azure_devops_backlog_generator.azure_devops.exceptions import AzureDevOpsTransportError
+from azure_devops_backlog_generator.azure_devops.exceptions import (
+    AzureDevOpsCompatibilityError,
+    AzureDevOpsHttpError,
+    AzureDevOpsResponseError,
+    AzureDevOpsRestClientError,
+    AzureDevOpsTransportError,
+)
 from azure_devops_backlog_generator.azure_devops.models import AzureDevOpsWorkItemRelationshipState
 from azure_devops_backlog_generator.config.exceptions import ConfigurationFileError
 from azure_devops_backlog_generator.config.models import (
@@ -28,6 +35,12 @@ from azure_devops_backlog_generator.generator.relationships import (
 from azure_devops_backlog_generator.generator.resolution import ExistingWorkItemResolutionError
 
 _SYNTHETIC_PAT = "slice-1-synthetic-pat"
+_HTTP_REPORTS = (
+    (401, "Azure DevOps authentication failed."),
+    (403, "Azure DevOps authorisation failed."),
+    (429, "Azure DevOps rate limit reached."),
+)
+_HTTP_FAILURES = [(AzureDevOpsHttpError(status), message) for status, message in _HTTP_REPORTS]
 
 
 class _SentinelError(Exception):
@@ -58,6 +71,20 @@ class _UnexpectedDiagnosticSentinelError(Exception):
 
     def __repr__(self) -> str:
         pytest.fail("Unexpected exception must not be represented")
+
+
+class _HttpDiagnosticSentinelError(AzureDevOpsHttpError):
+    def __init__(self, status: int) -> None:
+        super().__init__(status)
+        self.args = (*_UNEXPECTED_SENTINELS, "987654321", "adbg:source-id:v1:sha256:" + "a" * 64)
+        self.__cause__ = _UnexpectedDiagnosticSentinelError(*self.args)
+        self.__context__ = _UnexpectedDiagnosticSentinelError(*self.args)
+
+    def __str__(self) -> str:
+        pytest.fail("HTTP exception must not be stringified")
+
+    def __repr__(self) -> str:
+        pytest.fail("HTTP exception must not be represented")
 
 
 @pytest.fixture(autouse=True)
@@ -97,6 +124,7 @@ def test_run_process_returns_zero_after_one_successful_main_invocation(
         (ConfigurationFileError(), "Configuration error.\n"),
         (DocumentationReadError(), "Documentation processing error.\n"),
         (AzureDevOpsTransportError(), "Azure DevOps error.\n"),
+        *((error, f"{message}\n") for error, message in _HTTP_FAILURES),
         (
             SourceIdentityValidationError(SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY),
             "Source identity validation error.\n",
@@ -117,6 +145,7 @@ def test_run_process_returns_zero_after_one_successful_main_invocation(
         "configuration",
         "documentation",
         "azure-devops-rest-client",
+        "http-401", "http-403", "http-429",
         "source-identity",
         "existing-work-item-resolution",
         "application-logging",
@@ -236,14 +265,15 @@ def test_main_delegates_process_arguments_to_bootstrap_once(
     assert caplog.records == []
 
 
+@pytest.mark.parametrize("error", [_SentinelError(), *(error for error, _ in _HTTP_FAILURES)])
 def test_main_propagates_bootstrap_failure_without_retry_or_exit_conversion(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     caplog: pytest.LogCaptureFixture,
+    error: Exception,
 ) -> None:
     process_arguments = ["backlog-generator", "--config-file", "config/custom.toml"]
     expected_arguments = ["--config-file", "config/custom.toml"]
-    error = _SentinelError()
     received_arguments: list[list[str]] = []
 
     def coordinate_bootstrap(arguments_received: list[str]) -> None:
@@ -253,7 +283,7 @@ def test_main_propagates_bootstrap_failure_without_retry_or_exit_conversion(
     monkeypatch.setattr(main_module.sys, "argv", process_arguments)
     monkeypatch.setattr(main_module, "coordinate_application_bootstrap", coordinate_bootstrap)
 
-    with pytest.raises(_SentinelError) as raised:
+    with pytest.raises(type(error)) as raised:
         main_module.main()
 
     assert raised.value is error
@@ -316,13 +346,14 @@ def test_propagates_configuration_failure_without_invoking_slice_1(
     assert events == ["loader"]
 
 
+@pytest.mark.parametrize("error", [_SentinelError(), *(error for error, _ in _HTTP_FAILURES)])
 def test_propagates_slice_1_failure_without_retry_or_fallback(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
+    error: Exception,
 ) -> None:
     arguments = ["--config-file", "config/config.toml"]
     configuration = _configuration(Path("documentation-input"), tmp_path)
-    error = _SentinelError()
     events: list[str] = []
 
     def load_configuration(arguments_received: object) -> Configuration:
@@ -338,7 +369,7 @@ def test_propagates_slice_1_failure_without_retry_or_fallback(
     monkeypatch.setattr(main_module, "load_configuration_from_cli", load_configuration)
     monkeypatch.setattr(main_module, "coordinate_application_run", coordinate_run)
 
-    with pytest.raises(_SentinelError) as raised:
+    with pytest.raises(type(error)) as raised:
         main_module.coordinate_application_bootstrap(arguments)
 
     assert raised.value is error
@@ -452,10 +483,11 @@ def test_propagates_rest_client_construction_failure_without_invoking_generator(
     assert events == ["process", "rest-client-init"]
 
 
+@pytest.mark.parametrize("error", [_SentinelError(), *(error for error, _ in _HTTP_FAILURES)])
 def test_propagates_generator_failure_without_retry_or_fallback(
     monkeypatch: pytest.MonkeyPatch,
+    error: Exception,
 ) -> None:
-    error = _SentinelError()
     hierarchy = object()
     rest_client = object()
     events: list[str] = []
@@ -477,7 +509,7 @@ def test_propagates_generator_failure_without_retry_or_fallback(
     monkeypatch.setattr(main_module, "AzureDevOpsRestClient", construct_rest_client)
     monkeypatch.setattr(main_module, "coordinate_generator_orchestration", coordinate_generator)
 
-    with pytest.raises(_SentinelError) as raised:
+    with pytest.raises(type(error)) as raised:
         main_module.coordinate_application_run(_configuration(Path("documentation-input")))
 
     assert raised.value is error
@@ -485,11 +517,20 @@ def test_propagates_generator_failure_without_retry_or_fallback(
 
 
 @pytest.mark.parametrize("level", ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [(DocumentationReadError(
+        "SYNTHETIC_PAT_DO_NOT_RENDER C:\\secret\\config.toml https://example.invalid/private"
+    ), "Documentation processing error."),
+     *_HTTP_FAILURES],
+)
 def test_runtime_logger_uses_validated_settings_and_records_critical_failures(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
     level: str,
+    error: Exception,
+    message: str,
 ) -> None:
     configuration = _configuration(tmp_path, tmp_path)
     configuration = Configuration(
@@ -502,9 +543,7 @@ def test_runtime_logger_uses_validated_settings_and_records_critical_failures(
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
 
     def fail(_: Configuration) -> None:
-        raise DocumentationReadError(
-            "SYNTHETIC_PAT_DO_NOT_RENDER C:\\secret\\config.toml https://example.invalid/private"
-        )
+        raise error
 
     monkeypatch.setattr(main_module, "coordinate_application_run", fail)
     log_file = tmp_path / "azure-devops-backlog-generator.log"
@@ -513,7 +552,7 @@ def test_runtime_logger_uses_validated_settings_and_records_critical_failures(
     assert main_module.run_process() == 1
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert captured.err == "Documentation processing error.\n"
+    assert captured.err == f"{message}\n"
 
     logger = logging.getLogger("azure_devops_backlog_generator")
     owned_handlers = [
@@ -534,8 +573,8 @@ def test_runtime_logger_uses_validated_settings_and_records_critical_failures(
     assert contents.startswith("prior invocation\n")
     assert contents.count("Application run started.") == (level in ("DEBUG", "INFO"))
     assert "Application run completed successfully." not in contents
-    assert contents.count("Documentation processing error.") == 1
-    assert " CRITICAL azure_devops_backlog_generator Documentation processing error.\n" in contents
+    assert contents.count(message) == 1
+    assert f" CRITICAL azure_devops_backlog_generator {message}\n" in contents
     assert "SYNTHETIC_PAT_DO_NOT_RENDER" not in contents
     assert "C:\\secret\\config.toml" not in captured.out + captured.err + contents
     assert "https://example.invalid/private" not in captured.out + captured.err + contents
@@ -545,6 +584,12 @@ def test_runtime_logger_uses_validated_settings_and_records_critical_failures(
     ("error", "message"),
     [
         (AzureDevOpsTransportError("detail"), "Azure DevOps error."),
+        (AzureDevOpsRestClientError("detail"), "Azure DevOps error."),
+        (AzureDevOpsResponseError("detail"), "Azure DevOps error."),
+        (AzureDevOpsCompatibilityError("detail"), "Azure DevOps error."),
+        *((_HttpDiagnosticSentinelError(status), message) for status, message in _HTTP_REPORTS),
+        *((AzureDevOpsHttpError(status), "Azure DevOps error.")
+          for status in (201, 302, 400, 404, 408, 409, 412, 500, 503)),
         (
             SourceIdentityValidationError(SourceIdentityValidationState.DUPLICATE_LOGICAL_IDENTITY),
             "Source identity validation error.",
@@ -575,8 +620,15 @@ def test_each_reachable_post_initialisation_controlled_failure_is_logged_once(
         "coordinate_application_run",
         lambda _: (_ for _ in ()).throw(error),
     )
+    render = Mock(wraps=main_module._render_controlled_failure)
+    emit = Mock(wraps=main_module._emit_controlled_failure)
+    monkeypatch.setattr(main_module, "_render_controlled_failure", render)
+    monkeypatch.setattr(main_module, "_emit_controlled_failure", emit)
 
-    assert main_module.run_process() == 1
+    result = main_module.run_process()
+    assert type(result) is int and result == 1
+    emit.assert_called_once_with(message)
+    render.assert_called_once_with(message)
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == f"{message}\n"
@@ -587,6 +639,8 @@ def test_each_reachable_post_initialisation_controlled_failure_is_logged_once(
         "Application run started.",
         message,
     ]
+    for sentinel in (*_UNEXPECTED_SENTINELS, "987654321", "a" * 64, "Traceback"):
+        assert sentinel not in contents + captured.out + captured.err
 
 
 @pytest.mark.parametrize("level", ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
@@ -779,12 +833,17 @@ def test_partial_logging_initialisation_failure_closes_the_created_handler(
     )
 
 
-@pytest.mark.parametrize("fails", [False, True])
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [(None, ""), (DocumentationReadError("detail"), "Documentation processing error."),
+     *_HTTP_FAILURES],
+)
 def test_application_events_bypass_non_owned_named_root_and_unrelated_handlers(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
-    fails: bool,
+    error: Exception | None,
+    message: str,
 ) -> None:
     configuration = _configuration(tmp_path, tmp_path)
     stream = StringIO()
@@ -806,18 +865,18 @@ def test_application_events_bypass_non_owned_named_root_and_unrelated_handlers(
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
 
     def run(_: Configuration) -> int:
-        if fails:
-            raise DocumentationReadError("detail")
+        if error is not None:
+            raise error
         return 0
 
     monkeypatch.setattr(main_module, "coordinate_application_run", run)
 
     try:
-        assert main_module.run_process() == int(fails)
+        assert main_module.run_process() == int(error is not None)
         main_module._deactivate_runtime_logging()
         captured = capsys.readouterr()
         assert captured.out == ""
-        assert captured.err == ("Documentation processing error.\n" if fails else "")
+        assert captured.err == (f"{message}\n" if error is not None else "")
         assert named_handler in main_module._LOGGER.handlers
         assert named_handler.closed is False
         assert stream.getvalue() == ""
@@ -831,8 +890,8 @@ def test_application_events_bypass_non_owned_named_root_and_unrelated_handlers(
         contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
         assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
             "INFO azure_devops_backlog_generator Application run started.",
-        ] + (["CRITICAL azure_devops_backlog_generator Documentation processing error."]
-             if fails else [
+        ] + ([f"CRITICAL azure_devops_backlog_generator {message}"]
+             if error is not None else [
                  "INFO azure_devops_backlog_generator Execution summary: "
                  "outcome=success; source_items_processed=0.",
                  "INFO azure_devops_backlog_generator Application run completed successfully.",
@@ -846,17 +905,36 @@ def test_application_events_bypass_non_owned_named_root_and_unrelated_handlers(
         unrelated_handler.close()
 
 
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [(DocumentationReadError("detail"), "Documentation processing error."), *_HTTP_FAILURES],
+)
+@pytest.mark.parametrize("stage", ["record", "filter", "handle", "emit", "stream"])
+@pytest.mark.parametrize(
+    "secondary",
+    [OSError("SYNTHETIC_SECONDARY"), RecursionError("SYNTHETIC_SECONDARY"),
+     KeyboardInterrupt(), SystemExit(7), GeneratorExit(), BaseException("SYNTHETIC_CONTROL")],
+)
 def test_secondary_log_write_failure_preserves_the_primary_controlled_failure(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
+    error: Exception,
+    message: str,
+    stage: str,
+    secondary: BaseException,
 ) -> None:
+    """Ordinary delivery failures are secondary; process-control failures propagate."""
     configuration = _configuration(tmp_path, tmp_path)
     attempts = 0
 
+    def fail_delivery(*args: object) -> None:
+        nonlocal attempts
+        attempts += 1
+        raise secondary
+
     class FailingStream:
-        def write(self, _: str) -> int:
-            raise OSError("write failure")
+        write = staticmethod(fail_delivery)
 
         def flush(self) -> None:
             pass
@@ -865,47 +943,106 @@ def test_secondary_log_write_failure_preserves_the_primary_controlled_failure(
             pass
 
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
-    monkeypatch.setattr(
-        main_module,
-        "coordinate_application_run",
-        lambda _: (_ for _ in ()).throw(DocumentationReadError("detail")),
-    )
-    def replace_stream() -> None:
-        assert main_module._ACTIVE_LOG_HANDLER is not None
-        assert main_module._ACTIVE_LOG_HANDLER.stream is not None
-        main_module._ACTIVE_LOG_HANDLER.stream.close()
-        main_module._ACTIVE_LOG_HANDLER.stream = FailingStream()
-        original_handle = main_module._ACTIVE_LOG_HANDLER.handle
+    def run(_: Configuration) -> None:
+        handler = main_module._ACTIVE_LOG_HANDLER
+        assert handler is not None
+        if stage == "record":
+            monkeypatch.setattr(main_module._LOGGER, "makeRecord", fail_delivery)
+        elif stage == "stream":
+            handler.stream.close()
+            handler.stream = FailingStream()
+        else:
+            monkeypatch.setattr(handler, stage, fail_delivery)
+        raise error
 
-        def handle(record: logging.LogRecord) -> bool:
-            nonlocal attempts
-            attempts += 1
-            return original_handle(record)
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    render = Mock(wraps=main_module._render_controlled_failure)
+    monkeypatch.setattr(main_module, "_render_controlled_failure", render)
 
-        monkeypatch.setattr(main_module._ACTIVE_LOG_HANDLER, "handle", handle)
-
-    original_run = main_module.coordinate_application_run
-
-    def fail_with_stream(configuration_received: Configuration) -> None:
-        replace_stream()
-        original_run(configuration_received)
-
-    monkeypatch.setattr(main_module, "coordinate_application_run", fail_with_stream)
-
-    assert main_module.run_process() == 1
+    if isinstance(secondary, Exception):
+        result = main_module.run_process()
+        assert type(result) is int and result == 1
+        render.assert_called_once_with(message)
+    else:
+        with pytest.raises(type(secondary)) as raised:
+            main_module.run_process()
+        assert raised.value is secondary
+        render.assert_not_called()
     captured = capsys.readouterr()
     assert attempts == 1
     assert captured.out == ""
-    assert captured.err == "Documentation processing error.\n"
-    assert "Logging error" not in captured.err
+    assert captured.err == (f"{message}\n" if isinstance(secondary, Exception) else "")
+    log_file = tmp_path / "azure-devops-backlog-generator.log"
+    assert list(tmp_path.iterdir()) == [log_file]
+    contents = log_file.read_text(encoding="utf-8")
+    assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+        "INFO azure_devops_backlog_generator Application run started.",
+    ]
 
 
-@pytest.mark.parametrize("fails", [False, True])
+@pytest.mark.parametrize(("status", "message"), _HTTP_REPORTS)
+@pytest.mark.parametrize("boundary", ["logger-filter", "handler-filter", "disabled", "stderr"])
+def test_http_terminal_delivery_retains_filtering_and_stderr_failure_semantics(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    status: int, message: str, boundary: str,
+) -> None:
+    rejected: list[str] = []
+    stderr_error = OSError("SYNTHETIC_STDERR_FAILURE")
+    writes: list[str] = []
+
+    def reject(record: logging.LogRecord) -> bool:
+        rejected.append(record.getMessage())
+        return False
+
+    class FailingStderr:
+        def write(self, value: str) -> int:
+            writes.append(value)
+            raise stderr_error
+
+    def run(_: Configuration) -> None:
+        if boundary == "logger-filter":
+            monkeypatch.setattr(main_module._LOGGER, "filters", [reject])
+        elif boundary == "handler-filter":
+            main_module._ACTIVE_LOG_HANDLER.addFilter(reject)
+        elif boundary == "disabled":
+            monkeypatch.setattr(main_module._LOGGER, "disabled", True)
+        raise AzureDevOpsHttpError(status)
+
+    monkeypatch.setattr(main_module, "load_configuration_from_cli",
+                        lambda _: _configuration(tmp_path, tmp_path))
+    monkeypatch.setattr(main_module, "coordinate_application_run", run)
+    if boundary == "stderr":
+        with monkeypatch.context() as patch:
+            patch.setattr(main_module.sys, "stderr", FailingStderr())
+            with pytest.raises(OSError) as raised:
+                main_module.run_process()
+        assert raised.value is stderr_error
+        assert writes == [message]
+    else:
+        assert main_module.run_process() == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ("" if boundary == "stderr" else f"{message}\n")
+    assert rejected == ([message] if boundary == "handler-filter" else [])
+    contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
+    assert [line.split(" ", 1)[1] for line in contents.splitlines()] == [
+        "INFO azure_devops_backlog_generator Application run started.",
+    ] + ([] if boundary == "handler-filter" else [
+        f"CRITICAL azure_devops_backlog_generator {message}",
+    ])
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [(None, ""), (DocumentationReadError("detail"), "Documentation processing error."),
+     *_HTTP_FAILURES],
+)
 def test_repeated_invocations_replace_only_owned_handlers_and_do_not_duplicate_records(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     tmp_path: Path,
-    fails: bool,
+    error: Exception | None,
+    message: str,
 ) -> None:
     configuration = _configuration(tmp_path, tmp_path)
     unrelated_logger = logging.getLogger("unrelated.application.logger")
@@ -917,32 +1054,37 @@ def test_repeated_invocations_replace_only_owned_handlers_and_do_not_duplicate_r
     monkeypatch.setattr(main_module, "load_configuration_from_cli", lambda _: configuration)
 
     def run(_: Configuration) -> int:
-        if fails:
-            raise DocumentationReadError("detail")
+        if error is not None:
+            raise error
         return 0
 
     monkeypatch.setattr(main_module, "coordinate_application_run", run)
 
-    assert main_module.run_process() == int(fails)
+    assert main_module.run_process() == int(error is not None)
     first_handler = main_module._ACTIVE_LOG_HANDLER
-    assert main_module.run_process() == int(fails)
+    assert main_module.run_process() == int(error is not None)
     second_handler = main_module._ACTIVE_LOG_HANDLER
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert captured.err == ("Documentation processing error.\n" * 2 if fails else "")
+    assert captured.err == (f"{message}\n" * 2 if error is not None else "")
     assert first_handler is not second_handler
     assert first_handler is not None and first_handler.stream is None
     assert unrelated in unrelated_logger.handlers
     assert root_handler in logging.getLogger().handlers
     assert logging.raiseExceptions is raise_exceptions
     contents = (tmp_path / "azure-devops-backlog-generator.log").read_text(encoding="utf-8")
-    assert contents.count("Documentation processing error.") == (2 if fails else 0)
+    if error is not None:
+        assert contents.count(message) == 2
+    else:
+        assert "Documentation processing error." not in contents
     assert contents.count("Application run started.") == 2
-    assert contents.count("Application run completed successfully.") == (0 if fails else 2)
-    assert contents.count("Execution summary: outcome=success; source_items_processed=0.") == (
-        0 if fails else 2
+    assert contents.count("Application run completed successfully.") == (
+        0 if error is not None else 2
     )
-    assert len(contents.splitlines()) == (4 if fails else 6)
+    assert contents.count("Execution summary: outcome=success; source_items_processed=0.") == (
+        0 if error is not None else 2
+    )
+    assert len(contents.splitlines()) == (4 if error is not None else 6)
     logging.getLogger().removeHandler(root_handler)
     unrelated_logger.removeHandler(unrelated)
 
