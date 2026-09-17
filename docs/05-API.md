@@ -4,11 +4,11 @@
 
 > *This document defines the API architecture, communication standards and Azure DevOps REST API interactions for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.27
+**Version:** 2.28
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-16
+**Last Updated:** 2026-09-17
 
 **Target Release:** v1.0.0
 
@@ -16,12 +16,14 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records the owner-approved Gate-3 logging/HTTP and closure decisions
-G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01, authoritative in
+**Revision scope:** This Draft reconciles PR #162 (implementation `8515573`, merge `337116d`)
+against the Approved Baseline Gate-3 logging/HTTP and closure contract in Architecture 2.47,
+Roadmap 1.42, API 2.27, Testing 2.37 and Release 1.36. G3-OWN-D01 to G3-OWN-D14 and
+reconciliation-only G3-REC-R01 remain unchanged and authoritative in
 [Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
-The starting Approved Baseline is main at `91b848f`. This revision awaits document review and
-baseline promotion; owner decision approval does not establish implementation or execution evidence.
-Status-aware HTTP 401/403/429 reporting remains production work with implementation and validation pending.
+The starting implementation baseline is main at `337116d`. This reconciliation awaits document
+review and baseline promotion. Status-aware HTTP 401/403/429 reporting under D01-D05 is
+IMPLEMENTED + AUTOMATED VALIDATION COMPLETE; Testing Section 9.3 records the supplied PR #162 evidence.
 Historical slice contracts, `None` returns, summary exclusions and test results retain their original
 boundaries. Earlier references to unresolved logging/HTTP decisions or undefined continuation order
 describe those historical baselines; Section 13.5 and Roadmap Section 5.1 now settle those decisions
@@ -30,7 +32,8 @@ G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain 
 Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
 (`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
 row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
-Continuation is dependency-first; no Slice 11 is allocated. No new implementation or live evidence is claimed.
+Continuation is dependency-first; no Slice 11 is allocated. No new execution evidence is produced by
+this documentation revision. PR #162 supplies no live Azure DevOps Services validation evidence.
 
 ---
 
@@ -77,6 +80,7 @@ Continuation is dependency-first; no Slice 11 is allocated. No new implementatio
 | 2.25 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled Application/Run Slice-10 allocation status without changing REST or execution-summary behaviour. |
 | 2.26 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled implemented Generator/application integer returns and SUMMARY before COMPLETION without changing REST behaviour. |
 | 2.27 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded approved status-specific 401/403/429 terminal reporting and complete omission of Retry-After; implementation remains pending. |
+| 2.28 | 2026-09-17 | Draft | Jack Spaetjens | Reconciled PR #162 reporting implementation and automated evidence, including normative Retry-After omission. |
 
 ---
 
@@ -204,7 +208,7 @@ Version 1.0 shall obtain the Azure DevOps Personal Access Token only from `AZDO_
 
 All Azure DevOps Services requests shall use HTTPS and HTTP Basic authentication. The Basic credential shall be constructed from `":" + PAT`, encoded as ASCII bytes and Base64-encoded exactly once. The `Authorization` header shall be `Basic <base64-credential>`. The username component shall be empty. The PAT and derived Authorization header shall exist in memory only for request execution and shall never be logged, included in error output or included in request-dump diagnostics.
 
-The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET, Persistent Work Item Create, Parent-Child Relationship PATCH and reused-child relationship-state GET REST transport. Persistent Create uses the project-scoped Create endpoint with existing Work Item Type path encoding, `api-version=7.1`, no `validateOnly`, `application/json-patch+json`, the approved JSON Patch builder, exact `200 OK` handling, `AzureDevOpsWorkItem` evidence and shared structural response validation, existing controlled exceptions and no retry. Parent-Child Relationship JSON Patch construction and PATCH transport are implemented with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation, absolute organisation-scoped parent target URI and the successful response contract in Section 8.2. Reused-child relationship-state GET transport is implemented: it requests `$expand=relations`, validates child ID, fresh revision and relation collection/member structure, recognises the exact reverse relation, validates and parses reverse-parent target URIs, and returns ordered duplicate-preserving reverse-parent IDs. Existing/new `WorkItemResolution` coordination is implemented upstream of non-root relationship lifecycle coordination: NEW carries no existing Work Item ID or revision, while REUSED carries validated existing Work Item ID and revision. The generator consumes validated fresh relationship-state evidence for pure intended-parent comparison: MISSING applies to zero reverse-parent IDs, CORRECT to exactly one matching parent ID and CONFLICTING to every other valid non-empty state; duplicate evidence is preserved and fresh revision does not participate in classification. MISSING recovery coordination and reused-child descendant gating are implemented. The gate consumes the already-computed classification: CORRECT returns without relationship mutation, MISSING delegates to the existing recovery PATCH using the fresh relationship-state revision, and CONFLICTING raises the controlled generator-domain conflict; the gate does not process descendants. Complete non-root Parent-Child Relationship lifecycle coordination is implemented for an already-resolved candidate. For NEW, persistent Create occurs once and is immediately followed by one Parent-Child Relationship PATCH using the exact Create response ID and revision; successful return occurs only after PATCH success, with no relationship-state GET, classification, reused-child gate or post-PATCH reread. For REUSED, fresh relationship-state GET, classification and reused-child gate invocation each occur once, and successful return occurs only after gate success. The coordinator returns only the eligible child Work Item ID because a revision may be stale after relationship PATCH. If NEW Create succeeds and relationship PATCH fails, the invocation fails without retry, reread, rollback or deletion; a later run may resolve the created item as REUSED and use fresh relationship-state evidence to repair, continue or block as MISSING, CORRECT or CONFLICTING requires. The REST Client performs only requested transport and approved response validation. Complete Generator hierarchy orchestration, recursive descendant processing, broader Persistent Create coordination across the hierarchy and validation-only sequencing enforcement are implemented. Application/Run Slices 1–9 are implemented: configuration/application composition, the supported package invocation, controlled outcomes/reporting, runtime file logging, START/COMPLETION and the bounded unexpected-error fallback. The execution-summary contract in Architecture Section 13.4 is owner-approved; PR #157 implemented its Generator/application integer returns and summary emission, with automated validation complete in Testing Section 9.2. Broader logging, HTTP reporting reconciliation, integration/end-to-end and live Services validation, Operational Readiness and final release readiness remain incomplete. Broader Operational Recovery / DR is outside V1.0 under G3-D3; bounded Generator rerun recovery remains implemented. This status reconciliation changes no REST behaviour and does not settle the separate HTTP `401`/`403`/`429` reporting decisions. Ordinary updates and automatic retry remain outside the approved V1.0 behaviour.
+The REST Client Foundation shall use `urllib` from the Python standard library. No third-party HTTP dependency shall be introduced for this foundation. It shall expose only a small internal, purpose-specific transport interface and shall not be a general-purpose public HTTP wrapper. Endpoint-specific public operations include compatibility validation, WIQL, Work Item GET, Persistent Work Item Create, Parent-Child Relationship PATCH and reused-child relationship-state GET REST transport. Persistent Create uses the project-scoped Create endpoint with existing Work Item Type path encoding, `api-version=7.1`, no `validateOnly`, `application/json-patch+json`, the approved JSON Patch builder, exact `200 OK` handling, `AzureDevOpsWorkItem` evidence and shared structural response validation, existing controlled exceptions and no retry. Parent-Child Relationship JSON Patch construction and PATCH transport are implemented with the fixed `/rev` `test`, `/relations/-` `add`, `System.LinkTypes.Hierarchy-Reverse` relation, absolute organisation-scoped parent target URI and the successful response contract in Section 8.2. Reused-child relationship-state GET transport is implemented: it requests `$expand=relations`, validates child ID, fresh revision and relation collection/member structure, recognises the exact reverse relation, validates and parses reverse-parent target URIs, and returns ordered duplicate-preserving reverse-parent IDs. Existing/new `WorkItemResolution` coordination is implemented upstream of non-root relationship lifecycle coordination: NEW carries no existing Work Item ID or revision, while REUSED carries validated existing Work Item ID and revision. The generator consumes validated fresh relationship-state evidence for pure intended-parent comparison: MISSING applies to zero reverse-parent IDs, CORRECT to exactly one matching parent ID and CONFLICTING to every other valid non-empty state; duplicate evidence is preserved and fresh revision does not participate in classification. MISSING recovery coordination and reused-child descendant gating are implemented. The gate consumes the already-computed classification: CORRECT returns without relationship mutation, MISSING delegates to the existing recovery PATCH using the fresh relationship-state revision, and CONFLICTING raises the controlled generator-domain conflict; the gate does not process descendants. Complete non-root Parent-Child Relationship lifecycle coordination is implemented for an already-resolved candidate. For NEW, persistent Create occurs once and is immediately followed by one Parent-Child Relationship PATCH using the exact Create response ID and revision; successful return occurs only after PATCH success, with no relationship-state GET, classification, reused-child gate or post-PATCH reread. For REUSED, fresh relationship-state GET, classification and reused-child gate invocation each occur once, and successful return occurs only after gate success. The coordinator returns only the eligible child Work Item ID because a revision may be stale after relationship PATCH. If NEW Create succeeds and relationship PATCH fails, the invocation fails without retry, reread, rollback or deletion; a later run may resolve the created item as REUSED and use fresh relationship-state evidence to repair, continue or block as MISSING, CORRECT or CONFLICTING requires. The REST Client performs only requested transport and approved response validation. Complete Generator hierarchy orchestration, recursive descendant processing, broader Persistent Create coordination across the hierarchy and validation-only sequencing enforcement are implemented. Application/Run Slices 1–9 are implemented: configuration/application composition, the supported package invocation, controlled outcomes/reporting, runtime file logging, START/COMPLETION and the bounded unexpected-error fallback. The execution-summary contract in Architecture Section 13.4 is owner-approved; PR #157 implemented its Generator/application integer returns and summary emission, with automated validation complete in Testing Section 9.2. PR #162 implements the approved HTTP reporting contract with automated validation complete in Testing Section 9.3. Wider logging evidence acceptance, integration/end-to-end and live Services validation, Operational Readiness and final release readiness remain incomplete. Broader Operational Recovery / DR is outside V1.0 under G3-D3; bounded Generator rerun recovery remains implemented. This status reconciliation changes no REST behaviour; the Approved Baseline HTTP `401`/`403`/`429` reporting decisions are implemented by PR #162. Ordinary updates and automatic retry remain outside the approved V1.0 behaviour.
 
 Root existing/new lifecycle coordination is implemented through the existing resolution and Persistent Create operations: NEW performs one Create and returns its ID, REUSED performs no Create and returns the validated existing ID, and no revision, relationship endpoint, retry or reread is introduced. The REST Client performs only requested transport and approved response validation. Complete Generator hierarchy orchestration and validation-only sequencing enforcement are implemented; application/run orchestration remains deferred.
 
@@ -220,7 +224,7 @@ Version 1.0 shall perform no automatic HTTP retries for any Azure DevOps REST op
 
 Persistent mutation requests are not safely retryable in the general case. In particular, a lost or uncertain persistent Create response may mean Azure DevOps created the work item even though the client did not receive the success response. Version 1.0 shall not blindly retry Create or other mutation requests and shall not introduce idempotency keys or retry reconciliation.
 
-For HTTP `429`, the request shall be treated as failed. The application shall not sleep or retry automatically. When present, `Retry-After` may be captured and logged safely for diagnostics only; it does not authorise retry behaviour.
+For HTTP `429`, the request shall be treated as failed without retry, sleep or backoff. Under G3-OWN-D05, `Retry-After` shall be omitted entirely from application reporting: no inspection for reporting, propagation into reporting, header parsing for reporting, header-derived diagnostics or raw header output is permitted.
 
 Every authenticated request shall include `Authorization: Basic <base64-credential>`. Version 1.0 shall use `Accept: application/json` as the response-media convention for Azure DevOps JSON REST requests. WIQL requests shall use `Content-Type: application/json`. JSON Patch operations shall use `Content-Type: application/json-patch+json`. A fixed User-Agent may remain an implementation or observability detail and is not a normative Version 1.0 requirement.
 
@@ -243,11 +247,13 @@ The preceding transport/status-retention contract is unchanged. Its optional dia
 does not authorise dynamic application reporting: newly approved Gate-3 reporting is limited by
 G3-OWN-D01. In particular, 401/403/429 reports shall not expose extracted error messages or codes.
 
-### Approved HTTP terminal reporting — implementation and validation pending
+### Approved HTTP terminal reporting — IMPLEMENTED + AUTOMATED VALIDATION COMPLETE
 
 [Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions),
-G3-OWN-D01 to G3-OWN-D05, owns the owner-approved contract recorded in this Draft. Following
-propagation of the status-preserving failure, status-aware classification at the process boundary
+G3-OWN-D01 to G3-OWN-D05, owns the contract baselined in Architecture 2.47 and API 2.27.
+PR #162 (implementation `8515573`, merge `337116d`) implements it; Testing Section 9.3 records
+automated validation. This Draft reconciles that evidence without changing REST transport semantics.
+Following propagation of the status-preserving failure, status-aware classification at the process boundary
 shall select the exact logical message:
 
 | HTTP status | Category | Exact logical message | Owner decision |
@@ -276,7 +282,10 @@ alternate credential, privilege escalation or credential substitution is introdu
 
 For 429, `Retry-After` is OMITTED ENTIRELY: do not inspect it for reporting, propagate it into
 application reporting, add header parsing or header-derived diagnostics, or echo raw header data.
-Existing transport/status preservation remains; this revision claims no reporting implementation.
+Existing transport/status preservation remains. All other HTTP / Azure DevOps REST-client errors
+retain the generic `Azure DevOps error.` report. PR #162 changes only `main.py` in production;
+lower-layer REST-client code and exception taxonomy are unchanged. No live Azure DevOps Services
+validation occurred and no live evidence is supplied by PR #162.
 
 Successful controlled execution shall exit with status `0`. A controlled application failure shall exit with status `1`. Version 1.0 shall not define a differentiated numeric exit-code taxonomy. The implementation may use internal typed exception categories, including configuration, validation, compatibility, transport or API, response-shape, identity-resolution and relationship-state categories, provided that public behaviour remains consistent. Version 1.0 dry-run remains unsupported.
 
@@ -366,8 +375,8 @@ existing logfile, without stdout/stderr output. COMPLETION remains the separate 
 event and shall not substitute for SUMMARY. PR #157 implemented SUMMARY before independently eligible
 COMPLETION and the two approved integer returns: Generator returns `len(preflight_state.candidates)`
 after successful preflight/traversal and application execution forwards it unchanged. Bootstrap remains
-`None`-returning. Testing Section 9.2 records the completed automated validation; this documentation
-reconciliation remains Draft pending separate approval. Failure paths retain their
+`None`-returning. Testing Section 9.2 records the completed automated validation; the Slice-10
+reconciliation is Approved Baseline. The present PR #162 reconciliation remains Draft. Failure paths retain their
 approved reporting and global-stop contracts, with no failure or partial-state summary. No REST
 request, response, authentication or retry contract is changed.
 
@@ -777,8 +786,9 @@ Version 1.0 shall:
 - Fail without retry, sleep, backoff or fallback; any future retry strategy requires separate approval.
 
 `Retry-After` is omitted entirely under G3-OWN-D05, including reporting inspection, propagation,
-header parsing and header-derived diagnostics. This is an approved reporting decision with
-implementation and validation pending; no new execution evidence is claimed.
+header parsing for reporting and header-derived diagnostics. PR #162 implements this Approved Baseline
+reporting decision with automated validation recorded in Section 6.1 and Testing Section 9.3;
+this reconciliation produces no new execution evidence.
 
 Rate limiting shall not compromise application stability.
 

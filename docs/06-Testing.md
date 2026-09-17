@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.37
+**Version:** 2.38
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-16
+**Last Updated:** 2026-09-17
 
 **Target Release:** v1.0.0
 
@@ -16,12 +16,14 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records the owner-approved Gate-3 logging/HTTP and closure decisions
-G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01, authoritative in
+**Revision scope:** This Draft reconciles PR #162 (implementation `8515573`, merge `337116d`)
+against the Approved Baseline Gate-3 logging/HTTP and closure contract in Architecture 2.47,
+Roadmap 1.42, API 2.27, Testing 2.37 and Release 1.36. G3-OWN-D01 to G3-OWN-D14 and
+reconciliation-only G3-REC-R01 remain unchanged and authoritative in
 [Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
-The starting Approved Baseline is main at `91b848f`. This revision awaits document review and
-baseline promotion; owner decision approval does not establish implementation or execution evidence.
-Status-aware HTTP 401/403/429 reporting remains production work with implementation and validation pending.
+The starting implementation baseline is main at `337116d`. This reconciliation awaits document
+review and baseline promotion. Status-aware HTTP 401/403/429 reporting under D01-D05 is
+IMPLEMENTED + AUTOMATED VALIDATION COMPLETE; Testing Section 9.3 records the supplied PR #162 evidence.
 Historical slice contracts, `None` returns, summary exclusions and test results retain their original
 boundaries. Earlier references to unresolved logging/HTTP decisions or undefined continuation order
 describe those historical baselines; Section 13.5 and Roadmap Section 5.1 now settle those decisions
@@ -30,7 +32,8 @@ G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain 
 Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
 (`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
 row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
-Continuation is dependency-first; no Slice 11 is allocated. No new implementation or live evidence is claimed.
+Continuation is dependency-first; no Slice 11 is allocated. No new execution evidence is produced by
+this documentation revision. PR #162 supplies no live Azure DevOps Services validation evidence.
 
 ---
 
@@ -87,6 +90,7 @@ Continuation is dependency-first; no Slice 11 is allocated. No new implementatio
 | 2.35 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Associated prospective execution-summary validation with allocated Application/Run Slice 10 while preserving requirements and historical evidence. |
 | 2.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded PR #157 Slice-10 automated validation evidence for G3-SUM-D1 to G3-SUM-D9; live Services validation remains pending. |
 | 2.37 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Defined prospective Gate-3 HTTP validation, scenario allocation, live-plan and consolidated dossier requirements without claiming new evidence. |
+| 2.38 | 2026-09-17 | Draft | Jack Spaetjens | Recorded PR #162 HTTP reporting automated validation evidence; non-HTTP and live Gate-3 evidence remains incomplete. |
 
 ---
 
@@ -950,8 +954,8 @@ Final RC regression/live repetition and final release evidence remain subject to
 **MERGED AUTOMATED VALIDATION EVIDENCE — NO LIVE SERVICES VALIDATION CLAIMED.**
 **Application/Run Slice 10 — Execution Summary Implementation and Validation — IMPLEMENTED + AUTOMATED VALIDATION COMPLETE.**
 PR #157 (implementation `666f7aa`, merge `8e2a57d`) implemented and automatically validated the
-approved requirements below. This reconciliation revision is Draft pending review and separate
-approval-only promotion. No tests, Ruff, pytest or live Azure DevOps operations are run for this
+approved requirements below. The Slice-10 reconciliation is Approved Baseline; the present PR #162
+reconciliation remains Draft. No tests, Ruff, pytest or live Azure DevOps operations are run for this
 documentation-only reconciliation; the results recorded here are the supplied PR #157 evidence.
 
 [Architecture Section 13.4](02-Architecture.md#134-execution-summary-behavioural-contract) is
@@ -1037,15 +1041,18 @@ is claimed for PR #157. No new test execution evidence is produced by this recon
 
 ## 9.3 Gate-3 HTTP reporting and closure validation
 
-**PROSPECTIVE REQUIREMENTS — implementation and validation evidence pending.**
+**HTTP REPORTING — IMPLEMENTED + AUTOMATED VALIDATION COMPLETE; REMAINING GATE-3 EVIDENCE INCOMPLETE.**
 [Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions) owns
-G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01. The requirements below describe future
-validation; they do not claim tests exist or have run. Section 9.2 and all earlier slice evidence remain
-unchanged. No source/tests, Ruff/pytest run or live operation forms part of this documentation revision.
+G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01. PR #162 (implementation `8515573`,
+merge `337116d`) implements and automatically validates D01-D05 against the Approved Baseline
+contract. The HTTP requirements below now have merged automated evidence; the remaining non-HTTP
+closure requirements still require evidence completion/review. Section 9.2 and all earlier slice
+evidence remain historical and unchanged. No source/test changes, Ruff/pytest run or live operation
+forms part of this documentation revision.
 
 ### HTTP reporting — G3-OWN-D01 to G3-OWN-D05
 
-Future automated coverage shall prove:
+Merged PR #162 automated coverage validates the following continuing requirements:
 
 - Exact 401 logical message `Azure DevOps authentication failed.`, exact 403 logical message
   `Azure DevOps authorisation failed.` and exact 429 logical message `Azure DevOps rate limit reached.`;
@@ -1053,6 +1060,7 @@ Future automated coverage shall prove:
 - Each specific message replaces `Azure DevOps error.` in BOTH logfile and stderr, with no duplicate
   generic event/report for that failure, one eligible attempt per destination and CRITICAL logfile
   severity. Reporting follows propagated status-aware classification at the process boundary.
+  All other HTTP / Azure DevOps REST-client errors retain the generic `Azure DevOps error.` report.
 - Role-specific controlled-terminal delivery: only the current invocation owned logfile handler receives
   the event, no root/unrelated/same-named non-owned or stale handler delivery, and preserved
   process-boundary stderr semantics. Lifecycle/SUMMARY filtering and delivery remain unchanged.
@@ -1071,6 +1079,36 @@ Future automated coverage shall prove:
   sensitive/malformed synthetic data to prove it is ignored for reporting.
 - Full-suite and Ruff regression evidence after implementation, tied to the assessed implementation
   revision and preserving earlier controlled/unexpected, lifecycle, SUMMARY and failure/rerun behaviour.
+
+The supplied PR #162 validation record is:
+
+| PR #162 automated check | Recorded result |
+|-------------------------|-----------------|
+| Targeted Ruff | PASS |
+| Targeted pytest passed / failed | 652 / 0 |
+| Full Ruff | PASS |
+| Full pytest collected / passed / failed | 1,018 / 1,018 / 0 |
+| Coverage | 95% |
+| Statements / missed | 1,414 / 64 |
+| Changed production `main.py` coverage | 100% |
+| `git diff --check` | PASS |
+
+Only `src/azure_devops_backlog_generator/main.py` changed in production. Lower-layer REST-client
+production code, exception taxonomy and `__main__.py` remain unchanged. Merged tests provide this traceability:
+
+| Contract / boundary | Merged automated evidence | Proven scope |
+|---------------------|---------------------------|--------------|
+| D01-D05 terminal reporting | `tests/test_main.py`: controlled process/category reporting, `test_each_reachable_post_initialisation_controlled_failure_is_logged_once`, owned-handler isolation and repeated-invocation tests | Exact status-specific logfile/stderr replacement without generic duplication; generic fallback for other REST-client errors; CRITICAL severity, diagnostic safety, one eligible delivery attempt, exact integer outcome 1 and current-handler ownership. |
+| D02 delivery failures | `tests/test_main.py`: `test_secondary_log_write_failure_preserves_the_primary_controlled_failure`, `test_http_terminal_delivery_retains_filtering_and_stderr_failure_semantics` | Ordinary secondary logfile Exception preserves the primary failure and stderr attempt; non-Exception BaseException propagates; existing filtering and stderr-failure semantics remain unchanged. |
+| D05 header omission and retained status | `tests/azure_devops/test_rest_client.py`: `test_http_error_is_controlled_and_discards_the_error_body`, `test_429_headers_are_ignored_through_terminal_reporting` | 401/403/429 status preservation; header-present 429 cases, including sensitive/malformed synthetic Retry-After data, reach terminal reporting without header inspection or disclosure, retry or sleep. |
+| Global stop | `tests/generator/test_orchestration.py`: `test_real_generator_orchestration_stops_all_later_work_after_persistence_failure` | 401/403/429 propagation stops later descendants, siblings, roots, documents and persistence operations without retry or credential substitution. |
+| Supported package integration | `tests/test___main__.py`: `test_package_summary_with_real_parsing_generator_and_controlled_transport` | Each status at preflight and relationship PATCH, with real argument/configuration loading, parser, Generator and logging; exact safe logfile/stderr reports, outcome 1, global stop, no success SUMMARY/COMPLETION and unchanged package termination ownership. Only JSON transport is substituted. |
+
+No live Azure DevOps Services validation occurred; no live evidence is supplied by PR #162.
+These results support Release row E within its automated reporting scope. Wider application/integration
+evidence completeness and applicability, D06-D10 event/evidence mapping and required live proof remain
+outstanding; row D remains PARTIALLY SATISFIED and row H NOT SATISFIED. No warnings-as-errors result
+or new test execution is claimed here. Gate 3 remains NOT PASSED.
 
 ### Evidence interpretations and scenario allocation — G3-OWN-D06 to G3-OWN-D11
 

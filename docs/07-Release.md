@@ -4,11 +4,11 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.36
+**Version:** 1.37
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-16
+**Last Updated:** 2026-09-17
 
 **Target Release:** v1.0.0
 
@@ -16,12 +16,14 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft records the owner-approved Gate-3 logging/HTTP and closure decisions
-G3-OWN-D01 to G3-OWN-D14 and reconciliation-only G3-REC-R01, authoritative in
+**Revision scope:** This Draft reconciles PR #162 (implementation `8515573`, merge `337116d`)
+against the Approved Baseline Gate-3 logging/HTTP and closure contract in Architecture 2.47,
+Roadmap 1.42, API 2.27, Testing 2.37 and Release 1.36. G3-OWN-D01 to G3-OWN-D14 and
+reconciliation-only G3-REC-R01 remain unchanged and authoritative in
 [Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
-The starting Approved Baseline is main at `91b848f`. This revision awaits document review and
-baseline promotion; owner decision approval does not establish implementation or execution evidence.
-Status-aware HTTP 401/403/429 reporting remains production work with implementation and validation pending.
+The starting implementation baseline is main at `337116d`. This reconciliation awaits document
+review and baseline promotion. Status-aware HTTP 401/403/429 reporting under D01-D05 is
+IMPLEMENTED + AUTOMATED VALIDATION COMPLETE; Testing Section 9.3 records the supplied PR #162 evidence.
 Historical slice contracts, `None` returns, summary exclusions and test results retain their original
 boundaries. Earlier references to unresolved logging/HTTP decisions or undefined continuation order
 describe those historical baselines; Section 13.5 and Roadmap Section 5.1 now settle those decisions
@@ -30,7 +32,8 @@ G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain 
 Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
 (`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
 row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
-Continuation is dependency-first; no Slice 11 is allocated. No new implementation or live evidence is claimed.
+Continuation is dependency-first; no Slice 11 is allocated. No new execution evidence is produced by
+this documentation revision. PR #162 supplies no live Azure DevOps Services validation evidence.
 
 ---
 
@@ -76,6 +79,7 @@ Continuation is dependency-first; no Slice 11 is allocated. No new implementatio
 | 1.34 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded Application/Run Slice 10 as allocated, not implemented and not validated, preserving Gate-3 acceptance as unsatisfied. |
 | 1.35 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled merged Slice-10 implementation and automated validation, recording row F as satisfied while Gate 3 remains not passed. |
 | 1.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded owner-approved Gate-3 closure decisions and reconciled the CRITICAL/HIGH threshold while preserving open acceptance statuses. |
+| 1.37 | 2026-09-17 | Draft | Jack Spaetjens | Reconciled PR #162 implementation/evidence and rows D/E; Gate 3 remains not passed. |
 
 ---
 
@@ -307,11 +311,11 @@ no generic redaction framework exists. This implemented bounded safety does not 
 Readiness, integration/E2E completion, live Azure validation, Gate-3 completion, Gate-4 completion or RC readiness.
 
 Version 1.0 remains pre-release and wider Application/Run remains incomplete. Gates 1 and 2 remain
-PASS; Gates 3 and 4 remain future. Broader Architecture Section-12 logging and unresolved HTTP/API
-reporting remain separate capability work. Architecture Section 13.4 records owner-approved
+PASS; Gates 3 and 4 remain future. Wider Architecture Section-12 logging evidence remains incomplete;
+HTTP reporting is implemented and automatically validated by PR #162. Architecture Section 13.4 records owner-approved
 G3-SUM-D1 to G3-SUM-D9; Slice-10 implementation and automated validation are complete. No result DTO
-is approved. API Section 6.1 implementation status reconciliation is already approved; separate HTTP
-reporting decisions remain unresolved.
+is approved. API Section 6.1 implementation status reconciliation and the HTTP reporting contract
+are Approved Baseline; the present revision reconciles PR #162 implementation/evidence.
 Broader integration/E2E, live Azure DevOps Services validation, Operational Readiness definition/evidence,
 and final release approval remain outstanding. Section 8.1 records the approved Gate-3 framework and
 resolved placement decisions; broader Operational Recovery / DR is outside V1.0 under G3-D3.
@@ -324,14 +328,15 @@ PR #157 (implementation `666f7aa`, merge `8e2a57d`) implements the already-appro
 G3-SUM-D9 contract. Architecture Section 13.4 remains the behavioural authority and Testing Section
 9.2 records the automated evidence: Ruff PASS, 824 collected / 824 passed / 0 failed, 95% coverage,
 1,409 statements, 64 missed, both changed production files at 100% coverage and `git diff --check` PASS.
-This reconciliation revision is Draft pending review and separate approval-only promotion; it records
-merged evidence without producing a new test run or claiming release readiness. Execution-summary
+The Slice-10 reconciliation is Approved Baseline; the present PR #162 reconciliation remains Draft.
+It records merged evidence without producing a new test run or claiming release readiness. Execution-summary
 acceptance in Section 8.1 row F is SATISFIED within its stated scope; live Services validation remains
 pending under row H and no Gate-3 PASS is claimed.
 
 Slices 1–9 remain IMPLEMENTED + APPROVED; Gate 3 remains NOT PASSED, Gate 4 FUTURE and
-Version 1.0 PRE-RELEASE. HTTP 401/403/429 reporting and unrelated logging decisions remain unresolved
-separate work. A functioning GUI remains required for Version-1.0 release readiness, outside Slice 10
+Version 1.0 PRE-RELEASE. Logging/HTTP decisions are Approved Baseline; PR #162 implements and
+automatically validates HTTP 401/403/429 reporting, with wider Gate-3 evidence still incomplete.
+A functioning GUI remains required for Version-1.0 release readiness, outside Slice 10
 and not implemented by PR #157. It does not block Slice-10 reconciliation; no GUI design or allocation is added.
 No subsequent slice, broader recovery/DR, Gate-4 or release-candidate work is allocated.
 
@@ -410,7 +415,8 @@ Only approved releases shall be published.
 ## 8.1 Review Gate 3 Operational Readiness Acceptance
 
 **Gate 3 is FUTURE / NOT YET PASSED and currently NOT READY.**
-This Draft records the owner-approved logging/HTTP and closure contract within the approved Gate-3 framework.
+This Draft reconciles PR #162 implementation/evidence against the Approved Baseline logging/HTTP
+and closure contract within the approved Gate-3 framework.
 Gate 3 answers: "Is the application operationally complete and sufficiently evidenced to enter final
 release-candidate validation?" Gate 4 remains the Release Candidate / final pre-release gate. Neither
 approval of this contract nor a later Gate-3 PASS constitutes RC acceptance or final Version-1.0 approval.
@@ -425,8 +431,9 @@ summary implementation and automated validation are complete, and no Gate-3 PASS
 operational boundaries and logging/reporting dependencies; [Testing Section 9.1](06-Testing.md#91-review-gate-3-evidence-requirements)
 defines evidence. [Roadmap Section 5.1](03-Roadmap.md#51-review-gate-3-next-governance-milestone) records
 the governance milestone. Earlier implementation evidence was recorded at `751c928` and retained at
-`cff3397`. Row F now additionally records PR #157 evidence at merge `8e2a57d`; the other rows retain
-their existing statuses. Writing this Draft produces no new execution evidence.
+`cff3397`. Row F records PR #157 evidence at merge `8e2a57d`. Rows D/E now credit PR #162
+(implementation `8515573`, merge `337116d`) and Testing Section 9.3 automated evidence; only E's
+status changes. All other row statuses are retained. Writing this Draft produces no new execution evidence.
 
 ### Status and closure model
 
@@ -449,8 +456,8 @@ remaining release-scenario allocation must be explicit under the deferral rule.
 | A. Contract/documentation consistency | Development Sections 8-10; Release Section 5 pre-Gate-3 API prerequisite | Required behavioural/gate documents are Approved Baseline and consistent; API Section 6.1 status drift is reconciled; summary/completion and severity wording cannot undermine acceptance. | Approved revisions and reconciliation record linked to affected requirements. | NOT SATISFIED | CONTRACT, DOCUMENTATION, GOVERNANCE |
 | B. Operational implementation completeness | PRD FR-001 to FR-010; Architecture Sections 7-13 | Existing approved core and Slices 1-9 remain implemented; all additional operational behaviours assigned by this gate and resolved decisions are implemented and merged. | Implementation/review references and requirement-to-test coverage, including D-F. | PARTIALLY SATISFIED | CONTRACT, IMPLEMENTATION, VALIDATION |
 | C. Runtime/configuration | Architecture Sections 7.1.1-7.1.7 and Slice 9; Configuration Sections 5-8 | Supported package invocation, default/explicit configuration, PAT acquisition, outcomes and termination ownership retain their approved contracts. | Existing configuration, application and package/subprocess evidence; integrated success is separately required by G. | SATISFIED | - |
-| D. Observability/logging | PRD FR-009; Architecture Sections 12, 13.1 and 13.5 D01-D10; Configuration Section 6.4 | Owner-approved interpretations are baselined and supported by applicable evidence; D06-D10 require no new events; summary placement follows F. | Event/evidence acceptance mapping and validated HTTP content/timing/levels/delivery/safety under Testing Section 9.3. | PARTIALLY SATISFIED | CONTRACT, IMPLEMENTATION, VALIDATION |
-| E. HTTP/API reporting | API Sections 6.1, 6.2 and 9-11; Architecture Section 13.5 D01-D05 | Status-specific 401/403/429 messages replace generic logfile/stderr reports, without duplication; CRITICAL delivery, status preservation, Retry-After omission and no retry/backoff are implemented and evidenced. | Approved behavioural baseline and Testing Section 9.3 reporting/safety/global-stop tests; implementation/evidence pending. | PARTIALLY SATISFIED | CONTRACT, IMPLEMENTATION, VALIDATION |
+| D. Observability/logging | PRD FR-009; Architecture Sections 12, 13.1 and 13.5 D01-D10; Configuration Section 6.4 | Owner-approved interpretations are baselined and supported by applicable evidence; D06-D10 require no new events; summary placement follows F. | Approved Baseline interpretations and PR #162 HTTP content/timing/levels/delivery/safety evidence in Testing Section 9.3; complete event/evidence mapping, application/integration applicability assessment and D08/D09 live communication/creation/reuse proof remain outstanding. | PARTIALLY SATISFIED | DOCUMENTATION, VALIDATION |
+| E. HTTP/API reporting | API Sections 6.1, 6.2 and 9-11; Architecture Section 13.5 D01-D05 | Status-specific 401/403/429 messages replace generic logfile/stderr reports, without duplication; CRITICAL delivery, status preservation, Retry-After omission and no retry/backoff are implemented and evidenced. | Approved Baseline D01-D05 contract, merged PR #162 (`8515573`, merge `337116d`) and Testing Section 9.3 reporting/safety/global-stop, package integration and full-suite/Ruff evidence. | SATISFIED | - |
 | F. Execution summary | Architecture Sections 8, 12 and 13.4; API Section 7.1; owner-approved G3-D1 and G3-SUM-D1 to G3-SUM-D9 | The V1.0 summary is fully contract-defined, implemented, validated and evidenced before Gate-3 PASS; unfinished functionality cannot be deferred to Gate 4. | Owner-approved behaviour in Architecture Section 13.4; merged PR #157 (`666f7aa`, merge `8e2a57d`) and Testing Section 9.2 automated validation, including complete package execution with controlled transport. | SATISFIED: approved behaviour, merged implementation and required automated summary evidence recorded. | - |
 | G. Integration/system validation | Testing Sections 5 and 9 | Complete successful application-level execution and integrated failure/rerun evidence meet Testing Section 9.1; adapter-only success is insufficient. | Traceable application integration results with real configuration/parser/Generator and declared transport boundary. | PARTIALLY SATISFIED | VALIDATION, IMPLEMENTATION |
 | H. Azure DevOps Services validation | Testing Sections 6 and 9; Release Sections 8 and 10; owner-approved G3-D2 | Complete the minimum real Services operational proof in Testing Section 9.1 before Gate-3 PASS; mock-only evidence is insufficient. | Prepared controlled procedure/environment and executed live records; final RC repetition and explicitly assigned remaining scenarios retained for Gate 4. | NOT SATISFIED | VALIDATION, GOVERNANCE, DOCUMENTATION |
@@ -461,6 +468,22 @@ remaining release-scenario allocation must be explicit under the deferral rule.
 | M. Defects/findings | Testing Section 9; G3-REC-R01 reconciliation | No unresolved CRITICAL or HIGH defects/findings; remaining findings cannot prevent mandatory row satisfaction. | Assessed-revision findings register, severity/disposition and verified closure evidence. | NOT SATISFIED | GOVERNANCE, VALIDATION |
 | N. Evidence traceability | PRD NFR-006; Testing Sections 9.1 and 9.3; Architecture Section 13.5 D14 Option A; Release Section 12 | One consolidated versioned Gate-3 dossier supplies the A-O index, evidence applicability, decisions, findings, deferrals and review/sign-off record required by D14. | Complete dossier; historical evidence credited only within its proven scope and assessed-revision applicability; completion pending. | PARTIALLY SATISFIED | DOCUMENTATION, VALIDATION, GOVERNANCE |
 | O. Approval/sign-off | Release Sections 8-10 and 13; AI Working Agreement Section 13 | Owner explicitly records Gate-3 PASS only after the PASS rule is met. | Dated owner acceptance referring to the completed matrix, evidence and approved decision records. | NOT SATISFIED | GOVERNANCE |
+
+Row D remains PARTIALLY SATISFIED. The contract is Approved Baseline and HTTP implementation and
+automated validation are complete, but the full Section-12 event/evidence acceptance mapping and
+application/integration evidence applicability assessment remain incomplete. D08 additionally requires
+live Services communication proof and D09 live remote creation/reuse inspection; neither is supplied
+by PR #162. D06-D10 require no new events, so those gaps do not prescribe additional runtime logging.
+
+Row E is SATISFIED by the approved contract plus merged implementation and the automated evidence in
+Testing Section 9.3, including exact messages, both destinations, one-attempt delivery and failure
+precedence, diagnostic safety, generic fallback, retained status, Retry-After omission and global stop.
+This exceeds implementation alone: targeted Ruff PASS, targeted pytest 652 passed / 0 failed, full
+Ruff PASS, full pytest 1,018 collected / 1,018 passed / 0 failed, 95% coverage (1,414 statements,
+64 missed), `main.py` 100% and `git diff --check` PASS are recorded. Row E's stated condition does
+not independently require live proof; row H retains that requirement. No live Azure DevOps Services
+validation occurred in PR #162 and no live evidence is supplied. Approval of this reconciliation
+under A, wider evidence applicability/dossier work under N and final sign-off under O remain separate.
 
 Row F requires the approved summary contract, merged implementation and Section-9.2 validation.
 Section 9.2 D9 explicitly permits a controlled transport substitute for complete application evidence;
@@ -483,7 +506,7 @@ this reconciliation revision remains Draft.
 
 | Decision | Status | Owner-approved decision | Remaining boundary |
 |----------|--------|-------------------------|--------------------|
-| G3-D1 - Summary placement | RESOLVED / OWNER APPROVED | The summary shall be fully contract-defined, implemented, validated and evidenced before Gate-3 PASS. It shall not be deferred as unfinished runtime functionality; Gate 4 may repeat/verify it in final RC regression. | G3-SUM-D1 to G3-SUM-D9 are owner-approved and recorded in Architecture Section 13.4: one processed-source-item count, two integer-return changes and success-only INFO summary delivery, implemented and automatically validated by PR #157. This status reconciliation remains Draft; no result DTO is approved. |
+| G3-D1 - Summary placement | RESOLVED / OWNER APPROVED | The summary shall be fully contract-defined, implemented, validated and evidenced before Gate-3 PASS. It shall not be deferred as unfinished runtime functionality; Gate 4 may repeat/verify it in final RC regression. | G3-SUM-D1 to G3-SUM-D9 are owner-approved and recorded in Architecture Section 13.4: one processed-source-item count, two integer-return changes and success-only INFO summary delivery, implemented and automatically validated by PR #157. The Slice-10 status reconciliation is Approved Baseline; no result DTO is approved. |
 | G3-D2 - Live validation placement | RESOLVED / OWNER APPROVED | Minimum real Azure DevOps Services operational proof is required before Gate-3 PASS; mock-only evidence is insufficient. Final RC repetition and explicitly assigned remaining release scenarios remain at Gate 4. | Exact isolated project configuration, permissions, cleanup authorisation and controlled procedure still need definition. A repeatable manual procedure with recorded evidence is acceptable; no dedicated automated live harness is mandated. |
 | G3-D3 - Recovery/DR applicability | RESOLVED / OWNER APPROVED | Broader Operational Recovery / Disaster Recovery is OUTSIDE V1.0, not deferred to Gate 4. No new backup/restore or DR infrastructure, automatic retry/rollback/compensation, generic recovery subsystem, logfile recovery/rotation or dedicated DR platform/service is required. | Existing global fail-fast, legitimate partial state, later-run identity rediscovery/reuse and fresh MISSING repair, CORRECT continuation and CONFLICTING stop remain. Bounded operator guidance remains required under L; failure/rerun evidence remains under J. |
 
@@ -491,15 +514,16 @@ this reconciliation revision remains Draft.
 
 [Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions) owns the
 complete G3-OWN-D01 to G3-OWN-D14 register; API Section 6.1 records HTTP semantics and Testing
-Section 9.3 records prospective validation. Decisions are OWNER APPROVED; these new document
-revisions remain Draft pending review/baselining. No currently-open acceptance row becomes SATISFIED
-merely because a decision is approved.
+Section 9.3 records PR #162 HTTP automated validation and remaining closure requirements. Decisions
+are OWNER APPROVED and the contract revisions are Approved Baseline; these post-implementation
+reconciliation revisions remain Draft pending review/baselining. Row E is satisfied by contract,
+implementation and evidence together, not decision approval alone.
 
 | Record | Owner-approved selection / reconciliation | Remaining closure |
 |--------|-------------------------------------------|-------------------|
-| G3-OWN-D01 | Option A: fixed text and explicitly approved stable non-secret literals only; no new dynamic/numeric diagnostics or redaction framework. | Validate newly implemented reporting safety. |
-| G3-OWN-D02 | Option B: retain role-specific profiles; new HTTP reporting uses controlled-terminal owned-handler CRITICAL delivery and process-boundary stderr. | Implement and prove one attempt, primary-failure precedence and no duplicate generic report. |
-| G3-OWN-D03 / D04 / D05 | Option A each: exact 401 authentication, 403 authorisation and 429 rate-limit messages replace generic reporting in both destinations; Retry-After omitted entirely. | Implementation, automated safety/global-stop coverage and full-suite/Ruff evidence pending. |
+| G3-OWN-D01 | Option A: fixed text and explicitly approved stable non-secret literals only; no new dynamic/numeric diagnostics or redaction framework. | Reporting safety implemented and automatically validated by PR #162; Testing Section 9.3. |
+| G3-OWN-D02 | Option B: retain role-specific profiles; new HTTP reporting uses controlled-terminal owned-handler CRITICAL delivery and process-boundary stderr. | One attempt, primary-failure precedence and no duplicate generic report implemented and automatically validated by PR #162; Testing Section 9.3. |
+| G3-OWN-D03 / D04 / D05 | Option A each: exact 401 authentication, 403 authorisation and 429 rate-limit messages replace generic reporting in both destinations; Retry-After omitted entirely. | IMPLEMENTED + AUTOMATED VALIDATION COMPLETE: PR #162 and Testing Section 9.3 safety/global-stop, full-suite and Ruff evidence. |
 | G3-OWN-D06 / D07 / D08 / D09 / D10 | Option A each: existing START/SUMMARY and applicable automated/live evidence suffice under the stated limitations; no new runtime events or warning taxonomy. | Index applicable evidence; required live proof/inspection remains absent. |
 | G3-OWN-D11 | Option A: mandatory Gate-3 minimum cannot be deferred; eligible remaining scenarios need explicit complete Gate-4 allocation records. | Complete scenario mapping and assess permitted deferrals; none are allocated here. |
 | G3-OWN-D12 | Option B: isolated dedicated project in an existing TEST organisation; synthetic input, truthful process/field prerequisites and least privilege. | Concrete environment, mutation/cleanup-or-retention authorisation and execution remain pending; no immediate live execution is authorised. |
@@ -507,8 +531,12 @@ merely because a decision is approved.
 | G3-OWN-D13 | Option B: separate operator guide with discoverable README link and complete D13 acceptance coverage. | Guide completion/review and README link remain pending; neither is created here. |
 | G3-OWN-D14 | Option A: one consolidated versioned Gate-3 dossier with A-O index, applicability, findings, deferrals and dated owner sign-off. | Dossier completion, review and final owner sign-off remain pending. |
 
-Behavioural ambiguity for these logging/HTTP topics is closed by the decisions; implementation and
-evidence are not. G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged, and Slice-10 evidence
+Behavioural ambiguity for these logging/HTTP topics is closed by the approved contract; PR #162
+completes D01-D05 implementation and automated validation. Wider application/integration evidence,
+D06-D10 acceptance mapping, authorised live Services validation, the operator guide, consolidated
+versioned Gate-3 dossier, findings assessment and verified CRITICAL/HIGH closure, D11 scenario-to-gate
+allocation review and final dated owner sign-off remain pending.
+G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged, and Slice-10 evidence
 continues to support row F as SATISFIED. Row H remains NOT SATISFIED. Separate numbered allocation
 is not mandatory: continuation follows Roadmap Section 5.1 dependency-first, with approved behavioural
 documentation before implementation and no Slice 11 allocation. Gate 3 remains NOT PASSED; Gate 4
@@ -523,8 +551,9 @@ This revision neither implements the GUI nor resolves that future governance wor
 
 Preparation and contract review may proceed while the gate is NOT READY. Formal acceptance review shall
 use an identified merged implementation revision, approved gate/behavioural documentation, the complete
-matrix/evidence dossier, unchanged G3-D1 to G3-D3 and G3-OWN-D01 to G3-OWN-D14. The new contract
-revision must be baselined and its implementation/evidence closure completed. Gates 1 and 2 remain PASS.
+matrix/evidence dossier, unchanged G3-D1 to G3-D3 and G3-OWN-D01 to G3-OWN-D14. The closure contract
+is Approved Baseline and HTTP implementation/automated validation are complete; this reconciliation
+still requires baselining and the remaining gate evidence/closure remains incomplete. Gates 1 and 2 remain PASS.
 
 Gate 3 may PASS only when:
 
