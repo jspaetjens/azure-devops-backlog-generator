@@ -28,6 +28,9 @@ python -m pip install -e ".[dev]"
 
 ## Configuration bootstrap
 
+See the [Operator Guide](docs/10-Operator-Guide.md) for configuration, supported
+invocation, logging and failure/reuse guidance.
+
 Copy the tracked configuration template to the default local runtime path:
 
 ```powershell
