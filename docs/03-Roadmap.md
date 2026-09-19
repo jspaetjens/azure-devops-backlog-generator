@@ -6,7 +6,7 @@
 
 **Version:** 1.43
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-17
 
@@ -85,7 +85,7 @@ this documentation revision. PR #162 supplies no live Azure DevOps Services vali
 | 1.40 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Allocated Execution Summary Implementation and Validation as Application/Run Slice 10 with implementation and validation pending. |
 | 1.41 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded Application/Run Slice 10 as implemented with automated validation complete, retaining separate documentation approval and no subsequent slice allocation. |
 | 1.42 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded dependency-first Gate-3 closure under the owner-approved decisions without allocating Slice 11. |
-| 1.43 | 2026-09-17 | Draft | Jack Spaetjens | Reconciled PR #162 implementation and automated validation in dependency-first Gate-3 continuation without a new slice. |
+| 1.43 | 2026-09-17 | Approved Baseline | Jack Spaetjens | Reconciled PR #162 implementation and automated validation in dependency-first Gate-3 continuation without a new slice. |
 
 ---
 

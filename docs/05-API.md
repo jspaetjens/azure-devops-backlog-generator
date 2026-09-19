@@ -6,7 +6,7 @@
 
 **Version:** 2.28
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-17
 
@@ -80,7 +80,7 @@ this documentation revision. PR #162 supplies no live Azure DevOps Services vali
 | 2.25 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled Application/Run Slice-10 allocation status without changing REST or execution-summary behaviour. |
 | 2.26 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled implemented Generator/application integer returns and SUMMARY before COMPLETION without changing REST behaviour. |
 | 2.27 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded approved status-specific 401/403/429 terminal reporting and complete omission of Retry-After; implementation remains pending. |
-| 2.28 | 2026-09-17 | Draft | Jack Spaetjens | Reconciled PR #162 reporting implementation and automated evidence, including normative Retry-After omission. |
+| 2.28 | 2026-09-17 | Approved Baseline | Jack Spaetjens | Reconciled PR #162 reporting implementation and automated evidence, including normative Retry-After omission. |
 
 ---
 
