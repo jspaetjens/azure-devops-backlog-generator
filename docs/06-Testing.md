@@ -6,7 +6,7 @@
 
 **Version:** 2.38
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-17
 
@@ -90,7 +90,7 @@ this documentation revision. PR #162 supplies no live Azure DevOps Services vali
 | 2.35 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Associated prospective execution-summary validation with allocated Application/Run Slice 10 while preserving requirements and historical evidence. |
 | 2.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded PR #157 Slice-10 automated validation evidence for G3-SUM-D1 to G3-SUM-D9; live Services validation remains pending. |
 | 2.37 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Defined prospective Gate-3 HTTP validation, scenario allocation, live-plan and consolidated dossier requirements without claiming new evidence. |
-| 2.38 | 2026-09-17 | Draft | Jack Spaetjens | Recorded PR #162 HTTP reporting automated validation evidence; non-HTTP and live Gate-3 evidence remains incomplete. |
+| 2.38 | 2026-09-17 | Approved Baseline | Jack Spaetjens | Recorded PR #162 HTTP reporting automated validation evidence; non-HTTP and live Gate-3 evidence remains incomplete. |
 
 ---
 
