@@ -4,11 +4,11 @@
 
 > *This document defines the testing approach, quality assurance strategy and validation processes for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 2.38
+**Version:** 2.39
 
-**Status:** Approved Baseline
+**Status:** Draft
 
-**Last Updated:** 2026-09-17
+**Last Updated:** 2026-09-20
 
 **Target Release:** v1.0.0
 
@@ -16,24 +16,22 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft reconciles PR #162 (implementation `8515573`, merge `337116d`)
-against the Approved Baseline Gate-3 logging/HTTP and closure contract in Architecture 2.47,
-Roadmap 1.42, API 2.27, Testing 2.37 and Release 1.36. G3-OWN-D01 to G3-OWN-D14 and
-reconciliation-only G3-REC-R01 remain unchanged and authoritative in
-[Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
-The starting implementation baseline is main at `337116d`. This reconciliation awaits document
-review and baseline promotion. Status-aware HTTP 401/403/429 reporting under D01-D05 is
-IMPLEMENTED + AUTOMATED VALIDATION COMPLETE; Testing Section 9.3 records the supplied PR #162 evidence.
-Historical slice contracts, `None` returns, summary exclusions and test results retain their original
-boundaries. Earlier references to unresolved logging/HTTP decisions or undefined continuation order
-describe those historical baselines; Section 13.5 and Roadmap Section 5.1 now settle those decisions
-and dependencies. API Section 6.1 implementation-status reconciliation is already approved.
-G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain IMPLEMENTED + APPROVED;
-Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
-(`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
-row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
-Continuation is dependency-first; no Slice 11 is allocated. No new execution evidence is produced by
-this documentation revision. PR #162 supplies no live Azure DevOps Services validation evidence.
+**Revision scope:** This Draft records the Gate-3 application/integration evidence mapping and
+historical applicability assessment at `661102d64180417629ee7a96d36ad5bd40ac5a03` in Section 9.4.
+The governing Approved Baseline is Architecture 2.48, Roadmap 1.43, API 2.28, Testing 2.38 and
+Release 1.37. Existing automated evidence is sufficient for the mandatory application/integration
+scenarios; no missing mandatory automated test has been identified. Required live Azure DevOps
+Services validation remains pending. This reconciliation awaits document review and baseline promotion.
+G3-OWN-D01 to G3-OWN-D14, G3-REC-R01, G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged.
+[Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions)
+retains behavioural authority. Historical slice contracts, return values, exclusions and execution
+results retain their original boundaries; Sections 9.2 and 9.3 preserve PR #157 and PR #162 evidence.
+Earlier statements of pending implementation or evidence describe their historical baselines;
+Section 9.4 records current automated applicability without rewriting those results.
+Slices 1–9 remain IMPLEMENTED + APPROVED; Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION
+COMPLETE + Approved Baseline. No Release A–O status changes. Gate 3 remains NOT PASSED,
+Gate 4 FUTURE and Version 1.0 PRE-RELEASE. No Slice 11, new behaviour, new test execution or live
+operation is introduced or authorised. GUI governance and the G3-D3 exclusion of broader DR are unchanged.
 
 ---
 
@@ -91,6 +89,7 @@ this documentation revision. PR #162 supplies no live Azure DevOps Services vali
 | 2.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded PR #157 Slice-10 automated validation evidence for G3-SUM-D1 to G3-SUM-D9; live Services validation remains pending. |
 | 2.37 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Defined prospective Gate-3 HTTP validation, scenario allocation, live-plan and consolidated dossier requirements without claiming new evidence. |
 | 2.38 | 2026-09-17 | Approved Baseline | Jack Spaetjens | Recorded PR #162 HTTP reporting automated validation evidence; non-HTTP and live Gate-3 evidence remains incomplete. |
+| 2.39 | 2026-09-20 | Draft | Jack Spaetjens | Recorded the Gate-3 application/integration evidence mapping and historical applicability assessment, confirming sufficient existing automated evidence while retaining required live Services validation. |
 
 ---
 
@@ -116,6 +115,17 @@ this documentation revision. PR #162 supplies no live Azure DevOps Services vali
   - [9.1 Review Gate 3 evidence requirements](#91-review-gate-3-evidence-requirements)
   - [9.2 Execution-summary validation](#92-execution-summary-validation)
   - [9.3 Gate-3 HTTP reporting and closure validation](#93-gate-3-http-reporting-and-closure-validation)
+  - [9.4 Gate-3 Application/Integration Evidence Mapping](#94-gate-3-applicationintegration-evidence-mapping)
+    - [9.4.1 Assessed Revision and Historical Applicability](#941-assessed-revision-and-historical-applicability)
+    - [9.4.2 Evidence Levels and Boundary Rules](#942-evidence-levels-and-boundary-rules)
+    - [9.4.3 Package Integration Evidence](#943-package-integration-evidence)
+    - [9.4.4 Requirement-to-Evidence Mapping](#944-requirement-to-evidence-mapping)
+    - [9.4.5 Stateful Failure and Rerun Evidence](#945-stateful-failure-and-rerun-evidence)
+    - [9.4.6 Secret-Safety Evidence](#946-secret-safety-evidence)
+    - [9.4.7 D06–D10 Applicability](#947-d06d10-applicability)
+    - [9.4.8 Evidence Classification](#948-evidence-classification)
+    - [9.4.9 Remaining Live-Only Evidence](#949-remaining-live-only-evidence)
+    - [9.4.10 Release-Row Implications](#9410-release-row-implications)
 - [10. Defect Management](#10-defect-management)
 - [11. Traceability](#11-traceability)
 - [12. Approval](#12-approval)
@@ -853,6 +863,10 @@ settle summary/live-proof placement and broader DR exclusion alongside existing 
 rows, placement decisions and acceptance. [Architecture Section 13](02-Architecture.md#13-review-gate-3-operational-readiness-boundaries)
 owns behavioural dependencies. Writing this section does not satisfy an evidence requirement.
 
+[Section 9.4](#94-gate-3-applicationintegration-evidence-mapping) records the application/integration
+mapping and historical applicability at the assessed revision. It preserves the mandatory minimum,
+live-validation requirements and original execution results below; no new execution is claimed.
+
 ### Evidence forms and minimum application integration
 
 Existing unit, component/composition, subprocess, fake REST, stateful rerun and real filesystem/config
@@ -1003,6 +1017,9 @@ Historical Slice-9 764/764 full-suite and warnings-as-errors results, Ruff pass 
 historical implementation evidence only. The following PR #157 record supplies the Slice-10 evidence
 against G3-SUM-D1 to G3-SUM-D9, distinct from earlier adapter-only success.
 
+Section 9.4 records the applicability of this historical result and its package evidence to the
+assessed revision; it does not present PR #157 as a new run or as PR #162 evidence.
+
 | PR #157 automated check | Recorded result |
 |-------------------------|-----------------|
 | Ruff | PASS |
@@ -1105,10 +1122,10 @@ production code, exception taxonomy and `__main__.py` remain unchanged. Merged t
 | Supported package integration | `tests/test___main__.py`: `test_package_summary_with_real_parsing_generator_and_controlled_transport` | Each status at preflight and relationship PATCH, with real argument/configuration loading, parser, Generator and logging; exact safe logfile/stderr reports, outcome 1, global stop, no success SUMMARY/COMPLETION and unchanged package termination ownership. Only JSON transport is substituted. |
 
 No live Azure DevOps Services validation occurred; no live evidence is supplied by PR #162.
-These results support Release row E within its automated reporting scope. Wider application/integration
-evidence completeness and applicability, D06-D10 event/evidence mapping and required live proof remain
-outstanding; row D remains PARTIALLY SATISFIED and row H NOT SATISFIED. No warnings-as-errors result
-or new test execution is claimed here. Gate 3 remains NOT PASSED.
+These results support Release row E within its automated reporting scope. Section 9.4 now records
+application/integration evidence completeness and applicability and D06-D10 event/evidence mapping.
+Required live proof remains outstanding; row D remains PARTIALLY SATISFIED and row H NOT SATISFIED.
+No warnings-as-errors result or new test execution is claimed here. Gate 3 remains NOT PASSED.
 
 ### Evidence interpretations and scenario allocation — G3-OWN-D06 to G3-OWN-D11
 
@@ -1161,6 +1178,310 @@ revision. Include approved owner decisions and the findings register with CRITIC
 owner/disposition and verified closure evidence; explicit permitted D11 Gate-4 deferrals; reviewer;
 review date; and final dated owner PASS/NOT-PASSED sign-off. Missing or unexecuted evidence remains
 pending. Dossier structure alone cannot satisfy a row or establish Gate-3 PASS.
+
+---
+
+## 9.4 Gate-3 Application/Integration Evidence Mapping
+
+This record maps existing evidence to the mandatory Gate-3 application/integration obligations.
+It supports later Release reconciliation and the future consolidated Gate-3 dossier; it changes no
+behavioural contract or Release acceptance status. Existing automated evidence is sufficient within
+the boundaries below. Required live Services evidence remains separate and incomplete.
+
+### 9.4.1 Assessed Revision and Historical Applicability
+
+The assessed revision is `661102d64180417629ee7a96d36ad5bd40ac5a03` (`main` at review).
+The governing Approved Baseline is Architecture 2.48, Roadmap 1.43, API 2.28, Testing 2.38 and
+Release 1.37, together with Configuration 1.10 and Documentation Input 0.5 for their contracts.
+
+| Historical record | Implementation / merge | Recorded validation | Applicability |
+|-------------------|------------------------|---------------------|---------------|
+| PR #157; Section 9.2 | `666f7aa` / `8e2a57d` | Ruff PASS; 824 passed; 95% coverage; 1,409 statements / 64 missed. | Historical Slice-10 provenance: Generator/application count returns, SUMMARY and complete package integration with controlled transport. Continued regression support comes from PR #162. |
+| PR #162; Section 9.3 | `8515573` / `337116d` | Targeted pytest 652 passed; full pytest 1,018 passed; targeted/full Ruff PASS; 95% coverage; 1,414 statements / 64 missed; `main.py` 100%; `git diff --check` PASS. | Latest recorded implementation-wide regression evidence, including status-aware HTTP reporting, safety, delivery failures, Retry-After omission and package/global-stop coverage. |
+
+Production source, automated tests and `pyproject.toml` are unchanged from PR #162 implementation
+`8515573` / merge `337116d` through assessed revision `661102d`. The source/test/configuration
+comparison is empty; PRs #163, #164 and #165 changed documentation only. Therefore the recorded
+PR #162 Ruff/full-suite/coverage evidence remains applicable to the unchanged implementation and tests
+within its declared automated boundaries. PR #157 remains historical Slice-10 provenance, with
+regression support from PR #162; its results are not relabelled as PR #162 results.
+
+No Ruff/pytest execution is newly claimed by this revision, and no live Services result is claimed.
+Historical execution dates and artefacts must be referenced truthfully where available; commit dates
+are not substitutes for execution dates. Missing result metadata remains identified as missing, not
+invented. The future dossier references these records and records available execution artefacts,
+dates, reviewer and limitations under Sections 9.1/9.3 and G3-OWN-D14.
+
+### 9.4.2 Evidence Levels and Boundary Rules
+
+| Level | Meaning in this mapping |
+|-------|-------------------------|
+| Unit (U) | An individual function or decision with supplied values and, where needed, collaborator doubles. |
+| Component (C) | A bounded application, relationship or REST component; real behaviour inside that boundary with declared doubles outside it. |
+| Filesystem component integration (F) | Real temporary files and configuration loading/validation or Markdown parsing/rendering; synthetic environment and selected injected failures. |
+| Generator component integration (G) | Real Generator preflight/traversal and relevant lifecycle/resolution logic over a fake REST boundary and supplied hierarchy/evidence. |
+| Package/subprocess integration (P) | Actual package adapter and process/application boundaries inside an isolated child process; the particular substitutions remain explicit. |
+| Historical full-suite evidence (H) | Recorded execution result at an identified implementation revision, reused only within demonstrated applicability. |
+| Live Services evidence (L) | Executed authorised application behaviour against actual Azure DevOps Services, including required remote inspection. No such result is supplied here. |
+
+Unit evidence is not package evidence. Package evidence using substituted transport is not live
+Services evidence. Under Section 9.1, evidence may be composed by traceability: not every mandatory
+scenario requires its own complete subprocess test. Substituted collaborators and limitations remain
+explicit, and historical evidence applies only where revision applicability is demonstrated.
+
+The file keys below identify exact current test locations used throughout Section 9.4.
+`KEY::test_name` denotes that named test in the corresponding file.
+
+| Key | File | Real and substituted boundaries |
+|-----|------|--------------------------------|
+| PK | [tests/test___main__.py](../tests/test___main__.py) | Package adapter is real. PK-full is defined in Section 9.4.3. Missing-configuration subprocess uses the real loader; fallback subprocess replaces loader/application execution to induce failure. Adapter-only tests replace `run_process()`. |
+| M | [tests/test_main.py](../tests/test_main.py) | Real application boundary under test; logging tests use real owned handlers/files unless injecting delivery failure. Loader, processor, REST constructor, Generator or configured application execution are replaced as each test specifies. |
+| GO | [tests/generator/test_orchestration.py](../tests/generator/test_orchestration.py) | Full-composition tests use real Generator logic with fake REST and supplied hierarchy. Focused wiring tests additionally substitute preflight/traversal; compatibility-failure propagation substitutes the evaluator. |
+| GR | [tests/generator/test_relationships.py](../tests/generator/test_relationships.py) | Classification, lifecycle or recovery boundary with fake REST. Focused delegation tests may also substitute classification, gate or recovery; the two-run recovery test composes real resolution/lifecycle logic. |
+| RES | [tests/generator/test_resolution.py](../tests/generator/test_resolution.py) | Real resolution over fake WIQL/GET evidence; no network. |
+| ID | [tests/generator/test_identity.py](../tests/generator/test_identity.py) | Real identity/validation logic over supplied source models; deliberate marker substitution for collision evidence. |
+| REST | [tests/azure_devops/test_rest_client.py](../tests/azure_devops/test_rest_client.py) | Real request construction, authentication-header construction, JSON and response handling; fake urllib opener/responses, not Services. |
+| COMP | [tests/azure_devops/test_compatibility.py](../tests/azure_devops/test_compatibility.py) | Real structural evaluator over supplied metadata fixtures. |
+| CFG | [tests/config/test_loader.py](../tests/config/test_loader.py) | Real loader/validator and temporary files with synthetic environment. |
+| CFG-M | [tests/config/test_models.py](../tests/config/test_models.py) | Real configuration model with synthetic PAT. |
+| DOC | [tests/documentation/test_processor.py](../tests/documentation/test_processor.py) | Real parser and temporary files; unreadable-file failure is injected. |
+| DESC | [tests/documentation/test_description_mapping.py](../tests/documentation/test_description_mapping.py) | Real parser/Description preparation and temporary files; selected renderer failures are injected. |
+
+Application evidence resides in M and PK; there is no `tests/application/` directory at this revision.
+Earlier component evidence in Section 8, including Acceptance Criteria and Tags mapping, retains its
+scope. The package success fixture does not exercise every optional source-field combination.
+
+### 9.4.3 Package Integration Evidence
+
+**PK-full** denotes
+`tests/test___main__.py::test_package_summary_with_real_parsing_generator_and_controlled_transport`.
+It composes the real CLI/package adapter, configuration loading/validation, runtime PAT acquisition,
+Markdown parsing, application/bootstrap, Generator, preflight/compatibility, runtime logging,
+execution SUMMARY and process termination. REST endpoint methods, payload builders and endpoint
+structural response validation remain real. `AzureDevOpsRestClient.send_json_request` is the
+controlled transport substitute; `time.sleep` is guarded against use.
+
+| Parameter combination | Recorded assertions and scope |
+|-----------------------|-------------------------------|
+| `success` | Three Markdown documents and 12 semantic items; outcome `[0]`; exact SUMMARY count 12 followed by COMPLETION; silent console. |
+| `empty` | Permitted Markdown prose with zero semantic items; outcome `[0]`; SUMMARY count 0. This is not absence of eligible input files. |
+| `partial-rerun` | Outcomes `[1, 0]`; first PATCH failure leaves two items; later invocation reuses them, repairs MISSING and completes with count 4; only four Creates across both invocations. |
+| `conflict-rerun` | Outcomes `[1, 1, 0]`; initial partial state, then conflicting parent evidence and stop, then recoverable evidence and success. The fixture changes the conflict evidence; the application does not repair CONFLICTING state. |
+| `http-401-preflight` | One request, zero items, outcome 1, exact authentication report and no SUMMARY/COMPLETION. |
+| `http-401-patch` | Two items remain at first PATCH failure; exact authentication report, outcome 1 and no later transport work. |
+| `http-403-preflight` | One request, zero items, outcome 1, exact authorisation report and no SUMMARY/COMPLETION. |
+| `http-403-patch` | Two items remain at first PATCH failure; exact authorisation report, outcome 1 and no later transport work. |
+| `http-429-preflight` | One request, zero items, outcome 1, exact rate-limit report and no SUMMARY/COMPLETION. |
+| `http-429-patch` | Two items remain at first PATCH failure; exact rate-limit report, outcome 1 and no later transport work. |
+
+HTTP cases assert one exact stderr message and one CRITICAL logfile report without generic duplication,
+no DELETE and no sleep. Rerun failure snapshots have no success SUMMARY/COMPLETION; the successful
+summary describes only its own invocation. Synthetic source/configuration/remote sentinels are absent
+from application output. Lower-level REST tests separately establish header handling and HTTP parsing.
+
+The child runs an instrumented `-c` harness using `runpy.run_module(..., run_name="__main__")`.
+The actual adapter raises `SystemExit`; the harness records it, retains simulated remote state for
+reruns and exits the child with the final outcome. This is strong package integration evidence, not
+unintercepted repeated OS-process execution or live validation. No real HTTP, TLS, authentication
+exchange or Services state is exercised. The fake transport does not independently establish every
+remote field/relationship or actual process compatibility.
+
+`PK::test_adapter_boundary_success_subprocess` replaces `run_process()` and proves only adapter
+termination. It must not be cited as complete application-success evidence. Conversely,
+`PK::test_real_package_subprocess_reports_missing_configuration` exercises the actual `python -m`
+missing-configuration path. `PK::test_package_subprocess_real_fallback_suppresses_unexpected_details_and_traceback`
+exercises the real fallback before/after logger initialisation with lower collaborators substituted.
+
+### 9.4.4 Requirement-to-Evidence Mapping
+
+Document abbreviations are A = Architecture, API = API Specification, Cfg = Configuration and
+DI = Documentation Input. Sections 9.1/9.3 and A Section 13.5 D11 govern every row. Levels and
+collaborator boundaries are defined in Section 9.4.2; historical execution applicability is H in
+Section 9.4.1. All rows have sufficient reusable automated evidence within those boundaries.
+
+In the live column, **Yes** identifies required related corroboration in the minimum live proof,
+not a requirement to induce every negative case live. **No separate case** means the specific local
+or negative boundary can be evidenced automatically; it does not waive G3-D2 or D11 allocation review.
+
+| Obligation / normative source | Strongest reusable tests/evidence | Level | Proven boundary and key limitation | Additional live corroboration |
+|-------------------------------|----------------------------------|-------|------------------------------------|-------------------------------|
+| Complete supported application success; Section 9.1, A 13.4 D9 | PK-full `success` | P | Real configuration/parser/Generator/logging/adapter success; JSON transport substituted. | Yes: actual Services application success. |
+| Configuration/bootstrap success; Cfg 5–8, A 7.1.2–7.1.3 | `CFG::test_uses_the_canonical_default_configuration_path`, `CFG::test_loads_the_explicit_cli_configuration_file`, `M::test_composes_application_bootstrap_with_the_exact_collaborator_values`; PK-full | F/C/P | Default/explicit loading and exact bootstrap composition; M uses loader/application doubles, PK-full exercises explicit real loading. | No separate case. |
+| Controlled configuration failure; Cfg 7, A 7.1.4–7.1.6 | `PK::test_real_package_subprocess_reports_missing_configuration`, `CFG::test_reports_malformed_toml`, `CFG::test_requires_a_non_empty_runtime_pat`, `M::test_propagates_configuration_failure_without_invoking_slice_1` | F/C/P | Fixed failure, no application continuation; actual missing-file package result 1 without logfile. Other cases are composed evidence. | No separate case. |
+| Source/documentation failure; DI 13, A 7.1.1/7.3/11 | `DOC::test_rejects_invalid_utf8`, `DOC::test_reports_an_unreadable_matching_file`, `DESC::test_rejects_missing_or_whitespace_only_description`, `M::test_propagates_documentation_failure_without_constructing_other_collaborators`, `M::test_run_process_maps_each_controlled_failure_to_one` | F/C | Parser failures, no later REST construction/Generator and category reporting; not one malformed-source package run. | No separate case. |
+| Logging initialisation failure; Cfg 6.4, A 7.1.6 | `M::test_logging_initialisation_failure_is_a_controlled_application_error`, `M::test_partial_logging_initialisation_failure_closes_the_created_handler` | C | Fixed stderr, outcome 1, no active/fallback handler; injected constructor/attachment failure. | No separate case. |
+| Project/metadata preflight failure; API 7.1, A 7.4 | `GO::test_project_failure_propagates_once_without_later_preflight_requests`, `GO::test_metadata_failure_propagates_without_later_metadata_or_validation_requests`; PK-full HTTP preflight cases | G/P | No later preflight/persistence; package cases stop after one request. Fake REST failure. | Yes for real successful preflight; no mandated live rejection case. |
+| Structural compatibility; API 7.1, Section 9 | `COMP::test_accepts_complete_compatible_evidence_without_returning_persistence_authority`, `COMP::test_rejects_missing_required_work_item_type`, `COMP::test_rejects_missing_required_type_specific_field_evidence`, `COMP::test_rejects_incompatible_global_identity_evidence`, `COMP::test_rejects_incompatible_identity_type_specific_evidence`, `GO::test_compatibility_failure_prevents_every_validation_only_request` | U/G | Real evaluator acceptance/rejection plus injected evaluator failure propagation in GO; fixtures do not prove actual project compatibility. | Yes: actual process/field compatibility. |
+| Per-candidate validation; API 7.1, A 7.4 | `GO::test_coordinates_complete_preflight_in_source_order_and_returns_minimal_state`, `GO::test_validation_checks_each_same_type_candidate_with_its_actual_optional_values`, `REST::test_validates_work_item_create_with_the_exact_endpoint_contract` | G/C | Every actual candidate checked in order, optional-value differences and exact validation-only request; fake acceptance. | Yes: actual candidate acceptance. |
+| Candidate rejection; API 7.1 | `GO::test_validation_failure_stops_after_the_failing_candidate_without_retry`, `GO::test_real_generator_orchestration_preflight_failure_preserves_mutation_barrier`, `REST::test_validation_only_create_uses_the_existing_controlled_http_failure` | G/C | Mid-sequence rejection stops before persistence; no claim about an actual target's rejecting rule. | No separate case; D11 scenario allocation remains. |
+| Persistence barrier; A 7.4, API 7.1 | `GO::test_real_generator_orchestration_crosses_mutation_barrier_before_traversal`, `GO::test_real_generator_orchestration_preflight_failure_preserves_mutation_barrier`, `GO::test_rejects_malformed_preflight_state_before_persistent_operations` | G | Complete validation before lookup/mutation; invalid state/failure prevents traversal. Fake REST. | Yes: real supported execution corroboration. |
+| Identity/collision rejection; API 8.3.1, DI 12 | `ID::test_duplicate_logical_identity_takes_precedence_over_marker_collision`, `ID::test_distinct_logical_identities_with_one_complete_marker_fail`, `GO::test_source_identity_failure_prevents_all_rest_activity` | U/G | Duplicate/collision failure before external work; collision fixture deliberately forces marker equality. | No separate case. |
+| Persistent Create; API 8.1, A 7.4 | `GO::test_creates_a_new_root_once_and_returns_only_its_id`, `GR::test_coordinates_new_child_relationship_lifecycle`, `REST::test_creates_work_item_with_the_exact_persistent_endpoint_contract`; PK-full | C/G/P | One Create and real request contract; simulated rather than actual persistence. | Yes. |
+| Parent-child PATCH; API 8.2 | `GR::test_coordinates_new_child_relationship_lifecycle`, `REST::test_builds_the_exact_parent_child_relationship_json_patch`, `REST::test_patches_parent_child_relationship_with_the_exact_endpoint_contract`; PK-full | U/C/P | Immediate PATCH with Create ID/revision and exact payload/endpoint; no independent Services inspection. | Yes. |
+| Downstream failure/global stop; A 7.4/11, API 10 | `GO::test_real_generator_orchestration_stops_all_later_work_after_persistence_failure`, `GO::test_failure_stops_later_sibling_root_and_document`, `GO::test_relationship_patch_failure_stops_later_work`; PK-full HTTP PATCH cases | G/P | No later descendants/siblings/roots/documents or transport; GO status injection is at resolution after prior persistence. | No separate negative case. |
+| Unexpected application fallback; A Slice 9 | `M::test_run_process_handles_unexpected_exception_after_exactly_one_main_call`, `PK::test_package_maps_real_unexpected_fallback_to_system_exit_one`, `PK::test_package_subprocess_real_fallback_suppresses_unexpected_details_and_traceback` | C/P | Actual fixed fallback/outcome/traceback suppression; lower failure-producing collaborators substituted. | No separate case. |
+| Accepted partial persistence; A 11, API 8.5 | `GR::test_recovers_a_created_child_on_a_second_run_after_initial_relationship_failure`; PK-full `partial-rerun` | C/P | Created items survive PATCH failure without success records; remote state is simulated. | No forced live partial failure required. |
+| Later invocation recovery; API 8.5, Section 9.1 | `GO::test_later_run_recovers_created_child_without_duplicate_create`; PK-full `partial-rerun` / `conflict-rerun` | G/P | Later invocation can reuse/repair/complete; not automatic retry or independent OS-process recovery evidence. | Yes: later unchanged-input live invocation. |
+| Identity-based reuse; API 8.3–8.4, DI 12 | `RES::test_resolves_one_matching_work_item_as_verified_existing_evidence`, `RES::test_rejects_ambiguous_wiql_evidence_without_retrieving_a_work_item`, `RES::test_rejects_conflicting_existing_work_item_evidence`; PK-full reruns | C/P | Valid identity authorises reuse; ambiguous/conflicting evidence does not authorise Create. No real WIQL execution. | Yes. |
+| Fresh relationship inspection; API 8.5 | `GR::test_recovers_a_created_child_on_a_second_run_after_initial_relationship_failure`, `REST::test_retrieves_work_item_relationship_state_with_the_exact_get_contract` | C | Fresh GET/revision used for repair; fake response and retained simulated state. | Yes: actual reused-state inspection. |
+| MISSING repair; API 8.5 | `GR::test_recovers_missing_parent_relationship_with_fresh_evidence`, `GO::test_reused_non_root_missing_relationship_repairs_before_descendant`; PK-full `partial-rerun` | C/G/P | Missing parent repaired before descendants with fresh revision; no generic repair. | No forced live partial-failure case required. |
+| CORRECT continuation; API 8.5 | `GR::test_gates_correct_reused_child_for_descendant_processing_without_rest_operation`, `GO::test_correct_reused_non_root_allows_descendant_processing`, `GO::test_generator_counts_source_items_once_across_documents_and_roots` | U/G | CORRECT skips PATCH and permits descendants, including all-reused/mixed Generator paths; no dedicated CORRECT package parameter. | Yes: live unchanged-input reuse corroboration. |
+| CONFLICTING stop; API 8.5 | `GR::test_classifies_reused_child_relationship_state`, `GR::test_blocks_conflicting_reused_child_descendant_processing_without_rest_operation`, `GO::test_conflicting_reused_non_root_stops_descendant_and_later_work`; PK-full `conflict-rerun` | U/G/P | Wrong/multiple/duplicate parents block repair/continuation; conflict is simulated. | No disruptive live conflict case required. |
+| HTTP 401; API 6.1, A 13.5 D01–D03 | `REST::test_http_error_is_controlled_and_discards_the_error_body`, `M::test_each_reachable_post_initialisation_controlled_failure_is_logged_once`; PK-full 401 cases | C/P | Exact authentication report replaces generic in both destinations; no diagnosis of expiration/revocation. | No separate case. |
+| HTTP 403; API 6.1–6.2, A 13.5 D04 | `REST::test_http_403_is_controlled_without_retry_or_credential_disclosure`, `M::test_each_reachable_post_initialisation_controlled_failure_is_logged_once`; PK-full 403 cases | C/P | Distinct exact authorisation report and preserved failure; no claim of identifying missing permission. | Real permissions require live proof, not a forced 403. |
+| HTTP 429 / Retry-After omission; API 6.1/11, A 13.5 D05 | `REST::test_429_headers_are_ignored_through_terminal_reporting`; PK-full 429 cases | C/P | Exact rate-limit report; no header access, sleep or disclosure; package transport alone does not exercise headers. | No deliberate throttling required. |
+| Generic Azure DevOps REST failure; API 6.1 | `M::test_each_reachable_post_initialisation_controlled_failure_is_logged_once`; PK-full first rerun failure | C/P | Other HTTP/base/transport/response/compatibility failures retain `Azure DevOps error.`; not every status is a package case. | No separate case. |
+| Secret-safe reporting; A 10, Slice 9, 13.4 D7, 13.5 D01 | `M::test_each_reachable_post_initialisation_controlled_failure_is_logged_once`, `M::test_unexpected_events_are_secret_safe_owned_and_not_duplicated_across_invocations`; PK-full; Section 9.4.6 | C/P | Fixed output and sentinel exclusions; not redaction of all internal exceptions or review of live artefacts. | Yes: live-procedure/evidence safety. |
+| Logger ownership/isolation; A 7.1.6–7.1.8, 13.4 D4, 13.5 D02 | `M::test_application_events_bypass_non_owned_named_root_and_unrelated_handlers`, `M::test_repeated_invocations_replace_only_owned_handlers_and_do_not_duplicate_records`, `M::test_configuration_error_has_no_file_event_and_deactivates_a_stale_handler` | C | Current handler only, stale closure and no duplicates; application work substituted. | No separate case. |
+| Logfile delivery failure; A 7.1.6, Slice 9, 13.4 D6, 13.5 D02 | `M::test_secondary_log_write_failure_preserves_the_primary_controlled_failure`, `M::test_unexpected_log_failure_is_secondary_without_retry_or_fallback`, `M::test_summary_failure_is_silent_best_effort_and_completion_is_independent` | C | Ordinary secondary failures preserve outcome and applicable stderr/COMPLETION; no guaranteed log delivery or recovery. | No separate case. |
+| START; A 7.1.8, 13.5 D06 | `M::test_successful_run_emits_only_eligible_fixed_lifecycle_records_in_order`; PK-full | C/P | Exact INFO START after configuration/logger initialisation; filtering/best effort limits absence interpretation. | No separate case. |
+| SUMMARY; A 13.4, Section 9.2 | `GO::test_generator_counts_source_items_once_across_documents_and_roots`, `GO::test_generator_returns_zero_for_permitted_document_without_semantic_items`, `M::test_composes_the_configured_application_run_once`; PK-full | G/C/P | Successful invocation-local processed-source count, zero and created/reused/mixed paths; not a mutation inventory. | No separate summary case; D08/D09 still require live proof. |
+| SUMMARY filtering; A 13.4 D4 | `M::test_summary_honours_logger_and_handler_filtering`, `M::test_summary_accepts_replacement_records_from_normal_logger_filters`, `M::test_successful_run_emits_only_eligible_fixed_lifecycle_records_in_order` | C | Logger/handler filters, thresholds and disabled/no-handler cases; no guaranteed delivery. | No separate case. |
+| COMPLETION; A 7.1.8, 13.4 D5–D6 | `M::test_successful_run_emits_only_eligible_fixed_lifecycle_records_in_order`, `M::test_lifecycle_delivery_failure_preserves_silent_success_without_retry_or_fallback`, `M::test_summary_failure_is_silent_best_effort_and_completion_is_independent`; PK-full | C/P | Separate exact event after normal return/SUMMARY, independently eligible after ordinary summary failure; not remote inspection. | No separate case. |
+| Failure without SUMMARY/COMPLETION; A 13.4 D2 | `M::test_each_reachable_post_initialisation_controlled_failure_is_logged_once`, `M::test_unexpected_exception_after_start_reports_failure_without_completion_or_detail`, `PK::test_real_package_subprocess_reports_missing_configuration`; PK-full failures | C/P | Failed and partial runs emit no success records; absence does not prove absence of mutation. | No separate case. |
+| No retry/backoff; API 6.1/11, A 13.3 | `REST::test_network_and_timeout_failures_are_controlled_without_retry`, `REST::test_persistent_create_preserves_http_failure_without_retry`, `REST::test_parent_child_relationship_patch_preserves_http_failure_without_retry`, `REST::test_429_headers_are_ignored_through_terminal_reporting`; PK-full | C/P | Single attempts, stopped work and guarded sleep; no actual network failure in package evidence. | Yes: live record must retain approved behaviour. |
+| No rollback/compensation; A 11/13.3, API 8.5 | `GR::test_recovers_a_created_child_on_a_second_run_after_initial_relationship_failure`, `GO::test_real_generator_orchestration_stops_all_later_work_after_persistence_failure`; PK-full | C/G/P | Partial state retained and no later compensation; HTTP cases exclude DELETE. Simulated state. | Yes: live record must retain approved behaviour. |
+| No duplicate Create during valid reuse; API 8.4 | `GO::test_reuses_root_without_create_or_relationship_work`, `GO::test_later_run_recovers_created_child_without_duplicate_create`; GR two-run test in Section 9.4.5; PK-full reruns | C/G/P | Existing valid identities skip Create across simulated invocations; no guarantee for changed identities or arbitrary external concurrency. | Yes: actual no-duplicate inspection. |
+| Process-control/stderr boundaries; A Slice 9, 13.4 D6, 13.5 D02 | `M::test_lifecycle_best_effort_does_not_swallow_process_control_exceptions`, `M::test_unexpected_boundaries_preserve_process_control_exceptions`, `M::test_summary_preserves_non_exception_failures`, `M::test_http_terminal_delivery_retains_filtering_and_stderr_failure_semantics`, `M::test_unexpected_stderr_delivery_failure_propagates_without_retry_or_fallback` | C | Tested non-Exception failures and stderr errors propagate; no blanket outcome-1 guarantee for interruptions/broken output. | No separate case. |
+
+Controlled-terminal HTTP delivery retains its role-specific owned-handler profile: handler filtering
+applies, while logger filtering/disabled state is not globally imposed on that direct profile.
+SUMMARY separately applies normal logger and handler filtering. This mapping does not harmonise
+historical delivery profiles or add events. No missing mandatory automated test is identified.
+
+### 9.4.5 Stateful Failure and Rerun Evidence
+
+| Existing test/scenario | Stateful observation | Limitation |
+|------------------------|----------------------|------------|
+| `GR::test_recovers_a_created_child_on_a_second_run_after_initial_relationship_failure` | Real resolution/lifecycle first Creates child 17 at revision 3, then PATCH fails. Second resolution reuses the child; fresh relationship GET supplies revision 8 for repair. Exactly one Create across both simulated runs. | Fake REST retains the item; no Services operation. |
+| `GO::test_later_run_recovers_created_child_without_duplicate_create` | Repeated traversal retains fake work items; the fixture enables rediscovery and clears the injected PATCH failure. Create list remains only Epic and Feature. | Supplied preflight state and fake discoverability; not a fresh OS-process invocation. |
+| PK-full `partial-rerun` | Connects surviving items, identity reuse and MISSING repair to real configuration/parser/Generator/logging/package outcomes and one later successful count. | Invocations share the instrumented child and simulated remote dictionaries. |
+| PK-full `conflict-rerun` | Connects CONFLICTING stop to fixed process reporting and absence of success records, followed by success when the supplied state permits repair. | The fixture changes conflicting evidence; no application conflict repair is claimed. |
+
+Together with the barrier, global-stop, resolution and relationship cases in Section 9.4.4, existing
+evidence demonstrates validation before persistence, global stop after the first relevant failure,
+legitimate partial persistence, later invocation recovery, identity reuse, no duplicate Create,
+MISSING-only repair, CORRECT continuation, CONFLICTING stop, no automatic retry and no
+rollback/compensation. Later invocation recovery is not an automatic retry within the failed run.
+
+**No mandatory Gate-3 failure/rerun automated obligation is currently unsupported.** This does not
+prove actual remote Services reuse, remote duplicate absence or independently inspected relationships.
+
+### 9.4.6 Secret-Safety Evidence
+
+This assessment concerns supported process/application reporting under Architecture Slice 9,
+G3-SUM-D7 and G3-OWN-D01. It does not state that all internal/lower-level exceptions are redacted.
+Some lower-level exceptions retain causes or numeric relationship context; approved fixed reporting
+does not emit those values. Direct lower-level callers and non-Exception propagation retain their
+separate contracts. No general redaction framework is introduced.
+
+| Prohibited material | Applicable existing evidence | Proven scope / limitation |
+|---------------------|------------------------------|---------------------------|
+| PAT | `CFG-M::test_configuration_keeps_the_runtime_pat_out_of_its_representation`, `CFG::test_rejects_a_pat_toml_key_without_exposing_its_value`; PK-full | Synthetic PAT excluded from model representation, invalid-key diagnostics and application output; not a live credential audit. |
+| Derived Authorization | `REST::test_http_403_is_controlled_without_retry_or_credential_disclosure`, `M::test_each_reachable_post_initialisation_controlled_failure_is_logged_once`; PK-full | REST test checks actual synthetic Basic material against exception representation/state; terminal tests exclude Authorization sentinels. PK-full bypasses Basic construction. |
+| Exception detail | `M::test_each_reachable_post_initialisation_controlled_failure_is_logged_once`, `M::test_unexpected_events_are_secret_safe_owned_and_not_duplicated_across_invocations` | Exact fixed output; sentinel exception string/repr methods fail if called. |
+| Cause/context/traceback | M unexpected-event test above; `PK::test_package_subprocess_real_fallback_suppresses_unexpected_details_and_traceback` | Handled Exception fallback excludes causes/context and native traceback; not blanket suppression of process-control failures. |
+| Request/response body | M controlled/unexpected sentinel tests above; `REST::test_http_error_is_controlled_and_discards_the_error_body`, `REST::test_429_headers_are_ignored_through_terminal_reporting`; PK-full | Body sentinels excluded from reports; no claim of erasing all request/exception-chain memory. |
+| URL and local path | `M::test_run_process_does_not_render_controlled_failure_detail`, M unexpected-event test; PK-full | Fixed output excludes supplied URLs, paths and temporary directory. |
+| Organisation/project/configuration values | `M::test_successful_run_emits_only_eligible_fixed_lifecycle_records_in_order`, M unexpected-event test; PK-full | Supplied configuration sentinels excluded; future live artefacts remain unreviewed. |
+| Source title/content/hierarchy | M controlled/unexpected sentinel tests; PK-full | Real parsed synthetic Markdown excluded from package output; no per-item diagnostic entitlement. |
+| Source identities/digests | M controlled HTTP sentinel cases; PK-full | Synthetic digest and generated identity markers excluded, including each identity retained by the package fixture. |
+| Remote IDs | M controlled HTTP sentinel cases; PK-full | Numeric remote/conflict sentinels and exact output checks; not generic numeric redaction. |
+| Retry-After | `REST::test_429_headers_are_ignored_through_terminal_reporting` | Sensitive, malformed and numeric header values tested; no header access, output or sleep. |
+| Other prohibited dynamic/numeric diagnostics | Exact-message/LogRecord assertions in M; `M::test_summary_failure_is_silent_best_effort_and_completion_is_independent`; PK-full | Approved fixed output and summary count allowlist, with silent secondary failures. Contract prohibition remains broader than an exhaustive enumeration of sentinel values. |
+
+The evidence establishes approved output allowlists and representative direct exclusions, not a test
+for every conceivable secret value. The summary-specific processed-count and normal logfile-envelope
+permissions remain unchanged. Concrete live-procedure and resulting evidence safety still require
+review under Release row I, G3-D2 and G3-OWN-D12; automated safety alone does not close that row.
+
+### 9.4.7 D06–D10 Applicability
+
+Architecture Section 13.5 remains authoritative for these approved no-new-event interpretations.
+
+| Decision | Approved interpretation and automated applicability | Remaining limitation |
+|----------|-----------------------------------------------------|----------------------|
+| D06 — configuration success | START establishes that configuration loading/validation and logger initialisation completed and application execution was reached. M lifecycle-order/initialisation tests and PK-full connect this interpretation to the runtime path. | Does not prove parsing, connectivity or persistence; filtering/best effort may suppress START, so absence does not establish validation failure. |
+| D07 — documentation processing | Successful application path + SUMMARY + parser/application/integration evidence is sufficient. PK-full exercises real parsing; Section-8 source-mapping tests retain detailed coverage. | No new processing-success event, source titles, paths or document counters are required. |
+| D08 — communication | Automated package/REST/Generator evidence exists and connects successful Generator completion to SUMMARY. | Live Azure DevOps Services communication proof remains mandatory; substituted transport cannot provide it. |
+| D09 — creation/reuse | Automated Create/PATCH/reuse/rerun evidence exists and connects to SUMMARY. | Live remote creation/reuse inspection remains mandatory. SUMMARY is a processed-source count, not a mutation inventory or created-item count. |
+| D10 — warnings | No distinct warning taxonomy/event is required. `CFG::test_normalizes_logging_level_and_validates_its_type` and M five-threshold tests support WARNING as a configured logging threshold. | No approved warning-worthy condition exists; no warning scenario is invented. |
+
+### 9.4.8 Evidence Classification
+
+**A. Sufficient existing automated evidence**
+
+Application success; configuration/source failures; preflight/barrier; Create/PATCH contracts;
+global stop; unexpected fallback; partial rerun; identity reuse; MISSING/CORRECT/CONFLICTING;
+lifecycle/SUMMARY; HTTP reporting; secret-safe reporting; handler/delivery behaviour; and no
+retry/backoff/rollback/compensation are supported within the declared automated boundaries.
+
+**B. Existing evidence requiring traceability/applicability documentation**
+
+This Draft records the B/D/G/I/J consolidated mapping, D06–D10 applicability, component/package
+boundaries, stateful-rerun limitations, PR #157/#162 provenance and applicability to `661102d`.
+Review and baseline promotion of this record remain pending; later Release reconciliation and
+the consolidated dossier should reference it rather than duplicate all test prose.
+
+**C. Genuine missing mandatory evidence**
+
+- Minimum real Azure DevOps Services validation under Section 9.1 / G3-D2.
+- D08 live communication proof.
+- D09 live creation/reuse remote inspection.
+- Concrete live-procedure/evidence safety confirmation under Release row I / G3-OWN-D12.
+- Broader later findings/dossier/sign-off governance work under D11/D14 and Release rows M/N/O.
+
+**No missing mandatory automated test has been identified.** No new automated test is required by
+this reconciliation; the remaining live and governance obligations are not satisfied by that conclusion.
+
+### 9.4.9 Remaining Live-Only Evidence
+
+Existing automated tests cannot establish the following required actual-environment observations:
+
+- Real Services connectivity and authenticated communication.
+- Real least-privilege PAT scopes and project/Area Path permissions, including tag-creation permission
+  only when required.
+- Actual target process compatibility, identified truthfully as supported Scrum or inherited/customised
+  compatible Scrum, and actual required standard/type-specific field compatibility.
+- Actual `Custom.BacklogGeneratorSourceIdentity` compatibility and external prerequisite provisioning.
+- Actual candidate validation-only acceptance by the target project/process.
+- Real persistent Create across the supported hierarchy/work-item types and actual mapped remote fields.
+- Real parent-child PATCH and independent remote inspection of items and relationships.
+- A later unchanged-input invocation, real identity reuse and real no-duplicate verification.
+- D08 live communication and D09 live creation/reuse inspection evidence alongside the automated record.
+- Safe live credential handling and safe collection/review of live evidence without prohibited diagnostics.
+
+Section 9.1 and G3-OWN-D12 retain the environment-specific prerequisites: an isolated dedicated project
+inside an existing TEST organisation, synthetic approved input, truthful process/field identification,
+least privilege, writable logging, expected/actual results, explicit mutation authorisation and an
+approved cleanup-or-retention decision. No live execution is authorised or performed by this revision.
+
+No automated live harness is required; controlled manual execution with documented results is acceptable.
+Deliberate throttling/429 generation and disruptive negative scenarios are not required by this evidence
+mapping and are not authorised. This does not waive Section-9 rejection scenarios or the D11 allocation
+review. Inherited/customised Scrum evidence must be labelled truthfully and must not be represented as
+proof of unmodified standard Scrum. Minimum Gate-3 live proof cannot be deferred; final RC regression
+and repeated live validation remain at Gate 4.
+
+### 9.4.10 Release-Row Implications
+
+[Release Section 8.1](07-Release.md#81-review-gate-3-operational-readiness-acceptance) owns acceptance
+statuses. The following records potential implications only; no row is promoted by this Draft.
+
+| Row | Current status | Potential implication of accepted mapping | Remaining boundary |
+|-----|----------------|-------------------------------------------|--------------------|
+| B — operational implementation completeness | PARTIALLY SATISFIED | Mapping establishes no identified missing mandatory Gate-3 production capability and connects implementation to reusable tests. Later Release reconciliation may assess whether B can become SATISFIED. | This does not close D/H live evidence or imply Gate-3 PASS. |
+| D — observability/logging | PARTIALLY SATISFIED | Automated event/reporting mapping and D06–D10 applicability become complete. | D08/D09 live evidence remains; mapping alone cannot make D SATISFIED. |
+| G — integration/system validation | PARTIALLY SATISFIED | Integrated success/failure/rerun evidence becomes explicitly traceable, with actual collaborator boundaries. Later Release reconciliation may assess whether G can become SATISFIED. | Required live Services proof remains independently under H / G3-D2. |
+| I — security/secret safety | PARTIALLY SATISFIED | Automated reporting/security evidence and preserved protections become traceable. | Live-procedure/evidence safety remains; mapping alone cannot make I SATISFIED. |
+| J — failure/rerun behaviour | PARTIALLY SATISFIED | Failure/rerun behaviour becomes fully connected to runtime/package evidence. Later Release reconciliation may assess whether J can become SATISFIED. | Actual Services reuse/inspection remains required under H/D09. |
+
+The future versioned Gate-3 dossier should reference this detailed mapping and add its required A–O
+index, execution metadata/artefacts, live records, findings, explicit permitted deferrals, reviewer and
+dated owner sign-off. Release should receive resulting acceptance-state reconciliation later.
+No Release status changes, no Slice 11 is allocated, Gate 3 remains NOT PASSED, Gate 4 remains FUTURE
+and Version 1.0 remains PRE-RELEASE. GUI governance is unchanged; broader DR remains outside V1.0
+under G3-D3 rather than deferred to Gate 4.
 
 ---
 
