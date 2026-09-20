@@ -6,7 +6,7 @@
 
 **Version:** 1.38
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-20
 
@@ -86,7 +86,7 @@ execution evidence is produced. PR #162 supplies no live Azure DevOps Services v
 | 1.35 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Reconciled merged Slice-10 implementation and automated validation, recording row F as satisfied while Gate 3 remains not passed. |
 | 1.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded owner-approved Gate-3 closure decisions and reconciled the CRITICAL/HIGH threshold while preserving open acceptance statuses. |
 | 1.37 | 2026-09-17 | Approved Baseline | Jack Spaetjens | Reconciled PR #162 implementation/evidence and rows D/E; Gate 3 remains not passed. |
-| 1.38 | 2026-09-20 | Draft | Jack Spaetjens | Reconciled Gate-3 operational implementation, integration and failure/rerun acceptance against Approved Baseline Testing 2.39, promoting B, G and J while retaining live-evidence and governance blockers. |
+| 1.38 | 2026-09-20 | Approved Baseline | Jack Spaetjens | Reconciled Gate-3 operational implementation, integration and failure/rerun acceptance against Approved Baseline Testing 2.39, promoting B, G and J while retaining live-evidence and governance blockers. |
 
 ---
 
