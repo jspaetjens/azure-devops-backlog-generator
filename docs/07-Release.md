@@ -4,9 +4,9 @@
 
 > *This document defines the release management process, versioning strategy and deployment governance for Version 1.0 of the Azure DevOps Backlog Generator.*
 
-**Version:** 1.38
+**Version:** 1.39
 
-**Status:** Approved Baseline
+**Status:** Draft
 
 **Last Updated:** 2026-09-20
 
@@ -16,14 +16,13 @@
 
 **Author:** Jack Spaetjens
 
-**Revision scope:** This Draft reconciles Gate-3 acceptance against the Approved Baseline
-application/integration evidence mapping in Testing 2.39 Section 9.4. The governing baseline is
-Architecture 2.48, Roadmap 1.43, API 2.28, Testing 2.39 and Release 1.37 at main
-`fc88b7388f8d669c3dd3e8cd9c031db1f3abd72c`. Rows B, G and J become SATISFIED within their
-documented boundaries; all other A-O statuses remain unchanged. G3-OWN-D01 to G3-OWN-D14 and
+**Revision scope:** This Draft reconciles Release criterion L following approval of Operator Guide
+1.0 as Approved Baseline, with discoverability provided by README. L becomes SATISFIED;
+all other A-O statuses remain unchanged from Release 1.38 Approved Baseline at main
+`9519f28aa1571cfb2acc9d4e0bbf3cb0332df7ff`. G3-OWN-D01 to G3-OWN-D14 and
 reconciliation-only G3-REC-R01 remain unchanged and authoritative in
 [Architecture Section 13.5](02-Architecture.md#135-gate-3-owner-approved-closure-decisions).
-This Release 1.38 reconciliation awaits document review and baseline promotion. The HTTP
+This Release 1.39 reconciliation awaits document review and baseline promotion. The HTTP
 reconciliation is already approved. Status-aware HTTP 401/403/429 reporting under D01-D05 is
 IMPLEMENTED + AUTOMATED VALIDATION COMPLETE; Testing Section 9.3 records the supplied PR #162 evidence.
 Historical slice contracts, `None` returns, summary exclusions and test results retain their original
@@ -34,8 +33,8 @@ G3-D1 to G3-D3 and G3-SUM-D1 to G3-SUM-D9 remain unchanged. Slices 1–9 remain 
 Slice 10 remains IMPLEMENTED + AUTOMATED VALIDATION COMPLETE + Approved Baseline, with PR #157
 (`666f7aa`, merge `8e2a57d`) automated evidence preserved. Release row F remains SATISFIED;
 row H remains NOT SATISFIED. Gate 3 remains NOT PASSED, Gate 4 FUTURE and Version 1.0 PRE-RELEASE.
-Operator Guide 1.0 is delivered as Draft with a discoverable README link; owner review/approval
-and baselining remain pending. D08/D09 live proof, live-procedure/evidence safety, documentation
+Operator Guide 1.0 is Approved Baseline with a discoverable README link; L is SATISFIED.
+D08/D09 live proof, live-procedure/evidence safety, documentation
 consistency, findings, the consolidated dossier and final owner sign-off remain open.
 Continuation is dependency-first; no Slice 11 is allocated. No new runtime feature or automated
 test is required by this reconciliation. No Ruff, pytest or live operation is performed and no new
@@ -87,6 +86,7 @@ execution evidence is produced. PR #162 supplies no live Azure DevOps Services v
 | 1.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded owner-approved Gate-3 closure decisions and reconciled the CRITICAL/HIGH threshold while preserving open acceptance statuses. |
 | 1.37 | 2026-09-17 | Approved Baseline | Jack Spaetjens | Reconciled PR #162 implementation/evidence and rows D/E; Gate 3 remains not passed. |
 | 1.38 | 2026-09-20 | Approved Baseline | Jack Spaetjens | Reconciled Gate-3 operational implementation, integration and failure/rerun acceptance against Approved Baseline Testing 2.39, promoting B, G and J while retaining live-evidence and governance blockers. |
+| 1.39 | 2026-09-20 | Draft | Jack Spaetjens | Reconciled Release criterion L following approval of Operator Guide 1.0. |
 
 ---
 
@@ -161,6 +161,9 @@ Release management shall follow the following principles:
 ---
 
 # 5. Current Release Status
+
+Release 1.39 Draft records L as SATISFIED: Operator Guide 1.0 is Approved Baseline and
+discoverable through README. All other acceptance statuses remain unchanged.
 
 Release 1.38 Draft records B, G and J as SATISFIED against Approved Baseline Testing 2.39
 Section 9.4. Mandatory Gate-3 production implementation and automated/integration evidence are
@@ -429,8 +432,8 @@ Only approved releases shall be published.
 ## 8.1 Review Gate 3 Operational Readiness Acceptance
 
 **Gate 3 is FUTURE / NOT YET PASSED and currently NOT READY.**
-This Draft reconciles operational implementation, integration and failure/rerun acceptance against
-Approved Baseline Testing 2.39 Section 9.4 within the unchanged approved Gate-3 framework.
+This Draft reconciles L against Approved Baseline Operator Guide 1.0 and README discoverability
+within the unchanged approved Gate-3 framework.
 Gate 3 answers: "Is the application operationally complete and sufficiently evidenced to enter final
 release-candidate validation?" Gate 4 remains the Release Candidate / final pre-release gate. Neither
 approval of this contract nor a later Gate-3 PASS constitutes RC acceptance or final Version-1.0 approval.
@@ -452,7 +455,7 @@ supplies the accepted mapping and historical applicability record supporting B/G
 Its assessed revision is `661102d64180417629ee7a96d36ad5bd40ac5a03`; source, tests and
 `pyproject.toml` remain unchanged from PR #162 through this revision's starting HEAD `fc88b73`.
 Only Testing documentation changed between `661102d` and `fc88b73`. Historical results retain
-their original provenance; no new execution or test dates are inferred. Only B, G and J change
+their original provenance; no new execution or test dates are inferred. Only L changes
 status in this Draft. All other row statuses are retained; no new execution evidence is produced.
 
 ### Status and closure model
@@ -484,15 +487,15 @@ remaining release-scenario allocation must be explicit under the deferral rule.
 | I. Security/secret safety | PRD NFR-005; Architecture Section 10 and Slice 9; API Sections 5-6.2; Configuration Section 8 | Existing credential/transport/reporting protections remain; newly approved output and live evidence expose no credentials or prohibited diagnostics. | Testing 2.39 Section 9.4.6 maps automated safety evidence and preserved protections; live-procedure safety and credential/evidence handling during actual Services execution remain unverified. | PARTIALLY SATISFIED | VALIDATION |
 | J. Failure/rerun behaviour | PRD FR-007/FR-010; Architecture Sections 7.4 and 11; API Sections 8.5 and 10 | Preserve mutation barrier, global stop, accepted partial state and bounded later-run repair; prohibit automatic retry/rollback/compensation. | Testing 2.39 Sections 9.4.4-9.4.5 connect Generator failure/rerun evidence to application/package behaviour; no mandatory J automated obligation remains unsupported. Actual Services reuse/inspection remains under H/D09. | SATISFIED | - |
 | K. Operational Recovery / DR applicability | Owner-approved G3-D3; Architecture Section 13.3 | Broader Operational Recovery / DR is OUTSIDE V1.0, not deferred to Gate 4; existing bounded failure/rerun and operator-guidance obligations remain under J and L. | G3-D3 owner scope decision recorded below on 2026-09-12. | SATISFIED | - |
-| L. User/operator documentation | Architecture Sections 7.1.7 and 13.5 D13 Option B; Configuration Sections 5-8 | Separate operator guide covers every D13 acceptance topic and has a clear discoverable README link. | `docs/10-Operator-Guide.md` 1.0 Draft and discoverable README link are delivered; owner review against D13, approved contracts and implementation, approval and baselining remain pending. | NOT SATISFIED | DOCUMENTATION, VALIDATION |
+| L. User/operator documentation | Architecture Sections 7.1.7 and 13.5 D13 Option B; Configuration Sections 5-8 | Separate operator guide covers every D13 acceptance topic and has a clear discoverable README link. | `docs/10-Operator-Guide.md` Version 1.0 is Approved Baseline; README provides discoverability for the Operator Guide. The required operator-facing documentation is therefore baselined and discoverable. | SATISFIED | - |
 | M. Defects/findings | Testing Section 9; G3-REC-R01 reconciliation | No unresolved CRITICAL or HIGH defects/findings; remaining findings cannot prevent mandatory row satisfaction. | Assessed-revision findings register, severity/disposition and verified closure evidence. | NOT SATISFIED | GOVERNANCE, VALIDATION |
 | N. Evidence traceability | PRD NFR-006; Testing Sections 9.1, 9.3 and 9.4; Architecture Section 13.5 D14 Option A; Release Section 12 | One consolidated versioned Gate-3 dossier supplies the A-O index, evidence applicability, decisions, findings, deferrals and review/sign-off record required by D14. | Testing 2.39 Section 9.4 supplies accepted automated mapping and historical applicability; the complete dossier, execution metadata/artefacts, live records, findings, allocations, review and sign-off remain pending. | PARTIALLY SATISFIED | DOCUMENTATION, VALIDATION, GOVERNANCE |
 | O. Approval/sign-off | Release Sections 8-10 and 13; AI Working Agreement Section 13 | Owner explicitly records Gate-3 PASS only after the PASS rule is met. | Dated owner acceptance referring to the completed matrix, evidence and approved decision records. | NOT SATISFIED | GOVERNANCE |
 
 Row A remains NOT SATISFIED. HTTP/API reconciliation and Testing 2.39 are Approved Baseline;
-Release 1.38 reconciliation is in progress as Draft. Operator Guide 1.0 and its README link are
-delivered, but the guide remains Draft pending owner review/approval and baselining, so L remains
-NOT SATISFIED. Catalogue/status-wording consistency and final consistency review remain open.
+Release 1.39 reconciliation is in progress as Draft. Operator Guide 1.0 is Approved Baseline
+and discoverable through README, so L is SATISFIED.
+Catalogue/status-wording consistency and final consistency review remain open.
 The known GUI/PRD inconsistency retains its separate future governance boundary below and is not
 a current Gate-3 blocker. Neither the guide nor README is modified by this revision.
 
@@ -560,12 +563,12 @@ Actual Services reuse and no-duplicate/relationship inspection remain required u
 satisfying J does not waive those live requirements.
 
 K remains SATISFIED only for the owner-approved exclusion of broader DR from V1.0; bounded
-failure/rerun acceptance is recorded under J and operator guidance remains open under L.
+failure/rerun acceptance is recorded under J and operator guidance is SATISFIED under L.
 M remains NOT SATISFIED, N PARTIALLY SATISFIED and O NOT SATISFIED. Existing Gate-1/2 PASS records
 do not establish current Gate-3 findings closure or owner acceptance. Testing 2.39 supplies accepted
 automated traceability, not the complete consolidated dossier. This revision performs no findings
 review and creates no dossier. Dependency-first continuation remains: accepted documentation
-reconciliation and guide approval; dossier assembly with accepted automated evidence; authorised
+reconciliation; dossier assembly with accepted automated evidence; authorised
 live validation; findings and D11 allocation review; dossier completion and A-N assessment; then
 final dated owner sign-off. B/G/J satisfaction does not establish Gate-3 PASS.
 
@@ -600,13 +603,13 @@ decision approval alone.
 | G3-OWN-D11 | Option A: mandatory Gate-3 minimum cannot be deferred; eligible remaining scenarios need explicit complete Gate-4 allocation records. | Complete scenario mapping and assess permitted deferrals; none are allocated here. |
 | G3-OWN-D12 | Option B: isolated dedicated project in an existing TEST organisation; synthetic input, truthful process/field prerequisites and least privilege. | Concrete environment, mutation/cleanup-or-retention authorisation and execution remain pending; no immediate live execution is authorised. |
 | G3-REC-R01 | Reconciliation only: no unresolved CRITICAL or HIGH defects/findings, matching Testing. Not a new owner or behavioural decision. | Findings register and verified closure evidence remain pending. |
-| G3-OWN-D13 | Option B: separate operator guide with discoverable README link and complete D13 acceptance coverage. | Operator Guide 1.0 Draft and README link are delivered; owner review/approval and baselining remain pending. |
+| G3-OWN-D13 | Option B: separate operator guide with discoverable README link and complete D13 acceptance coverage. | Operator Guide 1.0 is Approved Baseline and discoverable through README; L is SATISFIED. |
 | G3-OWN-D14 | Option A: one consolidated versioned Gate-3 dossier with A-O index, applicability, findings, deferrals and dated owner sign-off. | Dossier completion, review and final owner sign-off remain pending. |
 
 Behavioural ambiguity for these logging/HTTP topics is closed by the approved contract; PR #162
 completes D01-D05 implementation and automated validation. Approved Baseline Testing 2.39 completes
 mandatory automated application/integration evidence mapping and D06-D10 automated applicability.
-Remaining work is acceptance of this Release reconciliation, operator-guide review/approval,
+Remaining work is acceptance of this Release reconciliation,
 documentation consistency, authorised live Services validation and safety evidence, the consolidated
 versioned Gate-3 dossier, findings assessment and verified CRITICAL/HIGH closure, D11 scenario-to-gate
 allocation review and final dated owner sign-off.
