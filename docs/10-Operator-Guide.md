@@ -6,7 +6,7 @@
 
 **Version:** 1.0
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-19
 
@@ -22,7 +22,7 @@
 
 | Version | Date | Status | Author | Description |
 |----------|------------|-------------------|-----------------|------------------------------------------------|
-| 1.0 | 2026-09-19 | Draft | Jack Spaetjens | Initial Gate-3 operator guide covering supported invocation, configuration, logging, persistence/reuse and controlled HTTP reporting. |
+| 1.0 | 2026-09-19 | Approved Baseline | Jack Spaetjens | Initial Gate-3 operator guide covering supported invocation, configuration, logging, persistence/reuse and controlled HTTP reporting. |
 
 ---
 
