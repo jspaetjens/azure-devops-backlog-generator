@@ -6,7 +6,7 @@
 
 **Version:** 2.39
 
-**Status:** Draft
+**Status:** Approved Baseline
 
 **Last Updated:** 2026-09-20
 
@@ -89,7 +89,7 @@ operation is introduced or authorised. GUI governance and the G3-D3 exclusion of
 | 2.36 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Recorded PR #157 Slice-10 automated validation evidence for G3-SUM-D1 to G3-SUM-D9; live Services validation remains pending. |
 | 2.37 | 2026-09-16 | Approved Baseline | Jack Spaetjens | Defined prospective Gate-3 HTTP validation, scenario allocation, live-plan and consolidated dossier requirements without claiming new evidence. |
 | 2.38 | 2026-09-17 | Approved Baseline | Jack Spaetjens | Recorded PR #162 HTTP reporting automated validation evidence; non-HTTP and live Gate-3 evidence remains incomplete. |
-| 2.39 | 2026-09-20 | Draft | Jack Spaetjens | Recorded the Gate-3 application/integration evidence mapping and historical applicability assessment, confirming sufficient existing automated evidence while retaining required live Services validation. |
+| 2.39 | 2026-09-20 | Approved Baseline | Jack Spaetjens | Recorded the Gate-3 application/integration evidence mapping and historical applicability assessment, confirming sufficient existing automated evidence while retaining required live Services validation. |
 
 ---
 
