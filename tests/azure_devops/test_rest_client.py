@@ -1205,6 +1205,34 @@ def test_returns_ordered_duplicate_preserving_reverse_parent_ids(
     ) == AzureDevOpsWorkItemRelationshipState(revision=3, reverse_parent_ids=(11, 12, 11))
 
 
+def test_accepts_project_guid_scoped_reverse_parent_relationship_url(
+    client: AzureDevOpsRestClient, opener: _Opener
+) -> None:
+    opener.response = _Response(
+        body=json.dumps(
+            _relationship_state_response(
+                relations=[
+                    {
+                        "rel": "System.LinkTypes.Hierarchy-Reverse",
+                        "url": (
+                            "https://dev.azure.com/example%20organization/"
+                            "11111111-2222-3333-4444-555555555555/"
+                            "_apis/wit/workItems/11"
+                        ),
+                    }
+                ]
+            )
+        ).encode()
+    )
+
+    assert client.retrieve_work_item_relationship_state(
+        17, personal_access_token="secret-pat"
+    ) == AzureDevOpsWorkItemRelationshipState(
+        revision=3,
+        reverse_parent_ids=(11,),
+    )
+
+
 def test_rejects_case_altered_reverse_relationship_reference(
     client: AzureDevOpsRestClient, opener: _Opener
 ) -> None:
@@ -1329,7 +1357,7 @@ def test_validates_work_item_create_with_the_exact_endpoint_contract(
     assert request.get_method() == "POST"
     assert request.full_url == (
         "https://dev.azure.com/example%20organization/Example%20Project/"
-        f"_apis/wit/workitems/{encoded_type}?validateOnly=true&api-version=7.1"
+        f"_apis/wit/workitems/%24{encoded_type}?validateOnly=true&api-version=7.1"
     )
     assert request.get_header("Content-type") == "application/json-patch+json"
     assert request.get_header("Accept") == "application/json"
@@ -1411,7 +1439,7 @@ def test_creates_work_item_with_the_exact_persistent_endpoint_contract(
     assert request.get_method() == "POST"
     assert request.full_url == (
         "https://dev.azure.com/example%20organization/Example%20Project/"
-        f"_apis/wit/workitems/{encoded_type}?api-version=7.1"
+        f"_apis/wit/workitems/%24{encoded_type}?api-version=7.1"
     )
     assert request.get_header("Content-type") == "application/json-patch+json"
     assert request.get_header("Accept") == "application/json"

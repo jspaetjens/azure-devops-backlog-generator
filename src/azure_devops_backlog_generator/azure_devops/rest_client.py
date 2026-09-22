@@ -224,7 +224,7 @@ class AzureDevOpsRestClient:
         """Validate one candidate Create request without persisting a work item."""
         self.send_json_request(
             method="POST",
-            path_segments=("_apis", "wit", "workitems", candidate.work_item_type.value),
+            path_segments=("_apis", "wit", "workitems", f"${candidate.work_item_type.value}"),
             personal_access_token=personal_access_token,
             query={"validateOnly": "true"},
             json_body=build_work_item_create_json_patch(candidate),
@@ -240,7 +240,7 @@ class AzureDevOpsRestClient:
         """Create one work item and return its validated persisted evidence."""
         response = self.send_json_request(
             method="POST",
-            path_segments=("_apis", "wit", "workitems", candidate.work_item_type.value),
+            path_segments=("_apis", "wit", "workitems", f"${candidate.work_item_type.value}"),
             personal_access_token=personal_access_token,
             json_body=build_work_item_create_json_patch(candidate),
             content_type="application/json-patch+json",
@@ -611,18 +611,44 @@ def _reverse_parent_target_id_from_url(url: str, organization: str) -> int:
 
     path_components = parsed.path.split("/")
     if (
-        len(path_components) != 6
-        or path_components[0] != ""
+        path_components[0] != ""
+        or len(path_components) not in (6, 7)
         or unquote(path_components[1]) != organization
-        or path_components[2:5] != ["_apis", "wit", "workItems"]
-        or not re.fullmatch(r"[0-9]+", path_components[5])
-        or int(path_components[5]) <= 0
     ):
         raise AzureDevOpsResponseError(
             "Azure DevOps Work Item relationship-state response contains an invalid "
             "reverse hierarchy relation URL."
         )
-    return int(path_components[5])
+
+    if len(path_components) == 6:
+        route_start = 2
+        target_index = 5
+    else:
+        project_identifier = path_components[2]
+        if not re.fullmatch(
+            r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-"
+            r"[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}",
+            project_identifier,
+        ):
+            raise AzureDevOpsResponseError(
+                "Azure DevOps Work Item relationship-state response contains an invalid "
+                "reverse hierarchy relation URL."
+            )
+        route_start = 3
+        target_index = 6
+
+    if (
+        path_components[route_start : route_start + 3]
+        != ["_apis", "wit", "workItems"]
+        or not re.fullmatch(r"[0-9]+", path_components[target_index])
+        or int(path_components[target_index]) <= 0
+    ):
+        raise AzureDevOpsResponseError(
+            "Azure DevOps Work Item relationship-state response contains an invalid "
+            "reverse hierarchy relation URL."
+        )
+
+    return int(path_components[target_index])
 
 
 def _consume_response(response: Any) -> tuple[int, bytes]:

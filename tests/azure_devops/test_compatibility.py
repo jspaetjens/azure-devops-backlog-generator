@@ -59,7 +59,7 @@ def _evidence() -> StructuralCompatibilityEvidence:
             _IDENTITY: {
                 "referenceName": _IDENTITY,
                 "name": "Backlog Generator Source Identity",
-                "type": "String",
+                "type": "string",
                 "readOnly": False,
             },
         },

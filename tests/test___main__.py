@@ -367,7 +367,7 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
                 field = path[-1]
                 result = {"referenceName": field}
                 if field == identity_field:
-                    result.update(name="Backlog Generator Source Identity", type="String",
+                    result.update(name="Backlog Generator Source Identity", type="string",
                                   readOnly=False, defaultValue=None, alwaysRequired=False)
                 return result
             if "workitemtypes" in path:
@@ -384,7 +384,7 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
                     fields = {op["path"].removeprefix("/fields/"): op["value"]
                               for op in json_body}
                     fields.update({"System.TeamProject": "SYNTHETIC_PROJECT",
-                                   "System.WorkItemType": path[-1]})
+                                   "System.WorkItemType": path[-1].removeprefix("$")})
                     item_id = 987650 + len(items)
                     item = {"id": item_id, "rev": 1, "fields": fields,
                             "synthetic_response": "SYNTHETIC_RESPONSE_CONTENT"}
