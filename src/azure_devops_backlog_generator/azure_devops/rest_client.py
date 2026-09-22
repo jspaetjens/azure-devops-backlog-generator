@@ -224,7 +224,7 @@ class AzureDevOpsRestClient:
         """Validate one candidate Create request without persisting a work item."""
         self.send_json_request(
             method="POST",
-            path_segments=("_apis", "wit", "workitems", candidate.work_item_type.value),
+            path_segments=("_apis", "wit", "workitems", f"${candidate.work_item_type.value}"),
             personal_access_token=personal_access_token,
             query={"validateOnly": "true"},
             json_body=build_work_item_create_json_patch(candidate),
@@ -240,7 +240,7 @@ class AzureDevOpsRestClient:
         """Create one work item and return its validated persisted evidence."""
         response = self.send_json_request(
             method="POST",
-            path_segments=("_apis", "wit", "workitems", candidate.work_item_type.value),
+            path_segments=("_apis", "wit", "workitems", f"${candidate.work_item_type.value}"),
             personal_access_token=personal_access_token,
             json_body=build_work_item_create_json_patch(candidate),
             content_type="application/json-patch+json",

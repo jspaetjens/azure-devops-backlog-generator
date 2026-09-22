@@ -1329,7 +1329,7 @@ def test_validates_work_item_create_with_the_exact_endpoint_contract(
     assert request.get_method() == "POST"
     assert request.full_url == (
         "https://dev.azure.com/example%20organization/Example%20Project/"
-        f"_apis/wit/workitems/{encoded_type}?validateOnly=true&api-version=7.1"
+        f"_apis/wit/workitems/%24{encoded_type}?validateOnly=true&api-version=7.1"
     )
     assert request.get_header("Content-type") == "application/json-patch+json"
     assert request.get_header("Accept") == "application/json"
@@ -1411,7 +1411,7 @@ def test_creates_work_item_with_the_exact_persistent_endpoint_contract(
     assert request.get_method() == "POST"
     assert request.full_url == (
         "https://dev.azure.com/example%20organization/Example%20Project/"
-        f"_apis/wit/workitems/{encoded_type}?api-version=7.1"
+        f"_apis/wit/workitems/%24{encoded_type}?api-version=7.1"
     )
     assert request.get_header("Content-type") == "application/json-patch+json"
     assert request.get_header("Accept") == "application/json"
