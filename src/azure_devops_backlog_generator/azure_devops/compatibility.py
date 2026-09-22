@@ -17,7 +17,7 @@ _ACCEPTANCE_CRITERIA = "Microsoft.VSTS.Common.AcceptanceCriteria"
 _TAGS = "System.Tags"
 _IDENTITY = "Custom.BacklogGeneratorSourceIdentity"
 _IDENTITY_NAME = "Backlog Generator Source Identity"
-_IDENTITY_TYPE = "String"
+_IDENTITY_TYPE = "string"
 
 _REQUIRED_FIELDS = {
     WorkItemType.EPIC: (_TITLE, _DESCRIPTION, _ACCEPTANCE_CRITERIA, _TAGS, _IDENTITY),

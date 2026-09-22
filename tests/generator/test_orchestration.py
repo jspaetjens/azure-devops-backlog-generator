@@ -256,7 +256,7 @@ class _PreflightRestClient:
             evidence.update(
                 {
                     "name": "Backlog Generator Source Identity",
-                    "type": "String",
+                    "type": "string",
                     "readOnly": False,
                 }
             )
@@ -822,7 +822,7 @@ class _TraversalRestClient:
             evidence.update(
                 {
                     "name": "Backlog Generator Source Identity",
-                    "type": "String",
+                    "type": "string",
                     "readOnly": False,
                 }
             )

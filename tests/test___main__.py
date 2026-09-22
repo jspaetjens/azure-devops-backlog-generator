@@ -367,7 +367,7 @@ def test_package_summary_with_real_parsing_generator_and_controlled_transport(
                 field = path[-1]
                 result = {"referenceName": field}
                 if field == identity_field:
-                    result.update(name="Backlog Generator Source Identity", type="String",
+                    result.update(name="Backlog Generator Source Identity", type="string",
                                   readOnly=False, defaultValue=None, alwaysRequired=False)
                 return result
             if "workitemtypes" in path:
